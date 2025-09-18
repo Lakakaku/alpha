@@ -1,0 +1,526 @@
+# =============================================================================
+# PROJECT ALPHA - GITIGNORE CONFIGURATION
+# =============================================================================
+# Comprehensive .gitignore for Next.js monorepo with security focus
+# =============================================================================
+
+# =============================================================================
+# ENVIRONMENT & SECRETS
+# =============================================================================
+# CRITICAL: Never commit sensitive credentials
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.staging.local
+
+# Environment backups
+.env.*.backup
+.env.*.bak
+
+# Secret files
+secrets/
+*.key
+*.pem
+*.p12
+*.cert
+*.crt
+*.pfx
+
+# API keys and tokens
+api-keys.json
+tokens.json
+credentials.json
+
+# =============================================================================
+# NODE.JS & NPM
+# =============================================================================
+
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Package manager files
+.npmrc
+.yarnrc
+.yarnrc.yml
+yarn.lock
+package-lock.json
+pnpm-lock.yaml
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# =============================================================================
+# NEXT.JS
+# =============================================================================
+
+# Next.js build output
+.next/
+out/
+build/
+dist/
+
+# Next.js cache
+.next/cache/
+
+# Turbo build cache
+.turbo/
+
+# Static exports
+out/
+
+# =============================================================================
+# MONOREPO & WORKSPACES
+# =============================================================================
+
+# Lerna
+lerna-debug.log*
+.lerna/
+
+# Rush
+common/temp/
+common/autoinstallers/*/node_modules/
+
+# Nx
+.nx/cache/
+.nx/workspace-data/
+
+# =============================================================================
+# DEVELOPMENT TOOLS
+# =============================================================================
+
+# IDEs and editors
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+.vim/
+*.vim
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# =============================================================================
+# TYPESCRIPT
+# =============================================================================
+
+# TypeScript cache
+*.tsbuildinfo
+.tsbuildinfo
+
+# TypeScript declaration maps
+*.d.ts.map
+
+# =============================================================================
+# TESTING
+# =============================================================================
+
+# Test results
+test-results/
+junit.xml
+coverage/
+.coverage
+htmlcov/
+
+# Jest
+jest_cache/
+.jest/
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Cypress
+cypress/videos/
+cypress/screenshots/
+cypress/downloads/
+
+# =============================================================================
+# DATABASES
+# =============================================================================
+
+# SQLite
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Database dumps
+*.sql
+*.dump
+
+# Supabase
+supabase/.temp/
+supabase/.branches/
+supabase/.git/
+
+# =============================================================================
+# LOGS
+# =============================================================================
+
+# General logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Application logs
+app.log
+error.log
+access.log
+combined.log
+
+# PM2 logs
+.pm2/
+
+# =============================================================================
+# CACHE & TEMPORARY FILES
+# =============================================================================
+
+# General cache
+.cache/
+*.cache
+.temp/
+.tmp/
+tmp/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# =============================================================================
+# BUILD & DEPLOYMENT
+# =============================================================================
+
+# Build artifacts
+build/
+dist/
+public/build/
+
+# Vercel
+.vercel/
+.vercel-build-output/
+
+# Netlify
+.netlify/
+
+# Docker
+Dockerfile.local
+docker-compose.override.yml
+.dockerignore.local
+
+# =============================================================================
+# SECURITY & CERTIFICATES
+# =============================================================================
+
+# SSL/TLS certificates
+*.pem
+*.key
+*.csr
+*.crt
+*.der
+*.p7b
+*.p7r
+*.spc
+*.pfx
+*.p12
+
+# SSH keys
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+known_hosts
+
+# GPG keys
+*.gpg
+*.asc
+
+# =============================================================================
+# MONITORING & ANALYTICS
+# =============================================================================
+
+# Sentry
+.sentryclirc
+
+# Analytics
+analytics-data/
+tracking-data/
+
+# Performance monitoring
+performance-logs/
+metrics/
+
+# =============================================================================
+# BACKUP & ARCHIVE
+# =============================================================================
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+*.rej
+*.swp
+*.swo
+
+# Archive files
+*.tar
+*.tar.gz
+*.zip
+*.rar
+*.7z
+
+# =============================================================================
+# UPLOADS & USER CONTENT
+# =============================================================================
+
+# File uploads
+uploads/
+user-uploads/
+attachments/
+
+# Generated content
+generated/
+auto-generated/
+
+# =============================================================================
+# EXTERNAL SERVICES
+# =============================================================================
+
+# MCP configuration (contains sensitive data)
+.mcp.json
+
+# Claude Code hooks (may contain sensitive paths)
+.claude/
+!.claude/hooks.json.example
+
+# AI service cache
+.ai-cache/
+.openai-cache/
+
+# =============================================================================
+# DEVELOPMENT ARTIFACTS
+# =============================================================================
+
+# Debug files
+debug/
+*.debug
+
+# Profiling
+*.prof
+*.heap
+
+# Memory dumps
+*.hprof
+heapdump.*
+
+# =============================================================================
+# DOCUMENTATION GENERATION
+# =============================================================================
+
+# Generated documentation
+docs/generated/
+api-docs/generated/
+
+# Typedoc output
+typedoc/
+docs-dist/
+
+# =============================================================================
+# INTERNATIONALIZATION
+# =============================================================================
+
+# Translation files (if auto-generated)
+locales/generated/
+*.pot
+
+# =============================================================================
+# MOBILE & NATIVE
+# =============================================================================
+
+# React Native
+.expo/
+.expo-shared/
+
+# Android
+*.apk
+*.aab
+
+# iOS
+*.ipa
+DerivedData/
+
+# =============================================================================
+# PACKAGE MANAGERS
+# =============================================================================
+
+# Yarn
+.yarn/cache/
+.yarn/install-state.gz
+.yarn/build-state.yml
+.yarn/unplugged/
+
+# pnpm
+.pnpm-store/
+.pnpm-debug.log
+
+# =============================================================================
+# EDITOR SPECIFIC
+# =============================================================================
+
+# WebStorm
+.idea/
+*.iml
+
+# Visual Studio
+.vs/
+*.sln
+*.vcxproj*
+
+# Atom
+.atom/
+
+# =============================================================================
+# CUSTOM PROJECT EXCLUSIONS
+# =============================================================================
+
+# Vocilia specific
+vocilia-data/
+feedback-samples/
+call-recordings/
+test-transactions/
+
+# Business data (should never be in repo)
+business-configs/
+store-layouts/
+pos-data/
+
+# Customer data (should never be in repo)
+customer-data/
+phone-numbers/
+transaction-logs/
+
+# Payment data (should never be in repo)
+payment-logs/
+swish-data/
+financial-reports/
+
+# AI training data
+training-data/
+model-cache/
+ai-logs/
+
+# =============================================================================
+# TEMPORARY DEVELOPMENT FILES
+# =============================================================================
+
+# Scratch files
+scratch/
+notes/
+todo.txt
+playground/
+
+# Local configuration overrides
+*.local.js
+*.local.ts
+*.local.json
+
+# =============================================================================
+# SECURITY SCAN RESULTS
+# =============================================================================
+
+# Security audit results
+security-audit/
+vulnerability-reports/
+pen-test-results/
+
+# Dependency check results
+dependency-check-report.html
+.snyk
+
+# =============================================================================
+# PERFORMANCE & MONITORING
+# =============================================================================
+
+# Lighthouse reports
+lighthouse-reports/
+
+# Bundle analysis
+bundle-analysis/
+webpack-bundle-analyzer/
+
+# Performance profiles
+.clinic/
+flamegraphs/
+
+# =============================================================================
+# COMPLIANCE & LEGAL
+# =============================================================================
+
+# Compliance documents (auto-generated)
+compliance-reports/
+audit-trails/
+legal-exports/
+
+# =============================================================================
+# NOTES
+# =============================================================================
+# This .gitignore is designed to:
+# 1. Prevent accidental commit of sensitive data
+# 2. Exclude build artifacts and caches
+# 3. Keep the repository clean and focused
+# 4. Support monorepo structure
+# 5. Maintain security best practices
+#
+# SECURITY REMINDER:
+# - Always review files before committing
+# - Use 'git status' to check what's being committed
+# - Never force-add ignored files with sensitive data
+# - Regularly audit and update this file
+# =============================================================================
