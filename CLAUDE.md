@@ -20,7 +20,8 @@ This is the alpha development workspace for the Vocilia system concept. The main
 
 The project uses multiple MCP servers for external integrations:
 
-- **Vercel**: Deployment and hosting management
+- **Railway**: Backend API deployment and hosting management
+- **Vercel**: Frontend application deployment and hosting
 - **Supabase**: Database and backend services (read-only mode, project ref: wtdckfgdcryjvbllcajq)
 - **Context7**: HTTP streaming and library information
 - **GitHub**: Repository management (repo: Lakakaku/alpha)
@@ -51,12 +52,38 @@ MCP configuration is stored in `.mcp.json` (git-ignored for security).
 - Store-specific databases with privacy protection
 - Fraud detection and legitimacy analysis
 
+### Deployment Architecture
+
+**Frontend (Vercel)**:
+- Next.js applications: Customer, Business, and Admin interfaces
+- Static site generation and edge functions
+- Automatic deployments from GitHub
+- Global CDN and edge caching
+
+**Backend (Railway)**:
+- Node.js API services and webhooks
+- AI processing and telephony integration
+- Background jobs and scheduled tasks
+- Payment processing workflows
+- Database operations and business logic
+
+**Database (Supabase)**:
+- PostgreSQL with Row Level Security
+- Real-time subscriptions
+- Authentication and user management
+- File storage and edge functions
+
 ### Technology Stack
-- **Frontend**: Next.js 14 with TypeScript
+- **Frontend**: Next.js 14 with TypeScript (deployed on Vercel)
+- **Backend**: Node.js APIs and services (deployed on Railway)
 - **Database**: Supabase with Row Level Security (RLS)
 - **Styling**: Tailwind CSS
 - **AI**: GPT-4o-mini for calls and analysis
 - **Payments**: Swish (Swedish mobile payment)
+- **Hosting**:
+  - Frontend applications → Vercel
+  - Backend APIs and services → Railway
+  - Database → Supabase
 
 ## Development Principles
 
@@ -85,7 +112,7 @@ Auto-approved operations include:
 - Read operations on `./apps/**`, `./packages/**`, documentation files
 - Common commands: `pnpm`, `npm run`, `npx supabase`, `ls`, `cat`, `grep`
 
-Blocked paths: `node_modules`, `.git`, `.next`, `dist`, `.vercel`, lock files
+Blocked paths: `node_modules`, `.git`, `.next`, `dist`, `.vercel`, `.railway`, lock files
 
 ## Key Documentation
 

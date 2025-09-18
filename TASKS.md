@@ -3,6 +3,13 @@
 ## Overview
 Comprehensive task breakdown for the Vocilia customer feedback reward system. This plan prioritizes early business site development while building a robust foundation for the complete system.
 
+### Architecture Overview
+**Frontend (Vercel)**: Next.js 14 monorepo with three applications (Customer, Business, Admin)
+**Backend (Railway)**: Node.js API services, webhooks, AI processing, and background jobs
+**Database (Supabase)**: PostgreSQL with Row Level Security, authentication, and real-time features
+
+This separation allows optimal deployment strategies: Vercel's edge network for fast frontend delivery and Railway's infrastructure for scalable backend services.
+
 ---
 
 ## PHASE 1: Foundation & Project Setup
@@ -52,6 +59,12 @@ Comprehensive task breakdown for the Vocilia customer feedback reward system. Th
   - Create auth utilities and hooks
   - Design user roles and permissions system
   - Implement auth middleware for Next.js
+- [ ] **Task 1.3.3**: Backend API foundation
+  - Set up Node.js/Express backend structure for Railway
+  - Configure API routes and middleware
+  - Set up backend environment configuration
+  - Create backend deployment scripts and Railway setup
+  - Implement API authentication and CORS configuration
 
 ---
 
@@ -252,22 +265,22 @@ Comprehensive task breakdown for the Vocilia customer feedback reward system. Th
 ## PHASE 5: AI Integration & Advanced Features
 *Estimated Duration: 3-4 weeks*
 
-### Step 5.1: GPT-4o-mini Integration
-- [ ] **Task 5.1.1**: Feedback collection AI
-  - Integrate Swedish-speaking call bot
-  - Create context-aware question generation
-  - Build conversation flow management
-  - Implement call quality monitoring
-- [ ] **Task 5.1.2**: Feedback analysis AI
-  - Create feedback grading system (2-15% scale)
-  - Build legitimacy and fraud detection
-  - Implement depth and usefulness analysis
-  - Set up automated feedback summarization
-- [ ] **Task 5.1.3**: Business analysis AI
-  - Create weekly feedback analysis automation
-  - Build trend identification and insights
-  - Implement comparative analysis tools
-  - Set up predictive analytics
+### Step 5.1: GPT-4o-mini Integration (Railway Backend)
+- [ ] **Task 5.1.1**: Feedback collection AI (Railway API)
+  - Integrate Swedish-speaking call bot on Railway backend
+  - Create context-aware question generation APIs
+  - Build conversation flow management services
+  - Implement call quality monitoring and logging
+- [ ] **Task 5.1.2**: Feedback analysis AI (Railway API)
+  - Create feedback grading system API (2-15% scale)
+  - Build legitimacy and fraud detection services
+  - Implement depth and usefulness analysis APIs
+  - Set up automated feedback summarization workers
+- [ ] **Task 5.1.3**: Business analysis AI (Railway API)
+  - Create weekly feedback analysis automation jobs
+  - Build trend identification and insights APIs
+  - Implement comparative analysis service endpoints
+  - Set up predictive analytics background processing
 
 ### Step 5.2: Advanced Question Logic
 - [ ] **Task 5.2.1**: Question combination engine
@@ -367,17 +380,27 @@ Comprehensive task breakdown for the Vocilia customer feedback reward system. Th
 *Estimated Duration: 1-2 weeks*
 
 ### Step 8.1: Production Deployment
-- [ ] **Task 8.1.1**: Vercel deployment setup
-  - Configure production environment variables
-  - Set up deployment pipelines
-  - Implement staging environment
-  - Build deployment monitoring
-- [ ] **Task 8.1.2**: Domain and SSL setup
-  - Configure custom domains
-  - Set up SSL certificates
-  - Implement CDN optimization
-  - Build DNS configuration
-- [ ] **Task 8.1.3**: Database production setup
+- [ ] **Task 8.1.1**: Backend deployment setup (Railway)
+  - Configure production environment variables in Railway
+  - Set up GitHub integration for automatic backend deployments
+  - Implement staging environment with Railway environments
+  - Configure Railway CLI and deployment monitoring
+  - Set up Node.js API services and webhooks
+  - Configure background job processing
+- [ ] **Task 8.1.2**: Frontend deployment setup (Vercel)
+  - Configure production environment variables in Vercel
+  - Set up automatic deployment from GitHub for Next.js apps
+  - Configure Vercel environments (staging, production)
+  - Set up Vercel CLI and deployment monitoring
+  - Configure build settings for monorepo structure
+  - Set up edge functions and serverless functions
+- [ ] **Task 8.1.3**: Domain and SSL setup
+  - Configure custom domains for frontend (Vercel)
+  - Configure API subdomain for backend (Railway)
+  - Set up SSL certificates (automatic with both platforms)
+  - Configure DNS settings for multi-domain setup
+  - Set up CDN and edge caching optimization
+- [ ] **Task 8.1.4**: Database production setup
   - Configure production Supabase instance
   - Set up database backups
   - Implement connection pooling
@@ -458,7 +481,8 @@ Comprehensive task breakdown for the Vocilia customer feedback reward system. Th
 
 ### External Dependencies
 - **Supabase**: Database hosting and authentication
-- **Vercel**: Application hosting and deployment
+- **Railway**: Backend API hosting and deployment
+- **Vercel**: Frontend application hosting and deployment
 - **OpenAI**: GPT-4o-mini API access
 - **Swish**: Payment processing API
 - **Telephony Provider**: For AI call system

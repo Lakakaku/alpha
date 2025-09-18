@@ -39,7 +39,7 @@ alpha/
 - **Database**: Supabase with Row Level Security (RLS)
 - **AI**: GPT-4o-mini (OpenAI) for calls and analysis
 - **Payments**: Swish (Swedish mobile payment system)
-- **Hosting**: Vercel
+- **Hosting**: Railway
 - **Authentication**: Supabase Auth
 
 ## 🚀 Quick Start
