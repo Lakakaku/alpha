@@ -1,5 +1,20 @@
 import { SupabaseClient, PostgrestError } from '@supabase/supabase-js';
-import type { Database, DatabaseError, ValidationError } from '../types/index.js';
+import type { Database } from '../types/index.js';
+
+// Error types
+export interface DatabaseError {
+  code: string;
+  message: string;
+  details?: any;
+  hint?: string;
+}
+
+export interface ValidationError extends DatabaseError {
+  field?: string;
+  constraint?: string;
+}
+
+export type FormattedDatabaseError = DatabaseError;
 
 export interface ConnectionTestResult {
   isConnected: boolean;
@@ -299,3 +314,12 @@ export function createDatabaseLogger(prefix: string = '[Database]') {
 }
 
 export const dbLogger = createDatabaseLogger();
+
+// Type guards
+export function isDatabaseError(error: any): error is DatabaseError {
+  return error && typeof error === 'object' && 'code' in error && 'message' in error;
+}
+
+export function isValidationError(error: any): error is ValidationError {
+  return isDatabaseError(error) && ('field' in error || 'constraint' in error);
+}
