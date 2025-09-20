@@ -1,12 +1,65 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
-import { 
-  approveBusinessRegistration, 
-  rejectBusinessRegistration,
-  validateAdminPermissions,
-  VerificationDecision 
-} from '@vocilia/auth/admin/verification';
+// Server-side verification functions
+interface VerificationDecision {
+  approved: boolean;
+  notes?: string;
+  adminUserId: string;
+}
+
+async function validateAdminPermissions(userId: string): Promise<{ hasPermission: boolean; error?: string }> {
+  const supabase = createRouteHandlerClient({ cookies });
+  
+  // Check if user has admin role
+  const { data, error } = await supabase
+    .from('user_accounts')
+    .select('role')
+    .eq('id', userId)
+    .single();
+
+  if (error || !data) {
+    return { hasPermission: false, error: 'Failed to verify admin permissions' };
+  }
+  
+  return { hasPermission: data.role === 'admin' };
+}
+
+async function approveBusinessRegistration(
+  businessId: string,
+  decision: VerificationDecision
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = createRouteHandlerClient({ cookies });
+  
+  const { error } = await supabase.rpc('approve_business_registration', {
+    user_id: businessId,
+    notes: decision.notes || null
+  });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
+async function rejectBusinessRegistration(
+  businessId: string,
+  decision: VerificationDecision
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = createRouteHandlerClient({ cookies });
+  
+  const { error } = await supabase.rpc('reject_business_registration', {
+    user_id: businessId,
+    notes: decision.notes || null
+  });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
 
 export interface BusinessApprovalRequest {
   businessId: string;

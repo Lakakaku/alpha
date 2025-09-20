@@ -1,7 +1,88 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
-import { registerBusinessAccount, validateBusinessRegistration } from '@vocilia/auth/business/registration';
+
+// Inline implementations to avoid import issues
+function validateBusinessRegistration(data: any) {
+  const errors: Array<{ field: string; message: string }> = [];
+  
+  if (!data.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+    errors.push({ field: 'email', message: 'Invalid email format' });
+  }
+  if (!data.password || data.password.length < 8) {
+    errors.push({ field: 'password', message: 'Password must be at least 8 characters' });
+  }
+  if (!data.businessName || data.businessName.length < 2) {
+    errors.push({ field: 'businessName', message: 'Business name is required' });
+  }
+  if (!data.contactPerson) {
+    errors.push({ field: 'contactPerson', message: 'Contact person is required' });
+  }
+  if (!data.phone) {
+    errors.push({ field: 'phone', message: 'Phone number is required' });
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
+async function registerBusinessAccount(supabase: any, data: any) {
+  // Create auth user
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email: data.email,
+    password: data.password,
+    options: {
+      data: {
+        business_name: data.businessName,
+        user_type: 'business'
+      }
+    }
+  });
+
+  if (authError || !authData.user) {
+    return { 
+      success: false, 
+      error: authError?.message || 'Failed to create user account' 
+    };
+  }
+
+  // Create business account record
+  const { data: businessAccount, error: businessError } = await supabase
+    .from('business_accounts')
+    .insert({
+      user_id: authData.user.id,
+      email: data.email.toLowerCase(),
+      business_name: data.businessName,
+      contact_person: data.contactPerson,
+      phone_number: data.phone,
+      address: data.address,
+      business_type: data.businessType,
+      estimated_monthly_customers: data.estimatedMonthlyCustomers,
+      verification_status: 'pending',
+      created_at: new Date().toISOString()
+    })
+    .select()
+    .single();
+
+  if (businessError) {
+    return { 
+      success: false, 
+      error: businessError.message 
+    };
+  }
+
+  return {
+    success: true,
+    data: {
+      id: businessAccount.id,
+      userId: authData.user.id,
+      email: businessAccount.email,
+      verificationStatus: 'pending'
+    }
+  };
+}
 
 export interface BusinessRegistrationRequest {
   email: string;
@@ -103,7 +184,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Perform registration
-    const result = await registerBusinessAccount(registrationData);
+    const result = await registerBusinessAccount(supabase, registrationData);
 
     if (!result.success) {
       // Check for specific error types
@@ -149,9 +230,7 @@ export async function POST(request: NextRequest) {
       id: businessAccount.user_id,
       email: businessAccount.email,
       verificationStatus: businessAccount.verification_status,
-      message: result.requiresEmailVerification 
-        ? 'Account created successfully. Please verify your email and wait for admin approval.'
-        : 'Account created successfully. Pending admin approval.'
+      message: 'Account created successfully. Pending admin approval.'
     };
 
     return NextResponse.json(response, { status: 201 });

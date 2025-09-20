@@ -105,11 +105,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform data to match API contract
-    const stores: Store[] = (businessStores || []).map(bs => ({
-      id: bs.stores.id,
-      name: bs.stores.name,
-      address: bs.stores.address,
-      qrCodeId: bs.stores.qr_code,
+    const stores: Store[] = (businessStores || []).map((bs: any) => ({
+      id: bs.stores?.id,
+      name: bs.stores?.name,
+      address: bs.stores?.address,
+      qrCodeId: bs.stores?.qr_code,
       permissions: {
         readFeedback: bs.permissions?.read_feedback || false,
         writeContext: bs.permissions?.write_context || false,

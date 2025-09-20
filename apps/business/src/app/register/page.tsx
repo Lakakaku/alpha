@@ -80,7 +80,7 @@ export default function RegisterPage() {
       if (formData.email) {
         const emailCheck = await checkEmailAvailability(formData.email);
         if (!emailCheck.available) {
-          newErrors.email = emailCheck.error || 'Email is already registered';
+          newErrors.email = (emailCheck as any).error || 'Email is already registered';
         }
       }
     }
@@ -89,7 +89,7 @@ export default function RegisterPage() {
       if (formData.businessName) {
         const nameCheck = await checkBusinessNameAvailability(formData.businessName);
         if (!nameCheck.available) {
-          newErrors.businessName = nameCheck.error || 'Business name is already taken';
+          newErrors.businessName = (nameCheck as any).error || 'Business name is already taken';
         }
       }
     }
@@ -121,7 +121,7 @@ export default function RegisterPage() {
     const validation = validateBusinessRegistration(formData);
     if (!validation.isValid) {
       const fieldErrors: Record<string, string> = {};
-      validation.errors.forEach(error => {
+      validation.errors.forEach((error: any) => {
         fieldErrors[error.field] = error.message;
       });
       setErrors(fieldErrors);
@@ -149,7 +149,7 @@ export default function RegisterPage() {
       if (result.success) {
         router.push('/pending-approval');
       } else {
-        setSubmitError(result.error || 'Registration failed');
+        setSubmitError((result as any).error || 'Registration failed');
       }
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'An unexpected error occurred');

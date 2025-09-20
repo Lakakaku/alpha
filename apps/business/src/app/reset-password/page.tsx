@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 // Temporary mock hook for demo purposes
@@ -9,7 +9,7 @@ const useBusinessAuth = () => ({
   loading: false
 });
 
-export default function ResetPasswordPage() {
+function ResetPasswordPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { resetPassword, loading } = useBusinessAuth();
@@ -61,7 +61,7 @@ export default function ResetPasswordPage() {
       if (result.success) {
         setIsSubmitted(true);
       } else {
-        setResetError(result.error || 'Failed to send reset email');
+        setResetError((result as any).error || 'Failed to send reset email');
       }
     } catch (err) {
       setResetError(err instanceof Error ? err.message : 'An unexpected error occurred');
@@ -280,5 +280,13 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ResetPasswordPageContent />
+    </Suspense>
   );
 }

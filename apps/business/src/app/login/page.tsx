@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 // Temporary mock hook for demo purposes
@@ -11,7 +11,7 @@ const useBusinessAuth = () => ({
   businessAccount: null
 });
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { signIn, loading, user, businessAccount } = useBusinessAuth();
@@ -28,10 +28,10 @@ export default function LoginPage() {
 
   // Redirect if already authenticated and approved
   useEffect(() => {
-    if (user && businessAccount?.verification_status === 'approved') {
+    if (user && (businessAccount as any)?.verification_status === 'approved') {
       const redirectTo = searchParams.get('redirect') || '/dashboard';
       router.push(redirectTo);
-    } else if (user && businessAccount?.verification_status === 'pending') {
+    } else if (user && (businessAccount as any)?.verification_status === 'pending') {
       router.push('/pending-approval');
     }
   }, [user, businessAccount, router, searchParams]);
@@ -86,16 +86,16 @@ export default function LoginPage() {
       if (result.success) {
         // Redirect will be handled by the useEffect
         // Check account status to determine redirect
-        if (businessAccount?.verification_status === 'pending') {
+        if ((businessAccount as any)?.verification_status === 'pending') {
           router.push('/pending-approval');
-        } else if (businessAccount?.verification_status === 'approved') {
+        } else if ((businessAccount as any)?.verification_status === 'approved') {
           const redirectTo = searchParams.get('redirect') || '/dashboard';
           router.push(redirectTo);
         } else {
           router.push('/pending-approval');
         }
       } else {
-        setLoginError(result.error || 'Login failed');
+        setLoginError((result as any).error || 'Login failed');
       }
     } catch (err) {
       setLoginError(err instanceof Error ? err.message : 'An unexpected error occurred');
@@ -281,5 +281,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginPageContent />
+    </Suspense>
   );
 }

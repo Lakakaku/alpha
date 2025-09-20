@@ -199,7 +199,7 @@ export async function PUT(request: NextRequest) {
         resource_id: body.storeId,
         metadata: {
           business_account_id: businessAccount.id,
-          store_name: businessStore.stores.name,
+          store_name: (businessStore as any).stores?.name,
           ip_address:
             request.headers.get('x-forwarded-for') ||
             request.headers.get('x-real-ip') ||
@@ -215,10 +215,10 @@ export async function PUT(request: NextRequest) {
 
     // Prepare response
     const currentStore: Store = {
-      id: businessStore.stores.id,
-      name: businessStore.stores.name,
-      address: businessStore.stores.address,
-      qrCodeId: businessStore.stores.qr_code,
+      id: (businessStore as any).stores?.id,
+      name: (businessStore as any).stores?.name,
+      address: (businessStore as any).stores?.address,
+      qrCodeId: (businessStore as any).stores?.qr_code,
       permissions: {
         readFeedback: businessStore.permissions?.read_feedback || false,
         writeContext: businessStore.permissions?.write_context || false,
@@ -328,20 +328,20 @@ export async function GET(request: NextRequest) {
     }
 
     const currentStore: Store = {
-      id: currentSession.business_stores.stores.id,
-      name: currentSession.business_stores.stores.name,
-      address: currentSession.business_stores.stores.address,
-      qrCodeId: currentSession.business_stores.stores.qr_code,
+      id: (currentSession.business_stores as any)?.stores?.id,
+      name: (currentSession.business_stores as any)?.stores?.name,
+      address: (currentSession.business_stores as any)?.stores?.address,
+      qrCodeId: (currentSession.business_stores as any)?.stores?.qr_code,
       permissions: {
         readFeedback:
-          currentSession.business_stores.permissions?.read_feedback || false,
+          (currentSession.business_stores as any)?.permissions?.read_feedback || false,
         writeContext:
-          currentSession.business_stores.permissions?.write_context || false,
+          (currentSession.business_stores as any)?.permissions?.write_context || false,
         manageQr:
-          currentSession.business_stores.permissions?.manage_qr || false,
+          (currentSession.business_stores as any)?.permissions?.manage_qr || false,
         viewAnalytics:
-          currentSession.business_stores.permissions?.view_analytics || false,
-        admin: currentSession.business_stores.permissions?.admin || false,
+          (currentSession.business_stores as any)?.permissions?.view_analytics || false,
+        admin: (currentSession.business_stores as any)?.permissions?.admin || false,
       },
       isActive: true,
     }

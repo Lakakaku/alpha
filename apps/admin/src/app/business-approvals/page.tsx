@@ -1,14 +1,118 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import {
-  getPendingRegistrations,
-  approveBusinessRegistration,
-  rejectBusinessRegistration,
-  validateAdminPermissions,
-  PendingRegistration,
-  VerificationDecision
-} from '@vocilia/auth/admin/verification';
+// Types for business approval
+interface PendingRegistration {
+  id: string;
+  email: string;
+  business_name: string;
+  business_phone?: string;
+  business_type: string;
+  contact_person: string;
+  phone: string;
+  address: string;
+  estimated_monthly_customers: number;
+  created_at: string;
+}
+
+interface VerificationDecision {
+  approved: boolean;
+  notes?: string;
+  adminUserId: string;
+}
+
+// Client-side functions for admin verification
+async function getPendingRegistrations(): Promise<{ registrations: PendingRegistration[]; error?: string }> {
+  const supabase = createClientComponentClient();
+  
+  const { data, error } = await supabase
+    .from('business_accounts')
+    .select('*')
+    .eq('verification_status', 'pending')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching pending registrations:', error);
+    return { registrations: [], error: error.message };
+  }
+
+  return { 
+    registrations: (data || []).map(account => ({
+      id: account.id,
+      email: account.email || '',
+      business_name: account.business_name || '',
+      business_phone: account.phone,
+      business_type: account.business_type || 'restaurant',
+      contact_person: account.contact_person || '',
+      phone: account.phone || '',
+      address: account.address || '',
+      estimated_monthly_customers: account.estimated_monthly_customers || 0,
+      created_at: account.created_at
+    }))
+  };
+}
+
+async function validateAdminPermissions(userId: string): Promise<{ hasPermission: boolean; error?: string }> {
+  const supabase = createClientComponentClient();
+  
+  const { data, error } = await supabase
+    .from('user_accounts')
+    .select('role')
+    .eq('id', userId)
+    .single();
+
+  if (error || !data) {
+    return { hasPermission: false, error: 'Failed to verify admin permissions' };
+  }
+  
+  return { hasPermission: data.role === 'admin' };
+}
+
+async function approveBusinessRegistration(
+  businessId: string,
+  decision: VerificationDecision
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = createClientComponentClient();
+  
+  const { error } = await supabase
+    .from('business_accounts')
+    .update({ 
+      verification_status: 'approved',
+      verification_notes: decision.notes,
+      verified_at: new Date().toISOString(),
+      verified_by: decision.adminUserId
+    })
+    .eq('id', businessId);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
+async function rejectBusinessRegistration(
+  businessId: string,
+  decision: VerificationDecision
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = createClientComponentClient();
+  
+  const { error } = await supabase
+    .from('business_accounts')
+    .update({ 
+      verification_status: 'rejected',
+      verification_notes: decision.notes,
+      verified_at: new Date().toISOString(),
+      verified_by: decision.adminUserId
+    })
+    .eq('id', businessId);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 

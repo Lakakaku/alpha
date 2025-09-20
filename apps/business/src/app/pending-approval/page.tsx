@@ -66,6 +66,7 @@ export default function PendingApprovalPage() {
 
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [businessAccount?.created_at]);
 
   const handleSignOut = async () => {
