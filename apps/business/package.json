@@ -23,7 +23,7 @@
     "@vocilia/types": "workspace:*"
   },
   "devDependencies": {
-    "@vocilia/tsconfig": "workspace:*",
+    "@alpha/tsconfig": "workspace:*",
     "@types/jest": "^29.5.8",
     "jest": "^29.7.0",
     "typescript": "^5.5.4",

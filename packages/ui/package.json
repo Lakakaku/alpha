@@ -41,7 +41,7 @@
     "tailwind-merge": "^2.5.2"
   },
   "devDependencies": {
-    "@vocilia/tsconfig": "workspace:*",
+    "@alpha/tsconfig": "workspace:*",
     "@types/jest": "^29.5.8",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
