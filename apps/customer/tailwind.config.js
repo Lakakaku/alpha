@@ -7,6 +7,9 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        border: 'hsl(var(--border))',
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
         // Brand colors for Vocilia
         primary: {
           50: '#f0f9ff',
