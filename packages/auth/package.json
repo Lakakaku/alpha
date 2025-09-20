@@ -4,6 +4,23 @@
   "description": "Authentication utilities and components for Vocilia",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./business/registration": {
+      "import": "./dist/business/registration.mjs",
+      "require": "./dist/business/registration.js",
+      "types": "./dist/business/registration.d.ts"
+    },
+    "./admin/verification": {
+      "import": "./dist/admin/verification.mjs",
+      "require": "./dist/admin/verification.js",
+      "types": "./dist/admin/verification.d.ts"
+    }
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",

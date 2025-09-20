@@ -1,7 +1,12 @@
 import { defineConfig } from 'tsup'
 
 export default defineConfig({
-  entry: ['src/index.ts', 'src/**/*.tsx'],
+  entry: [
+    'src/index.ts',
+    'src/**/*.tsx',
+    'src/business/registration.ts',
+    'src/admin/verification.ts'
+  ],
   format: ['cjs', 'esm'],
   dts: false, // Skip type declarations for now
   splitting: false,
