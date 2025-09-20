@@ -23,7 +23,7 @@
   ],
   "scripts": {
     "dev": "pnpm run --parallel dev",
-    "build": "pnpm run --recursive build --filter='!@vocilia/backend'",
+    "build": "pnpm run --filter='!@vocilia/backend' --recursive build",
     "start": "pnpm run --recursive start",
     "lint": "pnpm run --recursive lint",
     "lint:fix": "pnpm run --recursive lint:fix",
