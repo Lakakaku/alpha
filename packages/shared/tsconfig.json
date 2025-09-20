@@ -1,5 +1,5 @@
 {
-  "extends": "@vocilia/tsconfig/base.json",
+  "extends": "@alpha/tsconfig/base.json",
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
