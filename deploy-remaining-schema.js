@@ -2,8 +2,13 @@
 
 const https = require('https');
 
-const ACCESS_TOKEN = 'sbp_043d9851c31c0f85af3cfa240597eb17e586d352';
-const PROJECT_ID = 'wtdckfgdcryjvbllcajq';
+const ACCESS_TOKEN = process.env.SUPABASE_ACCESS_TOKEN;
+const PROJECT_ID = process.env.SUPABASE_PROJECT_REF;
+
+if (!ACCESS_TOKEN || !PROJECT_ID) {
+  console.error('❌ Error: SUPABASE_ACCESS_TOKEN and SUPABASE_PROJECT_REF environment variables are required');
+  process.exit(1);
+}
 
 async function executeSQL(sql) {
   return new Promise((resolve, reject) => {

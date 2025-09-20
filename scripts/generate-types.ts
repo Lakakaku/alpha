@@ -15,7 +15,7 @@ import { writeFileSync, readFileSync } from 'fs';
 import { join } from 'path';
 
 // Configuration
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://wtdckfgdcryjvbllcajq.supabase.co';
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://your-project.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!SUPABASE_SERVICE_ROLE_KEY) {

@@ -3,9 +3,14 @@
 const fs = require('fs');
 const https = require('https');
 
-// Configuration
-const SUPABASE_URL = 'https://wtdckfgdcryjvbllcajq.supabase.co';
-const SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0ZGNrZmdkY3J5anZibGxjYWpxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODIwODE0NywiZXhwIjoyMDczNzg0MTQ3fQ.Zk_SqbQpDihTXZu0Bz7ScDzxMKLIu7n-v3tkzU6QX3w';
+// Configuration - using environment variables
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://your-project.supabase.co';
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!SERVICE_ROLE_KEY) {
+  console.error('❌ Error: SUPABASE_SERVICE_ROLE_KEY environment variable is required');
+  process.exit(1);
+}
 
 // Read the schema file
 const schemaPath = '/Users/lucasjenner/alpha/specs/001-step-1-2/contracts/schema.sql';
@@ -29,7 +34,7 @@ async function executeSQL(sql) {
     const data = JSON.stringify({ query: sql });
 
     const options = {
-      hostname: 'wtdckfgdcryjvbllcajq.supabase.co',
+      hostname: SUPABASE_URL.replace('https://', '').replace('http://', ''),
       port: 443,
       path: '/rest/v1/rpc/sql',
       method: 'POST',
