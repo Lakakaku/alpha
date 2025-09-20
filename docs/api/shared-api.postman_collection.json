@@ -1,0 +1,420 @@
+{
+  "info": {
+    "name": "Vocilia Shared Infrastructure API",
+    "description": "Core API endpoints for shared infrastructure components",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api.vocilia.se/v1",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health check",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "health"
+          ]
+        },
+        "description": "Basic health check endpoint"
+      }
+    },
+    {
+      "name": "Detailed health check",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/health/detailed",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "health",
+            "detailed"
+          ]
+        },
+        "description": "Comprehensive health check with dependency status"
+      }
+    },
+    {
+      "name": "List businesses",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/businesses",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "businesses"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "",
+              "description": "Maximum number of results",
+              "disabled": true
+            },
+            {
+              "key": "offset",
+              "value": "",
+              "description": "Number of results to skip",
+              "disabled": true
+            },
+            {
+              "key": "search",
+              "value": "",
+              "description": "Search businesses by name",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Get list of businesses (admin only or own business)",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Create business",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/businesses",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "businesses"
+          ]
+        },
+        "description": "Create new business (admin only)",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get business details",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/businesses/{businessId}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "businesses",
+            "{businessId}"
+          ]
+        },
+        "description": "Get business information by ID",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Update business",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/businesses/{businessId}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "businesses",
+            "{businessId}"
+          ]
+        },
+        "description": "Update business information",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "List business stores",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/businesses/{businessId}/stores",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "businesses",
+            "{businessId}",
+            "stores"
+          ],
+          "query": [
+            {
+              "key": "active",
+              "value": "",
+              "description": "Filter by active status",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Get stores for a specific business",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Create store",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/businesses/{businessId}/stores",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "businesses",
+            "{businessId}",
+            "stores"
+          ]
+        },
+        "description": "Create new store for business",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get store details",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/stores/{storeId}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "stores",
+            "{storeId}"
+          ]
+        },
+        "description": "Get store information by ID",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Update store",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/stores/{storeId}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "stores",
+            "{storeId}"
+          ]
+        },
+        "description": "Update store information",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "List available permissions",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/permissions",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "permissions"
+          ],
+          "query": [
+            {
+              "key": "category",
+              "value": "",
+              "description": "Filter by permission category",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Get list of available permissions in the system",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

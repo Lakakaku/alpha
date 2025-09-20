@@ -1,0 +1,78 @@
+{
+  "name": "project-alpha",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Vocilia customer feedback reward system for physical stores",
+  "license": "UNLICENSED",
+  "author": "Project Alpha Team",
+  "keywords": [
+    "feedback",
+    "reward",
+    "vocilia",
+    "nextjs",
+    "typescript",
+    "monorepo"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Lakakaku/alpha.git"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "pnpm run --parallel dev",
+    "build": "pnpm run --recursive build",
+    "start": "pnpm run --recursive start",
+    "lint": "pnpm run --recursive lint",
+    "lint:fix": "pnpm run --recursive lint:fix",
+    "type-check": "pnpm run --recursive type-check",
+    "test": "pnpm run --recursive test",
+    "test:ci": "pnpm run --recursive test:ci",
+    "generate:types": "tsx scripts/generate-types-from-migrations.ts",
+    "generate:docs": "tsx scripts/generate-api-docs.ts",
+    "clean": "pnpm run --recursive clean && rm -rf node_modules",
+    "fresh": "pnpm clean && pnpm install",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "@supabase/supabase-js": "^2.39.3",
+    "@types/jest": "^30.0.0",
+    "@types/js-yaml": "^4.0.8",
+    "js-yaml": "^4.1.0",
+    "@types/node": "^20.16.5",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.8",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-jsx-a11y": "^6.9.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "eslint-plugin-react": "^7.35.0",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "husky": "^9.1.5",
+    "jest": "^30.1.3",
+    "lint-staged": "^15.2.10",
+    "prettier": "^3.3.3",
+    "ts-jest": "^29.4.4",
+    "tsx": "^4.7.1",
+    "typescript": "^5.5.4"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@10.17.0",
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  }
+}

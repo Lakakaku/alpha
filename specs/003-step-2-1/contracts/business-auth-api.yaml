@@ -1,0 +1,527 @@
+openapi: 3.0.3
+info:
+  title: Business Authentication API
+  description: Authentication endpoints for business users in the Vocilia feedback system
+  version: 1.0.0
+  contact:
+    name: Vocilia API Team
+    email: api@vocilia.com
+
+servers:
+  - url: https://api.vocilia.com/v1
+    description: Production server
+  - url: http://localhost:3000/api/v1
+    description: Development server
+
+paths:
+  /auth/business/register:
+    post:
+      summary: Register new business account
+      description: Creates a new business account with admin approval workflow
+      operationId: registerBusiness
+      tags:
+        - Business Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BusinessRegistrationRequest'
+      responses:
+        '201':
+          description: Business account created successfully, pending admin approval
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessRegistrationResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Business email already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Invalid business email domain
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/business/login:
+    post:
+      summary: Business user login
+      description: Authenticates business user and returns session with store context
+      operationId: loginBusiness
+      tags:
+        - Business Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BusinessLoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessLoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Account not approved or suspended
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many login attempts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/business/logout:
+    post:
+      summary: Business user logout
+      description: Terminates current session and clears authentication
+      operationId: logoutBusiness
+      tags:
+        - Business Authentication
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/business/reset-password:
+    post:
+      summary: Request password reset
+      description: Sends password reset email to business user
+      operationId: resetPassword
+      tags:
+        - Business Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+      responses:
+        '200':
+          description: Password reset email sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: Email not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many reset attempts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /business/stores:
+    get:
+      summary: List authorized stores
+      description: Returns list of stores accessible to current business user
+      operationId: listStores
+      tags:
+        - Store Management
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of authorized stores
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreListResponse'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /business/current-store:
+    put:
+      summary: Switch active store context
+      description: Changes the current store context for the business session
+      operationId: switchStore
+      tags:
+        - Store Management
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreContextRequest'
+      responses:
+        '200':
+          description: Store context updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreContextResponse'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: No access to specified store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Store not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/business/approve:
+    post:
+      summary: Approve or reject business account
+      description: Admin endpoint to approve or reject pending business registrations
+      operationId: approveBusinessAccount
+      tags:
+        - Admin Operations
+      security:
+        - AdminAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BusinessApprovalRequest'
+      responses:
+        '200':
+          description: Business account status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessApprovalResponse'
+        '401':
+          description: Not authenticated as admin
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Insufficient admin privileges
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Business account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    BusinessRegistrationRequest:
+      type: object
+      required:
+        - email
+        - password
+        - businessName
+        - contactPerson
+        - phoneNumber
+      properties:
+        email:
+          type: string
+          format: email
+          description: Business email address (must be business domain)
+          example: owner@examplestore.se
+        password:
+          type: string
+          minLength: 8
+          description: Strong password meeting security requirements
+          example: SecurePass123!
+        businessName:
+          type: string
+          minLength: 2
+          maxLength: 100
+          description: Legal business name
+          example: Example Store AB
+        contactPerson:
+          type: string
+          minLength: 2
+          maxLength: 50
+          description: Primary contact person name
+          example: Erik Andersson
+        phoneNumber:
+          type: string
+          pattern: '^(\+46|0)[0-9]{8,9}$'
+          description: Swedish phone number
+          example: +46701234567
+
+    BusinessRegistrationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique business account identifier
+        email:
+          type: string
+          format: email
+          description: Registered business email
+        verificationStatus:
+          type: string
+          enum: [pending, approved, rejected]
+          description: Current verification status
+        message:
+          type: string
+          description: Registration status message
+          example: Account created successfully. Pending admin approval.
+
+    BusinessLoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: Business email address
+        password:
+          type: string
+          description: Business account password
+
+    BusinessLoginResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/BusinessUser'
+        session:
+          $ref: '#/components/schemas/SessionInfo'
+        stores:
+          type: array
+          items:
+            $ref: '#/components/schemas/Store'
+        currentStore:
+          $ref: '#/components/schemas/Store'
+
+    BusinessUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        businessName:
+          type: string
+        contactPerson:
+          type: string
+        verificationStatus:
+          type: string
+          enum: [pending, approved, rejected]
+        createdAt:
+          type: string
+          format: date-time
+
+    SessionInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        expiresAt:
+          type: string
+          format: date-time
+        lastActivity:
+          type: string
+          format: date-time
+
+    Store:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        address:
+          type: string
+        qrCodeId:
+          type: string
+          format: uuid
+        permissions:
+          $ref: '#/components/schemas/StorePermissions'
+        isActive:
+          type: boolean
+
+    StorePermissions:
+      type: object
+      properties:
+        readFeedback:
+          type: boolean
+        writeContext:
+          type: boolean
+        manageQr:
+          type: boolean
+        viewAnalytics:
+          type: boolean
+        admin:
+          type: boolean
+
+    PasswordResetRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          description: Business email address for password reset
+
+    StoreContextRequest:
+      type: object
+      required:
+        - storeId
+      properties:
+        storeId:
+          type: string
+          format: uuid
+          description: Store ID to switch context to
+
+    StoreContextResponse:
+      type: object
+      properties:
+        currentStore:
+          $ref: '#/components/schemas/Store'
+        message:
+          type: string
+          example: Store context updated successfully
+
+    StoreListResponse:
+      type: object
+      properties:
+        stores:
+          type: array
+          items:
+            $ref: '#/components/schemas/Store'
+        total:
+          type: integer
+          description: Total number of authorized stores
+
+    BusinessApprovalRequest:
+      type: object
+      required:
+        - businessId
+        - action
+      properties:
+        businessId:
+          type: string
+          format: uuid
+          description: Business account ID to approve/reject
+        action:
+          type: string
+          enum: [approve, reject]
+          description: Approval action to take
+        notes:
+          type: string
+          description: Optional admin notes
+          maxLength: 500
+
+    BusinessApprovalResponse:
+      type: object
+      properties:
+        businessId:
+          type: string
+          format: uuid
+        newStatus:
+          type: string
+          enum: [approved, rejected]
+        message:
+          type: string
+          example: Business account approved successfully
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Operation completed successfully
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error type identifier
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: array
+          items:
+            type: string
+          description: Additional error details
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Business user authentication token
+
+    AdminAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Admin user authentication token
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Business Authentication
+    description: Business user authentication operations
+  - name: Store Management
+    description: Multi-store context management
+  - name: Admin Operations
+    description: Administrative approval workflows

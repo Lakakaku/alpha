@@ -12,9 +12,9 @@ A comprehensive customer feedback system for businesses with physical stores, wh
 
 ### 2. Customer Verification Process
 Customers must provide three pieces of information:
-- **Transaction Time**: Time of purchase (±2 minutes tolerance)
+- **Transaction Time**: Time of purchase (ï¿½2 minutes tolerance)
   - Default value: Current time
-- **Transaction Value**: Amount spent in SEK (±2 SEK tolerance)
+- **Transaction Value**: Amount spent in SEK (ï¿½2 SEK tolerance)
 - **Telephone Number**: Customer's phone number for callback
 
 ### 3. AI-Powered Feedback Call
@@ -193,7 +193,7 @@ Central information hub where businesses configure their feedback system and pro
 - **Location**: Accessible through admin website HTML blocks
 
 #### Feedback Processing
-- **Low-Grade Feedback**: Deleted immediately (no reward eligibility)
+- **Low-Grade Feedback , the feedback that is not good enough for getting rewards from**: Deleted immediately (no reward eligibility)
 - **High-Grade Feedback**: Summarized while preserving all information
 
 ### Weekly Verification Cycle
@@ -318,8 +318,8 @@ Central information hub where businesses configure their feedback system and pro
 - Aggregated rewards for multiple stores
 
 ### Fraud Prevention
-- Transaction time verification (±2 minutes)
-- Transaction value verification (±2 SEK)
+- Transaction time verification (ï¿½2 minutes)
+- Transaction value verification (ï¿½2 SEK)
 - POS system cross-reference
 - Context-based legitimacy analysis
 - Creative but reasonable proposal acceptance

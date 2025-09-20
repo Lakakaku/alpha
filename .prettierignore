@@ -1,0 +1,67 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+.turbo/
+
+# Generated files
+*.min.js
+*.min.css
+
+# Package manager files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Cache directories
+.cache/
+.parcel-cache/
+
+# Environment files
+.env
+.env.*
+
+# Logs
+*.log
+
+# Coverage
+coverage/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Ignored by git
+.gitignore
+
+# Documentation that shouldn't be formatted
+CHANGELOG.md
+LICENSE
+
+# Config files that have specific formatting
+*.config.js
+*.config.ts
+*.config.mjs
+.eslintrc.js
+
+# Migration files
+**/migrations/**
+
+# Auto-generated types
+*.d.ts

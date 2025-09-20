@@ -1,0 +1,11 @@
+packages:
+  # Applications
+  - 'apps/*'
+
+  # Shared packages
+  - 'packages/*'
+
+  # Exclude test directories and examples
+  - '!**/test/**'
+  - '!**/tests/**'
+  - '!**/examples/**'

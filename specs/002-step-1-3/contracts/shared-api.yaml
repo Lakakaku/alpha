@@ -1,0 +1,810 @@
+openapi: 3.0.3
+info:
+  title: Vocilia Shared Infrastructure API
+  description: Core API endpoints for shared infrastructure components
+  version: 1.0.0
+  contact:
+    name: Vocilia Development Team
+    email: dev@vocilia.se
+
+servers:
+  - url: https://api.vocilia.se/v1
+    description: Production server
+  - url: https://api-staging.vocilia.se/v1
+    description: Staging server
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      description: Basic health check endpoint
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-09-20T10:00:00Z"
+                  uptime:
+                    type: number
+                    description: Service uptime in seconds
+                    example: 86400
+
+  /health/detailed:
+    get:
+      summary: Detailed health check
+      description: Comprehensive health check with dependency status
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Detailed health information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedHealthResponse'
+        '503':
+          description: Service unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedHealthResponse'
+
+  /businesses:
+    get:
+      summary: List businesses
+      description: Get list of businesses (admin only or own business)
+      tags:
+        - Business Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of results
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          description: Number of results to skip
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: search
+          in: query
+          description: Search businesses by name
+          schema:
+            type: string
+            maxLength: 100
+      responses:
+        '200':
+          description: Businesses retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Business'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      summary: Create business
+      description: Create new business (admin only)
+      tags:
+        - Business Management
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBusinessRequest'
+      responses:
+        '201':
+          description: Business created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Business'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /businesses/{businessId}:
+    get:
+      summary: Get business details
+      description: Get business information by ID
+      tags:
+        - Business Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: businessId
+          in: path
+          required: true
+          description: Business unique identifier
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Business details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Business'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      summary: Update business
+      description: Update business information
+      tags:
+        - Business Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: businessId
+          in: path
+          required: true
+          description: Business unique identifier
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBusinessRequest'
+      responses:
+        '200':
+          description: Business updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Business'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /businesses/{businessId}/stores:
+    get:
+      summary: List business stores
+      description: Get stores for a specific business
+      tags:
+        - Store Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: businessId
+          in: path
+          required: true
+          description: Business unique identifier
+          schema:
+            type: string
+            format: uuid
+        - name: active
+          in: query
+          description: Filter by active status
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Stores retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Store'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      summary: Create store
+      description: Create new store for business
+      tags:
+        - Store Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: businessId
+          in: path
+          required: true
+          description: Business unique identifier
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateStoreRequest'
+      responses:
+        '201':
+          description: Store created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Store'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /stores/{storeId}:
+    get:
+      summary: Get store details
+      description: Get store information by ID
+      tags:
+        - Store Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          description: Store unique identifier
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Store details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Store'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      summary: Update store
+      description: Update store information
+      tags:
+        - Store Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          description: Store unique identifier
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateStoreRequest'
+      responses:
+        '200':
+          description: Store updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Store'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /permissions:
+    get:
+      summary: List available permissions
+      description: Get list of available permissions in the system
+      tags:
+        - Permission Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: category
+          in: query
+          description: Filter by permission category
+          schema:
+            type: string
+            enum: [business, customer, admin, feedback]
+      responses:
+        '200':
+          description: Permissions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Permission'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    DetailedHealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+          example: "healthy"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-09-20T10:00:00Z"
+        uptime:
+          type: number
+          description: Service uptime in seconds
+          example: 86400
+        memory:
+          type: object
+          properties:
+            rss:
+              type: number
+              description: Resident Set Size in bytes
+            heapTotal:
+              type: number
+              description: Total heap size in bytes
+            heapUsed:
+              type: number
+              description: Used heap size in bytes
+        version:
+          type: string
+          example: "1.0.0"
+        environment:
+          type: string
+          example: "production"
+        checks:
+          type: object
+          properties:
+            database:
+              $ref: '#/components/schemas/HealthCheck'
+            aiService:
+              $ref: '#/components/schemas/HealthCheck'
+
+    HealthCheck:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+        responseTime:
+          type: number
+          description: Response time in milliseconds
+        error:
+          type: string
+          description: Error message if unhealthy
+
+    Business:
+      type: object
+      required:
+        - id
+        - name
+        - subscription_status
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Business unique identifier
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        name:
+          type: string
+          description: Business name
+          example: "Acme Restaurant Chain"
+        organization_number:
+          type: string
+          nullable: true
+          description: Swedish organization number
+          example: "556789-1234"
+        contact_email:
+          type: string
+          format: email
+          nullable: true
+          description: Business contact email
+          example: "contact@acme.se"
+        phone_number:
+          type: string
+          nullable: true
+          description: Business phone number
+          example: "+46701234567"
+        address:
+          type: object
+          nullable: true
+          description: Business address information
+          properties:
+            street:
+              type: string
+            city:
+              type: string
+            postal_code:
+              type: string
+            country:
+              type: string
+        subscription_status:
+          type: string
+          enum: [active, inactive, suspended]
+          description: Business subscription status
+          example: "active"
+        created_at:
+          type: string
+          format: date-time
+          description: Business creation timestamp
+          example: "2025-09-20T10:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: Last business update timestamp
+          example: "2025-09-20T10:00:00Z"
+
+    CreateBusinessRequest:
+      type: object
+      required:
+        - name
+        - contact_email
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          description: Business name
+          example: "Acme Restaurant Chain"
+        organization_number:
+          type: string
+          description: Swedish organization number
+          example: "556789-1234"
+        contact_email:
+          type: string
+          format: email
+          description: Business contact email
+          example: "contact@acme.se"
+        phone_number:
+          type: string
+          description: Business phone number
+          example: "+46701234567"
+        address:
+          type: object
+          description: Business address information
+          properties:
+            street:
+              type: string
+            city:
+              type: string
+            postal_code:
+              type: string
+            country:
+              type: string
+
+    UpdateBusinessRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          description: Business name
+        contact_email:
+          type: string
+          format: email
+          description: Business contact email
+        phone_number:
+          type: string
+          description: Business phone number
+        address:
+          type: object
+          description: Business address information
+          properties:
+            street:
+              type: string
+            city:
+              type: string
+            postal_code:
+              type: string
+            country:
+              type: string
+        subscription_status:
+          type: string
+          enum: [active, inactive, suspended]
+          description: Business subscription status
+
+    Store:
+      type: object
+      required:
+        - id
+        - business_id
+        - name
+        - active
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Store unique identifier
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        business_id:
+          type: string
+          format: uuid
+          description: Parent business identifier
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        name:
+          type: string
+          description: Store name or location identifier
+          example: "Acme Downtown"
+        address:
+          type: object
+          nullable: true
+          description: Store physical address
+          properties:
+            street:
+              type: string
+            city:
+              type: string
+            postal_code:
+              type: string
+            country:
+              type: string
+        store_code:
+          type: string
+          nullable: true
+          description: Internal store identifier
+          example: "ACM001"
+        qr_code_data:
+          type: string
+          nullable: true
+          description: QR code content for customer entry
+          example: "https://customer.vocilia.se/entry/store123"
+        active:
+          type: boolean
+          description: Store operational status
+          example: true
+        created_at:
+          type: string
+          format: date-time
+          description: Store creation timestamp
+          example: "2025-09-20T10:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: Last store update timestamp
+          example: "2025-09-20T10:00:00Z"
+
+    CreateStoreRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Store name or location identifier
+          example: "Acme Downtown"
+        address:
+          type: object
+          description: Store physical address
+          properties:
+            street:
+              type: string
+            city:
+              type: string
+            postal_code:
+              type: string
+            country:
+              type: string
+        store_code:
+          type: string
+          description: Internal store identifier
+          example: "ACM001"
+
+    UpdateStoreRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Store name or location identifier
+        address:
+          type: object
+          description: Store physical address
+          properties:
+            street:
+              type: string
+            city:
+              type: string
+            postal_code:
+              type: string
+            country:
+              type: string
+        store_code:
+          type: string
+          description: Internal store identifier
+        active:
+          type: boolean
+          description: Store operational status
+
+    Permission:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - category
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Permission unique identifier
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        name:
+          type: string
+          description: Permission identifier
+          example: "business.read"
+        description:
+          type: string
+          description: Human-readable permission description
+          example: "View business information"
+        category:
+          type: string
+          description: Permission grouping
+          example: "business"
+        created_at:
+          type: string
+          format: date-time
+          description: Permission creation timestamp
+          example: "2025-09-20T10:00:00Z"
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of items
+          example: 150
+        limit:
+          type: integer
+          description: Maximum items per page
+          example: 20
+        offset:
+          type: integer
+          description: Number of items skipped
+          example: 0
+        has_more:
+          type: boolean
+          description: Whether more items are available
+          example: true
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type identifier
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Invalid input data"
+        details:
+          type: object
+          description: Additional error details
+          additionalProperties: true
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid input data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: Unauthorized - authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    TooManyRequests:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+      headers:
+        Retry-After:
+          description: Seconds to wait before making a new request
+          schema:
+            type: integer
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+security:
+  - BearerAuth: []

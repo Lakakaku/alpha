@@ -1,0 +1,536 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Vocilia Authentication API",
+    "description": "Shared authentication API for Vocilia applications",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Vocilia Development Team",
+      "email": "dev@vocilia.se"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.vocilia.se/v1",
+      "description": "Production server"
+    },
+    {
+      "url": "https://api-staging.vocilia.se/v1",
+      "description": "Staging server"
+    }
+  ],
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "summary": "Authenticate user",
+        "description": "Authenticate user with email and password",
+        "tags": [
+          "Authentication"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "user@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "example": "securePassword123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "summary": "Sign out user",
+        "description": "Invalidate user session and clear authentication tokens",
+        "tags": [
+          "Authentication"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Logout successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Successfully logged out"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "summary": "Refresh authentication token",
+        "description": "Refresh expired access token using refresh token",
+        "tags": [
+          "Authentication"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "refresh_token"
+                ],
+                "properties": {
+                  "refresh_token": {
+                    "type": "string",
+                    "example": "refresh_token_value"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token refreshed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/auth/profile": {
+      "get": {
+        "summary": "Get user profile",
+        "description": "Retrieve current user's profile information",
+        "tags": [
+          "Authentication"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfile"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update user profile",
+        "description": "Update current user's profile information",
+        "tags": [
+          "Authentication"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "full_name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "John Doe"
+                  },
+                  "avatar_url": {
+                    "type": "string",
+                    "format": "uri",
+                    "example": "https://example.com/avatar.jpg"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfile"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/auth/permissions": {
+      "get": {
+        "summary": "Get user permissions",
+        "description": "Retrieve current user's permissions and roles",
+        "tags": [
+          "Authentication"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Permissions retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "$ref": "#/components/schemas/UserRole"
+                    },
+                    "permissions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "business.read",
+                        "feedback.read",
+                        "customers.read"
+                      ]
+                    },
+                    "business_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "nullable": true,
+                      "example": "123e4567-e89b-12d3-a456-426614174000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "AuthResponse": {
+        "type": "object",
+        "required": [
+          "access_token",
+          "refresh_token",
+          "token_type",
+          "expires_in",
+          "user"
+        ],
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "description": "JWT access token",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "refresh_token": {
+            "type": "string",
+            "description": "Refresh token for obtaining new access tokens",
+            "example": "refresh_token_value"
+          },
+          "token_type": {
+            "type": "string",
+            "enum": [
+              "bearer"
+            ],
+            "example": "bearer"
+          },
+          "expires_in": {
+            "type": "integer",
+            "description": "Access token expiration time in seconds",
+            "example": 3600
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserProfile"
+          }
+        }
+      },
+      "UserProfile": {
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "role",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "User unique identifier",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "User email address",
+            "example": "user@example.com"
+          },
+          "full_name": {
+            "type": "string",
+            "nullable": true,
+            "description": "User full name",
+            "example": "John Doe"
+          },
+          "avatar_url": {
+            "type": "string",
+            "format": "uri",
+            "nullable": true,
+            "description": "User avatar image URL",
+            "example": "https://example.com/avatar.jpg"
+          },
+          "role": {
+            "$ref": "#/components/schemas/UserRole"
+          },
+          "business_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Associated business ID (for business accounts)",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Account creation timestamp",
+            "example": "2025-09-20T10:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last profile update timestamp",
+            "example": "2025-09-20T10:00:00Z"
+          }
+        }
+      },
+      "UserRole": {
+        "type": "string",
+        "enum": [
+          "business_account",
+          "admin_account"
+        ],
+        "description": "User role type",
+        "example": "business_account"
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": [
+          "error",
+          "message"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error type identifier",
+            "example": "INVALID_CREDENTIALS"
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable error message",
+            "example": "Invalid email or password"
+          },
+          "details": {
+            "type": "object",
+            "description": "Additional error details",
+            "additionalProperties": true
+          }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Bad request - invalid input data",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "error": "VALIDATION_ERROR",
+              "message": "Invalid input data",
+              "details": {
+                "email": "Must be a valid email address"
+              }
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Unauthorized - authentication required",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "error": "UNAUTHORIZED",
+              "message": "Authentication required"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Forbidden - insufficient permissions",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "error": "FORBIDDEN",
+              "message": "Insufficient permissions"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "error": "NOT_FOUND",
+              "message": "Resource not found"
+            }
+          }
+        }
+      },
+      "TooManyRequests": {
+        "description": "Rate limit exceeded",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "error": "RATE_LIMITED",
+              "message": "Too many requests, please try again later"
+            }
+          }
+        },
+        "headers": {
+          "Retry-After": {
+            "description": "Seconds to wait before making a new request",
+            "schema": {
+              "type": "integer"
+            },
+            "example": 60
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "Internal server error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "error": "INTERNAL_ERROR",
+              "message": "An unexpected error occurred"
+            }
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ]
+}

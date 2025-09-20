@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run type checking
+echo "🔍 Running type checks..."
+pnpm type-check
+
+# Run tests if they exist
+if [ -f "package.json" ] && grep -q '"test"' package.json; then
+  echo "🧪 Running tests..."
+  pnpm test:ci
+fi

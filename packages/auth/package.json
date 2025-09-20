@@ -1,0 +1,37 @@
+{
+  "name": "@vocilia/auth",
+  "version": "0.1.0",
+  "description": "Authentication utilities and components for Vocilia",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "jest",
+    "test:ci": "jest --ci --coverage",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@vocilia/types": "workspace:*",
+    "@supabase/auth-helpers-nextjs": "^0.8.7",
+    "@supabase/auth-helpers-react": "^0.4.2",
+    "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.39.3",
+    "react": "^18.2.0",
+    "jwt-decode": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.45",
+    "typescript": "^5.3.3",
+    "tsup": "^8.0.1",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.8",
+    "eslint": "^8.56.0"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  }
+}

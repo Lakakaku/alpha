@@ -1,0 +1,63 @@
+{
+  "name": "@vocilia/ui",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared UI components and design system for Project Alpha",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./styles": {
+      "import": "./dist/styles.css",
+      "require": "./dist/styles.css"
+    },
+    "./tailwind.config.js": "./tailwind.config.js"
+  },
+  "files": [
+    "dist/**",
+    "tailwind.config.js"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "jest",
+    "test:ci": "jest --ci --coverage",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist .turbo node_modules"
+  },
+  "dependencies": {
+    "@vocilia/types": "workspace:*",
+    "@radix-ui/react-slot": "^1.0.2",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.441.0",
+    "tailwind-merge": "^2.5.2"
+  },
+  "devDependencies": {
+    "@vocilia/tsconfig": "workspace:*",
+    "@types/jest": "^29.5.8",
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "postcss": "^8.4.47",
+    "react": "^18.3.1",
+    "tailwindcss": "^3.4.10",
+    "tsup": "^8.2.4",
+    "typescript": "^5.5.4"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}

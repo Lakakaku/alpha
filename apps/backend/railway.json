@@ -1,0 +1,174 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "npm run build",
+    "watchPatterns": [
+      "src/**/*.ts",
+      "package.json",
+      "tsconfig.json"
+    ]
+  },
+  "deploy": {
+    "numReplicas": 1,
+    "sleepApplication": false,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 3
+  },
+  "environments": {
+    "production": {
+      "variables": {
+        "NODE_ENV": "production",
+        "PORT": "${{RAILWAY_PORT}}",
+        "DATABASE_URL": "${{DATABASE_URL}}",
+        "SUPABASE_URL": "${{SUPABASE_URL}}",
+        "SUPABASE_SERVICE_ROLE_KEY": "${{SUPABASE_SERVICE_ROLE_KEY}}",
+        "SUPABASE_ANON_KEY": "${{SUPABASE_ANON_KEY}}",
+        "JWT_SECRET": "${{JWT_SECRET}}",
+        "CORS_ORIGINS": "https://customer.vocilia.com,https://business.vocilia.com,https://admin.vocilia.com",
+        "LOG_LEVEL": "info",
+        "RATE_LIMIT_WINDOW_MS": "900000",
+        "RATE_LIMIT_MAX_REQUESTS": "100",
+        "RATE_LIMIT_STRICT_MAX_REQUESTS": "20",
+        "SESSION_SECRET": "${{SESSION_SECRET}}",
+        "SMTP_HOST": "${{SMTP_HOST}}",
+        "SMTP_PORT": "${{SMTP_PORT}}",
+        "SMTP_USER": "${{SMTP_USER}}",
+        "SMTP_PASS": "${{SMTP_PASS}}",
+        "FROM_EMAIL": "${{FROM_EMAIL}}",
+        "SHUTDOWN_TIMEOUT": "30000"
+      }
+    },
+    "staging": {
+      "variables": {
+        "NODE_ENV": "staging",
+        "PORT": "${{RAILWAY_PORT}}",
+        "DATABASE_URL": "${{DATABASE_URL}}",
+        "SUPABASE_URL": "${{SUPABASE_URL}}",
+        "SUPABASE_SERVICE_ROLE_KEY": "${{SUPABASE_SERVICE_ROLE_KEY}}",
+        "SUPABASE_ANON_KEY": "${{SUPABASE_ANON_KEY}}",
+        "JWT_SECRET": "${{JWT_SECRET}}",
+        "CORS_ORIGINS": "https://staging-customer.vocilia.com,https://staging-business.vocilia.com,https://staging-admin.vocilia.com",
+        "LOG_LEVEL": "debug",
+        "RATE_LIMIT_WINDOW_MS": "900000",
+        "RATE_LIMIT_MAX_REQUESTS": "200",
+        "RATE_LIMIT_STRICT_MAX_REQUESTS": "50",
+        "SESSION_SECRET": "${{SESSION_SECRET}}",
+        "SHUTDOWN_TIMEOUT": "15000"
+      }
+    }
+  },
+  "healthcheck": {
+    "endpoint": "/health",
+    "intervalSeconds": 30,
+    "timeoutSeconds": 10,
+    "retries": 3
+  },
+  "regions": ["us-west1"],
+  "runtime": {
+    "type": "nodejs",
+    "version": "18"
+  },
+  "scaling": {
+    "minReplicas": 1,
+    "maxReplicas": 5,
+    "cpuThreshold": 80,
+    "memoryThreshold": 80
+  },
+  "resources": {
+    "memory": "1Gi",
+    "cpu": "1000m"
+  },
+  "networking": {
+    "serviceDomains": [
+      {
+        "domain": "api.vocilia.com",
+        "environment": "production"
+      },
+      {
+        "domain": "staging-api.vocilia.com",
+        "environment": "staging"
+      }
+    ]
+  },
+  "logs": {
+    "level": "info",
+    "format": "json",
+    "retention": "7d"
+  },
+  "monitoring": {
+    "metrics": true,
+    "alerts": [
+      {
+        "name": "High CPU Usage",
+        "condition": "cpu > 80",
+        "duration": "5m",
+        "severity": "warning"
+      },
+      {
+        "name": "High Memory Usage",
+        "condition": "memory > 80",
+        "duration": "5m",
+        "severity": "warning"
+      },
+      {
+        "name": "Health Check Failed",
+        "condition": "healthcheck_failed",
+        "duration": "1m",
+        "severity": "critical"
+      },
+      {
+        "name": "High Response Time",
+        "condition": "response_time > 2000",
+        "duration": "5m",
+        "severity": "warning"
+      }
+    ]
+  },
+  "security": {
+    "allowedOrigins": [
+      "https://customer.vocilia.com",
+      "https://business.vocilia.com",
+      "https://admin.vocilia.com",
+      "https://staging-customer.vocilia.com",
+      "https://staging-business.vocilia.com",
+      "https://staging-admin.vocilia.com"
+    ],
+    "rateLimiting": {
+      "enabled": true,
+      "requestsPerMinute": 100
+    }
+  },
+  "databases": [
+    {
+      "name": "supabase",
+      "type": "external",
+      "connectionString": "${{DATABASE_URL}}"
+    }
+  ],
+  "services": [
+    {
+      "name": "backend-api",
+      "source": {
+        "type": "image",
+        "image": "node:18-alpine"
+      },
+      "build": {
+        "buildCommand": "npm ci && npm run build",
+        "startCommand": "npm start"
+      },
+      "environment": "production",
+      "healthcheck": {
+        "path": "/health",
+        "port": "${{PORT}}"
+      }
+    }
+  ],
+  "volumes": [
+    {
+      "name": "logs",
+      "mountPath": "/app/logs",
+      "size": "1Gi"
+    }
+  ]
+}
