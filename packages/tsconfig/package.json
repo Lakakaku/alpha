@@ -1,12 +1,6 @@
 {
-  "name": "@vocilia/tsconfig",
+  "name": "@alpha/tsconfig",
   "version": "0.1.0",
   "private": true,
-  "description": "Shared TypeScript configuration for Project Alpha",
-  "main": "index.js",
-  "files": [
-    "base.json",
-    "nextjs.json",
-    "react.json"
-  ]
+  "files": ["*.json"]
 }
