@@ -524,3 +524,4 @@ legal-exports/
 # - Never force-add ignored files with sensitive data
 # - Regularly audit and update this file
 # =============================================================================
+.vercel
