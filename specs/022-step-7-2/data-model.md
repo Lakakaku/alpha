@@ -1,47 +1,59 @@
 # Data Model: Security & Privacy Testing
 
-**Feature**: Security & Privacy Testing Framework
-**Date**: 2025-09-27
+**Feature**: Security & Privacy Testing Framework **Date**: 2025-09-27
 
 ## Core Entities
 
 ### Security Test Case
-**Purpose**: Represents individual security testing scenarios with comprehensive validation criteria
+
+**Purpose**: Represents individual security testing scenarios with comprehensive
+validation criteria
 
 **Fields**:
+
 - `id`: UUID - Unique identifier for test case
 - `name`: string - Descriptive test case name
-- `category`: enum - Authentication, Authorization, Privacy, GDPR, Vulnerability, Fraud
+- `category`: enum - Authentication, Authorization, Privacy, GDPR,
+  Vulnerability, Fraud
 - `attack_vector`: string - Specific attack method being tested
 - `expected_defense`: string - Expected system behavior to block attack
 - `pass_criteria`: string[] - Conditions that must be met for test to pass
-- `performance_impact_limit`: number - Maximum acceptable performance degradation percentage (≤10%)
+- `performance_impact_limit`: number - Maximum acceptable performance
+  degradation percentage (≤10%)
 - `execution_frequency`: enum - On-demand, Daily, Weekly, Monthly
 - `priority`: enum - Critical, High, Medium, Low
 - `created_at`: timestamp
 - `updated_at`: timestamp
 
 **Relationships**:
+
 - Has many `SecurityTestResults`
 - Belongs to `SecurityTestSuite`
 
 **State Transitions**:
+
 - Draft → Active → Deprecated
 - Active → Maintenance → Active
 
 **Validation Rules**:
+
 - Performance impact limit must be ≤10%
 - Attack vector must be non-empty and specific
 - Pass criteria must include measurable conditions
 
 ### Privacy Assessment
-**Purpose**: Tracks data flow analysis and personal data identification across system components
+
+**Purpose**: Tracks data flow analysis and personal data identification across
+system components
 
 **Fields**:
+
 - `id`: UUID - Unique identifier
-- `component_name`: string - System component being assessed (API, Database, Frontend)
+- `component_name`: string - System component being assessed (API, Database,
+  Frontend)
 - `data_flow_path`: string[] - Sequence of data movement through system
-- `personal_data_types`: enum[] - PhoneNumber, TransactionData, FeedbackContent, SessionData
+- `personal_data_types`: enum[] - PhoneNumber, TransactionData, FeedbackContent,
+  SessionData
 - `anonymization_status`: enum - Required, Applied, Verified, Failed
 - `anonymization_method`: string - Technique used for data anonymization
 - `verification_result`: boolean - Whether anonymization was successful
@@ -51,18 +63,23 @@
 - `next_review_date`: timestamp
 
 **Relationships**:
+
 - References `DataProtectionAudit`
 - Has many `PrivacyViolations`
 
 **Validation Rules**:
+
 - Compliance score must be 0-100
 - High/Critical risk levels require immediate review
 - Anonymization verification required for customer data
 
 ### GDPR Compliance Record
-**Purpose**: Documents legal requirement testing and data subject rights validation
+
+**Purpose**: Documents legal requirement testing and data subject rights
+validation
 
 **Fields**:
+
 - `id`: UUID - Unique identifier
 - `request_type`: enum - DataDeletion, DataAccess, DataExport, ConsentWithdrawal
 - `customer_identifier`: string - Anonymized customer reference
@@ -76,28 +93,35 @@
 - `legal_basis`: string - GDPR article justifying processing
 
 **Relationships**:
+
 - Links to `DataProtectionAudit`
 - References `SecurityTestCase` for validation testing
 
 **State Transitions**:
+
 - Pending → InProgress → Completed
 - Pending → InProgress → Failed → Retry → Completed
 
 **Validation Rules**:
+
 - Data deletion requests must complete within 72 hours
 - All deletion operations must be verifiable
 - Audit trail must be immutable and complete
 
 ### Vulnerability Report
-**Purpose**: Contains discovered security issues with risk assessment and remediation tracking
+
+**Purpose**: Contains discovered security issues with risk assessment and
+remediation tracking
 
 **Fields**:
+
 - `id`: UUID - Unique identifier
 - `vulnerability_type`: enum - OWASP category or custom type
 - `severity`: enum - Critical, High, Medium, Low, Info
 - `cve_reference`: string - Common Vulnerabilities and Exposures ID
 - `affected_component`: string - System component with vulnerability
-- `discovery_method`: enum - AutomatedScan, PenetrationTest, CodeReview, External
+- `discovery_method`: enum - AutomatedScan, PenetrationTest, CodeReview,
+  External
 - `discovery_date`: timestamp
 - `description`: string - Detailed vulnerability description
 - `exploit_scenario`: string - How vulnerability could be exploited
@@ -109,18 +133,23 @@
 - `retest_result`: enum - Pass, Fail, NotTested
 
 **Relationships**:
+
 - Has many `VulnerabilityRetests`
 - References `SecurityTestCase` that discovered it
 
 **Validation Rules**:
+
 - Critical vulnerabilities require remediation within 24 hours
 - High severity vulnerabilities require remediation within 72 hours
 - All fixed vulnerabilities must be retested
 
 ### Access Control Matrix
-**Purpose**: Maps user roles to system resources with authorization boundary validation
+
+**Purpose**: Maps user roles to system resources with authorization boundary
+validation
 
 **Fields**:
+
 - `id`: UUID - Unique identifier
 - `user_role`: enum - Admin, Business, Customer, SecurityTester, Anonymous
 - `resource_type`: enum - API, Database, File, AdminPanel, BusinessDashboard
@@ -135,21 +164,28 @@
 - `test_frequency`: enum - PerDeployment, Daily, Weekly
 
 **Relationships**:
+
 - References `SecurityTestCase` for validation
 - Links to specific user accounts for testing
 
 **Validation Rules**:
+
 - Security testers must have full admin access (per clarifications)
 - Business accounts must not access other business data
 - Customer data access must be logged and authorized
 
 ### Data Protection Audit
-**Purpose**: Records comprehensive data handling throughout QR verification and payment workflows
+
+**Purpose**: Records comprehensive data handling throughout QR verification and
+payment workflows
 
 **Fields**:
+
 - `id`: UUID - Unique identifier
-- `workflow_type`: enum - QRVerification, FeedbackCollection, BusinessVerification, PaymentProcessing
-- `customer_data_types`: enum[] - PhoneNumber, TransactionAmount, TransactionTime, FeedbackContent
+- `workflow_type`: enum - QRVerification, FeedbackCollection,
+  BusinessVerification, PaymentProcessing
+- `customer_data_types`: enum[] - PhoneNumber, TransactionAmount,
+  TransactionTime, FeedbackContent
 - `data_entry_point`: string - Where data enters the system
 - `processing_steps`: object[] - Detailed processing workflow with timestamps
 - `data_transformations`: object[] - How data is modified during processing
@@ -162,10 +198,12 @@
 - `audit_timestamp`: timestamp
 
 **Relationships**:
+
 - Has many `PrivacyAssessments`
 - Links to `GDPRComplianceRecords`
 
 **Validation Rules**:
+
 - All customer data access must be logged
 - Retention periods must align with legal requirements
 - Anonymization must be verified for business data delivery
@@ -186,18 +224,21 @@ DataProtectionAudit 1:N PrivacyAssessments
 ## State Machines
 
 ### Security Test Case Lifecycle
+
 ```
 [Draft] → [Active] → [Deprecated]
 [Active] ↔ [Maintenance]
 ```
 
 ### GDPR Request Processing
+
 ```
 [Pending] → [InProgress] → [Completed]
 [InProgress] → [Failed] → [Retry] → [Completed]
 ```
 
 ### Vulnerability Remediation
+
 ```
 [Open] → [InProgress] → [Fixed] → [Retested] → [Closed]
 [Fixed] → [Failed Retest] → [InProgress]
@@ -208,18 +249,21 @@ DataProtectionAudit 1:N PrivacyAssessments
 ## Data Retention and Privacy
 
 ### Personal Data Handling
+
 - Customer phone numbers: Encrypted at rest, access logged
 - Transaction data: Anonymized after verification cycle
 - Feedback content: Summarized and anonymized for business delivery
 - Session data: Automatic expiration per security policy
 
 ### GDPR Compliance Data
+
 - Request processing logs: Retained for 6 years (legal requirement)
 - Deletion audit trails: Permanent retention for compliance proof
 - Access logs: Retained for 2 years for security analysis
 - Test result data: Anonymized after 1 year
 
 ### Security Test Data
+
 - Test execution logs: Retained for 1 year
 - Vulnerability reports: Retained until remediation verified
 - Performance metrics: Retained for 6 months for trend analysis

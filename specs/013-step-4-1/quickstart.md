@@ -6,35 +6,44 @@
 
 ## Overview
 
-This quickstart guide provides step-by-step scenarios to validate the Admin Dashboard Foundation feature. Each scenario corresponds to acceptance criteria from the feature specification and can be executed against the implemented system.
+This quickstart guide provides step-by-step scenarios to validate the Admin
+Dashboard Foundation feature. Each scenario corresponds to acceptance criteria
+from the feature specification and can be executed against the implemented
+system.
 
 ## Prerequisites
 
 ### System Requirements
+
 - Admin Dashboard deployed at `https://alpha-admin.vercel.app`
 - Backend API running at `https://alpha-backend.railway.app`
 - Supabase database with admin schema deployed
 - Test admin account created in the system
 
 ### Test Data Setup
+
 Before running scenarios, ensure the following test data exists:
 
 **Test Admin Account**:
+
 - Username: `test_admin`
 - Password: `TestAdmin123!`
 - Email: `test.admin@vocilia.com`
 - Full Name: `Test Administrator`
 
 **Test Stores** (minimum 3 stores with varied states):
+
 1. **Active Store**: Online, recent sync, good performance
-2. **Problem Store**: Offline, sync errors, poor performance  
+2. **Problem Store**: Offline, sync errors, poor performance
 3. **New Store**: Recently created, pending first sync
 
 ## Scenario 1: Admin Authentication
 
-**User Story**: System administrators need secure authentication to access the admin portal.
+**User Story**: System administrators need secure authentication to access the
+admin portal.
 
 ### Steps
+
 1. **Navigate to Admin Portal**
    - Open browser to `https://alpha-admin.vercel.app`
    - Verify login page displays with username/password fields
@@ -61,6 +70,7 @@ Before running scenarios, ensure the following test data exists:
    - **Expected**: Admin user data cached locally
 
 ### Success Criteria
+
 - ✅ Login page loads without errors
 - ✅ Invalid credentials rejected with clear error message
 - ✅ Valid credentials redirect to dashboard
@@ -68,9 +78,11 @@ Before running scenarios, ensure the following test data exists:
 
 ## Scenario 2: Store Listing and Overview
 
-**User Story**: Admins need to view comprehensive store listings with status information.
+**User Story**: Admins need to view comprehensive store listings with status
+information.
 
 ### Steps
+
 1. **Access Store Listing**
    - From dashboard, click "Store Management" in navigation
    - **Expected**: Store listing page loads within 2 seconds
@@ -87,7 +99,7 @@ Before running scenarios, ensure the following test data exists:
 
 3. **Test Store Status Indicators**
    - **Expected**: Green indicator for online stores
-   - **Expected**: Red indicator for offline stores  
+   - **Expected**: Red indicator for offline stores
    - **Expected**: Yellow indicator for stores with errors
 
 4. **Test Pagination**
@@ -103,6 +115,7 @@ Before running scenarios, ensure the following test data exists:
    - **Expected**: Full listing restored
 
 ### Success Criteria
+
 - ✅ Store listing loads with all stores visible
 - ✅ Status indicators accurately reflect store health
 - ✅ Search and pagination work correctly
@@ -110,9 +123,11 @@ Before running scenarios, ensure the following test data exists:
 
 ## Scenario 3: Store Details and Monitoring
 
-**User Story**: Admins need detailed store information including monitoring data.
+**User Story**: Admins need detailed store information including monitoring
+data.
 
 ### Steps
+
 1. **Access Store Details**
    - From store listing, click on a test store card
    - **Expected**: Store details page loads
@@ -142,6 +157,7 @@ Before running scenarios, ensure the following test data exists:
    - **Expected**: Last sync time updates if sync occurs
 
 ### Success Criteria
+
 - ✅ Store details page loads with complete information
 - ✅ Monitoring data displays accurately
 - ✅ Real-time updates function properly
@@ -149,9 +165,11 @@ Before running scenarios, ensure the following test data exists:
 
 ## Scenario 4: Store Creation Workflow
 
-**User Story**: Admins need to create new store entries with comprehensive business information.
+**User Story**: Admins need to create new store entries with comprehensive
+business information.
 
 ### Steps
+
 1. **Access Store Creation**
    - From store listing, click "Create New Store" button
    - **Expected**: Store creation form loads
@@ -188,6 +206,7 @@ Before running scenarios, ensure the following test data exists:
    - **Expected**: Audit log entry created
 
 ### Success Criteria
+
 - ✅ Store creation form validates all inputs correctly
 - ✅ Valid store data creates new store successfully
 - ✅ QR code generated automatically
@@ -195,9 +214,11 @@ Before running scenarios, ensure the following test data exists:
 
 ## Scenario 5: Database Upload Process
 
-**User Story**: Admins need to upload weekly verification databases to store accounts.
+**User Story**: Admins need to upload weekly verification databases to store
+accounts.
 
 ### Steps
+
 1. **Access Upload Interface**
    - Navigate to store details page
    - Locate "Upload Database" section
@@ -229,6 +250,7 @@ Before running scenarios, ensure the following test data exists:
    - **Expected**: Audit log entry created for upload
 
 ### Success Criteria
+
 - ✅ File validation prevents invalid uploads
 - ✅ Valid CSV processes successfully
 - ✅ Upload progress feedback provided
@@ -239,6 +261,7 @@ Before running scenarios, ensure the following test data exists:
 **User Story**: Admin sessions must be secure with appropriate timeouts.
 
 ### Steps
+
 1. **Test Session Persistence**
    - Log in successfully
    - Close browser tab
@@ -269,6 +292,7 @@ Before running scenarios, ensure the following test data exists:
    - **Expected**: Session token cleared from storage
 
 ### Success Criteria
+
 - ✅ Sessions persist for up to 2 hours of inactivity
 - ✅ Activity tracking updates correctly
 - ✅ Automatic logout functions at timeout
@@ -279,6 +303,7 @@ Before running scenarios, ensure the following test data exists:
 **User Story**: All admin actions must be logged for security and compliance.
 
 ### Steps
+
 1. **Access Audit Log**
    - From dashboard, click "Audit Log" in navigation
    - **Expected**: Audit log page loads with recent entries
@@ -305,6 +330,7 @@ Before running scenarios, ensure the following test data exists:
    - **Expected**: Only actions in range shown
 
 ### Success Criteria
+
 - ✅ All admin actions appear in audit log
 - ✅ Audit entries contain complete information
 - ✅ Filtering and search work correctly
@@ -313,13 +339,15 @@ Before running scenarios, ensure the following test data exists:
 ## Performance Validation
 
 ### Load Time Requirements
+
 - **Login page**: <1 second
-- **Dashboard**: <2 seconds  
+- **Dashboard**: <2 seconds
 - **Store listing**: <2 seconds
 - **Store details**: <1.5 seconds
 - **Audit log**: <2 seconds
 
 ### Stress Testing
+
 1. **Multiple Store Operations**
    - Create 5 stores rapidly
    - **Expected**: All operations complete successfully
@@ -338,12 +366,14 @@ Before running scenarios, ensure the following test data exists:
 ## Security Validation
 
 ### Authentication Security
+
 - ✅ Passwords must meet complexity requirements
 - ✅ Failed login attempts are rate limited
 - ✅ Sessions use secure tokens
 - ✅ Admin routes require authentication
 
-### Data Access Security  
+### Data Access Security
+
 - ✅ RLS policies prevent unauthorized data access
 - ✅ Admin actions require proper authentication
 - ✅ Sensitive data properly encrypted
@@ -352,12 +382,14 @@ Before running scenarios, ensure the following test data exists:
 ## Troubleshooting
 
 ### Common Issues
+
 1. **Login fails**: Check admin account exists and is active
 2. **Store listing empty**: Verify database connection and RLS policies
 3. **Upload fails**: Check file format and size limits
 4. **Performance slow**: Check network connection and database indexes
 
 ### Debug Information
+
 - Backend API logs: Check Railway deployment logs
 - Frontend errors: Check browser developer console
 - Database issues: Check Supabase dashboard for errors
@@ -366,6 +398,7 @@ Before running scenarios, ensure the following test data exists:
 ## Success Criteria Summary
 
 **Feature Complete When**:
+
 - ✅ All 7 scenarios pass successfully
 - ✅ Performance requirements met
 - ✅ Security validation passes
@@ -374,6 +407,7 @@ Before running scenarios, ensure the following test data exists:
 - ✅ Session management works as specified
 
 **Ready for Production When**:
+
 - All quickstart scenarios consistently pass
 - Load testing validates performance under expected usage
 - Security review confirms no vulnerabilities

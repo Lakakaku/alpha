@@ -51,11 +51,21 @@
 ## Clarifications
 
 ### Session 2025-09-24
-- Q: When multiple trigger conditions apply simultaneously, what strategy should the system use to handle trigger conflicts? → A: Apply trigger priority hierarchy - higher priority triggers override lower ones
-- Q: What should be the priority weighting scale for question importance to ensure proper prioritization when call time is limited? → A: 5-level scale: Critical (5), High (4), Medium (3), Low (2), Optional (1)
-- Q: When customer purchase data is incomplete or unclear, how should the system handle question triggering? → A: Ask customer for missing purchase details during verification
-- Q: What sensitivity range should businesses use to configure trigger thresholds for different conditions? → A: Flexible range: 1-100 customers with business choosing exact numbers
-- Q: How should the system handle timing conflicts between different question schedules? → A: Business configures conflict resolution per question pair
+
+- Q: When multiple trigger conditions apply simultaneously, what strategy should
+  the system use to handle trigger conflicts? → A: Apply trigger priority
+  hierarchy - higher priority triggers override lower ones
+- Q: What should be the priority weighting scale for question importance to
+  ensure proper prioritization when call time is limited? → A: 5-level scale:
+  Critical (5), High (4), Medium (3), Low (2), Optional (1)
+- Q: When customer purchase data is incomplete or unclear, how should the system
+  handle question triggering? → A: Ask customer for missing purchase details
+  during verification
+- Q: What sensitivity range should businesses use to configure trigger
+  thresholds for different conditions? → A: Flexible range: 1-100 customers with
+  business choosing exact numbers
+- Q: How should the system handle timing conflicts between different question
+  schedules? → A: Business configures conflict resolution per question pair
 
 ---
 
@@ -94,10 +104,17 @@ efficiently without answering irrelevant questions.
 
 ### Edge Cases
 
-- When multiple trigger conditions apply simultaneously, system applies trigger priority hierarchy where higher priority triggers override lower ones
-- System handles timing conflicts between different question schedules through business-configurable conflict resolution settings per question pair
-- When customer purchase data is incomplete or unclear, system asks customer for missing purchase details during verification to enable proper question triggering
-- When call duration approaches maximum limit (90% of allocated time), system automatically switches to high-priority questions only, truncates remaining low-priority questions gracefully, and ensures critical questions are completed before call termination.
+- When multiple trigger conditions apply simultaneously, system applies trigger
+  priority hierarchy where higher priority triggers override lower ones
+- System handles timing conflicts between different question schedules through
+  business-configurable conflict resolution settings per question pair
+- When customer purchase data is incomplete or unclear, system asks customer for
+  missing purchase details during verification to enable proper question
+  triggering
+- When call duration approaches maximum limit (90% of allocated time), system
+  automatically switches to high-priority questions only, truncates remaining
+  low-priority questions gracefully, and ensures critical questions are
+  completed before call termination.
 
 ## Requirements
 
@@ -113,16 +130,22 @@ efficiently without answering irrelevant questions.
   conversation flow
 - **FR-004**: System MUST apply priority weighting to ensure high-importance
   questions are asked when time is limited
-- **FR-005**: System MUST harmonize different question frequencies through business-configurable conflict resolution settings per question pair to avoid customer fatigue while maintaining data collection goals
+- **FR-005**: System MUST harmonize different question frequencies through
+  business-configurable conflict resolution settings per question pair to avoid
+  customer fatigue while maintaining data collection goals
 
 #### Dynamic Trigger System
 
-- **FR-006**: System MUST automatically trigger specific questions based on customer purchase categories and items, requesting missing purchase details during verification when data is incomplete
+- **FR-006**: System MUST automatically trigger specific questions based on
+  customer purchase categories and items, requesting missing purchase details
+  during verification when data is incomplete
 - **FR-007**: System MUST activate time-sensitive questions based on purchase
   timing (lunch hour, evening, weekend)
 - **FR-008**: System MUST trigger value-based questions when customer
   transaction amount exceeds defined thresholds
-- **FR-009**: System MUST handle complex trigger combinations by applying trigger priority hierarchy where higher priority triggers override lower ones when multiple conditions are met simultaneously
+- **FR-009**: System MUST handle complex trigger combinations by applying
+  trigger priority hierarchy where higher priority triggers override lower ones
+  when multiple conditions are met simultaneously
 - **FR-010**: System MUST track trigger effectiveness and adjust activation
   rules based on feedback quality
 
@@ -143,7 +166,9 @@ efficiently without answering irrelevant questions.
   customer verification flow
 - **FR-016**: System MUST provide businesses with visibility into how questions
   are being combined and triggered
-- **FR-017**: System MUST allow businesses to configure trigger sensitivity levels using flexible range of 1-100 customers with business choosing exact numbers for each trigger condition
+- **FR-017**: System MUST allow businesses to configure trigger sensitivity
+  levels using flexible range of 1-100 customers with business choosing exact
+  numbers for each trigger condition
 - **FR-018**: System MUST maintain call quality by ensuring logical question
   flow and avoiding repetitive topics
 
@@ -154,8 +179,12 @@ efficiently without answering irrelevant questions.
   hierarchies
 - **Dynamic Trigger**: Conditions that automatically activate specific questions
   based on purchase data, timing, or transaction values
-- **Priority Weight**: 5-level numerical scoring system (Critical=5, High=4, Medium=3, Low=2, Optional=1) that determines question importance when time constraints require selection
-- **Frequency Harmonizer**: Business-configurable logic that resolves conflicts between different question scheduling frequencies through per-question-pair resolution settings
+- **Priority Weight**: 5-level numerical scoring system (Critical=5, High=4,
+  Medium=3, Low=2, Optional=1) that determines question importance when time
+  constraints require selection
+- **Frequency Harmonizer**: Business-configurable logic that resolves conflicts
+  between different question scheduling frequencies through per-question-pair
+  resolution settings
 - **Trigger Activation Log**: Record of which triggers fired for each customer
   interaction for analytics and optimization
 - **Question Group**: Collection of related questions that work well together in

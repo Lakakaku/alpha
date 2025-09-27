@@ -1,12 +1,14 @@
 # Data Model: System Monitoring & Analytics
 
-**Feature**: System Monitoring & Analytics | **Branch**: 015-step-4-3 | **Date**: 2025-09-23
+**Feature**: System Monitoring & Analytics | **Branch**: 015-step-4-3 |
+**Date**: 2025-09-23
 
 ## Database Schema
 
 ### Core Monitoring Tables
 
 #### system_metrics
+
 Time-series table for performance metrics with 1-minute granularity.
 
 ```sql
@@ -25,6 +27,7 @@ CREATE TABLE system_metrics (
 ```
 
 #### error_logs
+
 Application error tracking with severity classification.
 
 ```sql
@@ -44,6 +47,7 @@ CREATE TABLE error_logs (
 ```
 
 #### usage_analytics
+
 Daily aggregated usage statistics.
 
 ```sql
@@ -61,6 +65,7 @@ CREATE TABLE usage_analytics (
 ```
 
 #### alert_rules
+
 Configurable alert thresholds and notification preferences.
 
 ```sql
@@ -79,6 +84,7 @@ CREATE TABLE alert_rules (
 ```
 
 #### alert_notifications
+
 History of sent alerts for tracking and debugging.
 
 ```sql
@@ -96,6 +102,7 @@ CREATE TABLE alert_notifications (
 ### Business Intelligence Tables
 
 #### fraud_detection_reports
+
 Aggregated fraud analysis data updated when admins upload verification results.
 
 ```sql
@@ -114,6 +121,7 @@ CREATE TABLE fraud_detection_reports (
 ```
 
 #### revenue_analytics
+
 Business performance metrics aggregated by store and time period.
 
 ```sql
@@ -133,6 +141,7 @@ CREATE TABLE revenue_analytics (
 ```
 
 #### business_performance_metrics
+
 Store performance analytics for comparative analysis.
 
 ```sql
@@ -152,6 +161,7 @@ CREATE TABLE business_performance_metrics (
 ### Audit and Access Control
 
 #### monitoring_access_logs
+
 Audit trail for all monitoring system access.
 
 ```sql
@@ -170,6 +180,7 @@ CREATE TABLE monitoring_access_logs (
 ## Entity Relationships
 
 ### Core Relationships
+
 - `alert_rules` → `admin_accounts` (created_by foreign key)
 - `alert_notifications` → `alert_rules` (alert_rule_id foreign key)
 - `fraud_detection_reports` → `stores` (store_id foreign key)
@@ -178,27 +189,37 @@ CREATE TABLE monitoring_access_logs (
 - `monitoring_access_logs` → `admin_accounts` (admin_user_id foreign key)
 
 ### Data Flow
-1. **Metrics Collection**: Middleware writes to `system_metrics` and `error_logs`
+
+1. **Metrics Collection**: Middleware writes to `system_metrics` and
+   `error_logs`
 2. **Analytics Aggregation**: Daily jobs aggregate data into `usage_analytics`
-3. **Alert Processing**: Background service monitors `system_metrics` against `alert_rules`
-4. **BI Updates**: Admin data uploads trigger updates to fraud/revenue analytics tables
+3. **Alert Processing**: Background service monitors `system_metrics` against
+   `alert_rules`
+4. **BI Updates**: Admin data uploads trigger updates to fraud/revenue analytics
+   tables
 5. **Access Auditing**: All monitoring access logged to `monitoring_access_logs`
 
 ## Validation Rules
 
 ### Data Integrity
-- **Timestamps**: All tables require `created_at`, monitoring tables require `timestamp`
+
+- **Timestamps**: All tables require `created_at`, monitoring tables require
+  `timestamp`
 - **Metrics**: All numeric values must be non-negative
 - **Retention**: Automated cleanup after 1 year via scheduled functions
 - **Partitioning**: `system_metrics` partitioned by month for performance
 
 ### Business Rules
-- **Alert Thresholds**: Must specify comparison operator and notification channels
+
+- **Alert Thresholds**: Must specify comparison operator and notification
+  channels
 - **Metrics Collection**: 1-minute minimum granularity for real-time metrics
-- **Analytics Updates**: BI tables updated only when admin uploads verification data
+- **Analytics Updates**: BI tables updated only when admin uploads verification
+  data
 - **Access Control**: All monitoring access requires admin authentication
 
 ### Performance Optimizations
+
 - **Indexes**: Timestamp, metric_type, service_name, store_id
 - **Materialized Views**: For complex analytics queries
 - **Aggregation**: Pre-computed daily/weekly/monthly rollups
@@ -207,6 +228,7 @@ CREATE TABLE monitoring_access_logs (
 ## Row Level Security (RLS) Policies
 
 ### Admin Access Control
+
 ```sql
 -- monitoring_access_logs: Admins can only see their own access logs
 CREATE POLICY admin_own_access_logs ON monitoring_access_logs
@@ -223,6 +245,7 @@ CREATE POLICY admin_alert_rules ON alert_rules
 ```
 
 ### Business Data Isolation
+
 ```sql
 -- fraud_detection_reports: Respect business data isolation
 CREATE POLICY business_fraud_reports ON fraud_detection_reports
@@ -246,19 +269,23 @@ CREATE POLICY business_revenue_analytics ON revenue_analytics
 ## State Transitions
 
 ### Error Log Lifecycle
+
 ```
 open → investigating → resolved
 ```
 
 ### Alert Rule States
+
 ```
 active → inactive (can be toggled by admins)
 ```
 
 ### Data Retention Lifecycle
+
 ```
 current_data → archived_data → deleted_data (after 1 year)
 ```
 
 ---
-*Data model complete - Ready for API contracts generation*
+
+_Data model complete - Ready for API contracts generation_

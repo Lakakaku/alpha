@@ -31,24 +31,24 @@ paths:
             format: uuid
           description: Store identifier
       responses:
-        '200':
+        "200":
           description: QR code information retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/QRCodeInfo'
-        '404':
+                $ref: "#/components/schemas/QRCodeInfo"
+        "404":
           description: Store not found or no access
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '403':
+                $ref: "#/components/schemas/Error"
+        "403":
           description: Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /qr/stores/{storeId}/regenerate:
     post:
@@ -80,24 +80,24 @@ paths:
                   maximum: 168
                   description: Hours to maintain old QR functionality
       responses:
-        '200':
+        "200":
           description: QR code regenerated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/QRCodeInfo'
-        '400':
+                $ref: "#/components/schemas/QRCodeInfo"
+        "400":
           description: Invalid request parameters
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '403':
+                $ref: "#/components/schemas/Error"
+        "403":
           description: Insufficient permissions (requires manage_qr)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /qr/stores/{storeId}/download:
     get:
@@ -124,7 +124,7 @@ paths:
             enum: [A4, letter, business_card, label_sheet]
             default: A4
       responses:
-        '200':
+        "200":
           description: PDF generated successfully
           content:
             application/pdf:
@@ -136,12 +136,12 @@ paths:
               schema:
                 type: string
                 example: 'attachment; filename="store-qr-code.pdf"'
-        '404':
+        "404":
           description: Store or template not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /qr/analytics/{storeId}:
     get:
@@ -175,24 +175,24 @@ paths:
             format: date-time
           description: End time for analytics (ISO 8601)
       responses:
-        '200':
+        "200":
           description: Analytics retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/QRAnalytics'
-        '400':
+                $ref: "#/components/schemas/QRAnalytics"
+        "400":
           description: Invalid time range or parameters
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '403':
+                $ref: "#/components/schemas/Error"
+        "403":
           description: Insufficient permissions (requires view_analytics)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /qr/bulk/regenerate:
     post:
@@ -230,24 +230,24 @@ paths:
                   minimum: 1
                   maximum: 168
       responses:
-        '200':
+        "200":
           description: Bulk operation completed successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BulkOperationResult'
-        '400':
+                $ref: "#/components/schemas/BulkOperationResult"
+        "400":
           description: Invalid request or too many stores
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '403':
+                $ref: "#/components/schemas/Error"
+        "403":
           description: Insufficient permissions for one or more stores
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /qr/scan:
     post:
@@ -281,7 +281,7 @@ paths:
                   format: uuid
                   description: Customer session identifier
       responses:
-        '201':
+        "201":
           description: Scan event recorded successfully
           content:
             application/json:
@@ -294,18 +294,18 @@ paths:
                   timestamp:
                     type: string
                     format: date-time
-        '400':
+        "400":
           description: Invalid scan data
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '404':
+                $ref: "#/components/schemas/Error"
+        "404":
           description: Store not found or QR version invalid
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /qr/templates:
     get:
@@ -313,14 +313,14 @@ paths:
       description: Retrieves all custom print templates for the current business
       operationId: listPrintTemplates
       responses:
-        '200':
+        "200":
           description: Templates retrieved successfully
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/PrintTemplate'
+                  $ref: "#/components/schemas/PrintTemplate"
 
     post:
       summary: Create custom print template
@@ -331,20 +331,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreatePrintTemplate'
+              $ref: "#/components/schemas/CreatePrintTemplate"
       responses:
-        '201':
+        "201":
           description: Template created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PrintTemplate'
-        '400':
+                $ref: "#/components/schemas/PrintTemplate"
+        "400":
           description: Invalid template configuration
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /qr/templates/{templateId}:
     put:
@@ -363,20 +363,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdatePrintTemplate'
+              $ref: "#/components/schemas/UpdatePrintTemplate"
       responses:
-        '200':
+        "200":
           description: Template updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PrintTemplate'
-        '404':
+                $ref: "#/components/schemas/PrintTemplate"
+        "404":
           description: Template not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
     delete:
       summary: Delete print template
@@ -390,20 +390,20 @@ paths:
             type: string
             format: uuid
       responses:
-        '204':
+        "204":
           description: Template deleted successfully
-        '400':
+        "400":
           description: Cannot delete default template
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '404':
+                $ref: "#/components/schemas/Error"
+        "404":
           description: Template not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
 components:
   securitySchemes:
@@ -542,7 +542,7 @@ components:
                 nullable: true
                 description: Error message if operation failed
               qrCodeInfo:
-                $ref: '#/components/schemas/QRCodeInfo'
+                $ref: "#/components/schemas/QRCodeInfo"
                 nullable: true
 
     PrintTemplate:
@@ -585,11 +585,11 @@ components:
           default: "Scan for feedback"
         textColor:
           type: string
-          pattern: '^#[0-9A-Fa-f]{6}$'
+          pattern: "^#[0-9A-Fa-f]{6}$"
           default: "#000000"
         backgroundColor:
           type: string
-          pattern: '^#[0-9A-Fa-f]{6}$'
+          pattern: "^#[0-9A-Fa-f]{6}$"
           default: "#FFFFFF"
         borderStyle:
           type: string
@@ -634,11 +634,11 @@ components:
           default: "Scan for feedback"
         textColor:
           type: string
-          pattern: '^#[0-9A-Fa-f]{6}$'
+          pattern: "^#[0-9A-Fa-f]{6}$"
           default: "#000000"
         backgroundColor:
           type: string
-          pattern: '^#[0-9A-Fa-f]{6}$'
+          pattern: "^#[0-9A-Fa-f]{6}$"
           default: "#FFFFFF"
         borderStyle:
           type: string
@@ -671,10 +671,10 @@ components:
           maxLength: 200
         textColor:
           type: string
-          pattern: '^#[0-9A-Fa-f]{6}$'
+          pattern: "^#[0-9A-Fa-f]{6}$"
         backgroundColor:
           type: string
-          pattern: '^#[0-9A-Fa-f]{6}$'
+          pattern: "^#[0-9A-Fa-f]{6}$"
         borderStyle:
           type: string
           enum: [none, thin, thick, dashed]

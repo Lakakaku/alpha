@@ -17,18 +17,18 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Current call status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CallStatusResponse'
-        '404':
+                $ref: "#/components/schemas/CallStatusResponse"
+        "404":
           description: Call session not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /api/calls/{sessionId}/confirm-completion:
     post:
@@ -46,20 +46,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CallCompletionConfirmation'
+              $ref: "#/components/schemas/CallCompletionConfirmation"
       responses:
-        '200':
+        "200":
           description: Call completion confirmed
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CallCompletionResponse'
-        '400':
+                $ref: "#/components/schemas/CallCompletionResponse"
+        "400":
           description: Invalid confirmation data
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /api/calls/{sessionId}/quality-feedback:
     post:
@@ -77,14 +77,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CallQualityFeedback'
+              $ref: "#/components/schemas/CallQualityFeedback"
       responses:
-        '200':
+        "200":
           description: Quality feedback recorded
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
+                $ref: "#/components/schemas/SuccessResponse"
 
 components:
   schemas:
@@ -100,7 +100,7 @@ components:
           format: uuid
         status:
           type: string
-          enum: 
+          enum:
             - verification_pending
             - call_scheduled
             - call_in_progress

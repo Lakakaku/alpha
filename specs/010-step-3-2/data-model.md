@@ -1,21 +1,23 @@
 # Data Model: AI Call Integration Infrastructure
 
-**Date**: 2025-09-22
-**Feature**: AI Call Integration Infrastructure
-**Branch**: 010-step-3-2
+**Date**: 2025-09-22 **Feature**: AI Call Integration Infrastructure **Branch**:
+010-step-3-2
 
 ## Core Entities
 
 ### Call Session
-**Purpose**: Represents an individual AI-powered call session
-**Table**: `call_sessions`
+
+**Purpose**: Represents an individual AI-powered call session **Table**:
+`call_sessions`
 
 **Fields**:
+
 - `id` (UUID, primary key)
 - `business_id` (UUID, foreign key to businesses table)
 - `customer_phone` (VARCHAR, encrypted) - Customer's phone number
 - `verification_id` (UUID, foreign key to customer verifications)
-- `status` (ENUM: 'initiated', 'connecting', 'in_progress', 'completed', 'failed', 'timeout')
+- `status` (ENUM: 'initiated', 'connecting', 'in_progress', 'completed',
+  'failed', 'timeout')
 - `started_at` (TIMESTAMP) - Call initiation time
 - `connected_at` (TIMESTAMP, nullable) - When customer answered
 - `ended_at` (TIMESTAMP, nullable) - Call completion time
@@ -30,22 +32,26 @@
 - `updated_at` (TIMESTAMP)
 
 **Relationships**:
+
 - Belongs to business
 - Has many call_events
 - Has many call_responses
 - Relates to customer verification
 
 **Validation Rules**:
+
 - Status transitions must follow valid state machine
 - Duration must be ≤ 120 seconds (2 minutes)
 - Customer phone must be valid Swedish format
 - Cost estimate must be non-negative
 
 ### Question Configuration
+
 **Purpose**: Business-defined questions with frequency and targeting settings
 **Table**: `question_configurations`
 
 **Fields**:
+
 - `id` (UUID, primary key)
 - `business_id` (UUID, foreign key to businesses table)
 - `question_text` (TEXT) - The actual question in Swedish
@@ -61,40 +67,49 @@
 - `updated_at` (TIMESTAMP)
 
 **Relationships**:
+
 - Belongs to business
 - Has many call_responses through call sessions
 
 **Validation Rules**:
+
 - Question text must be 10-500 characters
 - Frequency must be 1-100
 - Active period must be valid (from ≤ until)
 - Department tags must be non-empty array
 
 ### Call Event
-**Purpose**: Log of events during call lifecycle
-**Table**: `call_events`
+
+**Purpose**: Log of events during call lifecycle **Table**: `call_events`
 
 **Fields**:
+
 - `id` (UUID, primary key)
 - `call_session_id` (UUID, foreign key to call_sessions)
-- `event_type` (ENUM: 'initiated', 'connecting', 'answered', 'ai_connected', 'question_asked', 'response_received', 'warning_sent', 'timeout', 'completed', 'failed')
+- `event_type` (ENUM: 'initiated', 'connecting', 'answered', 'ai_connected',
+  'question_asked', 'response_received', 'warning_sent', 'timeout', 'completed',
+  'failed')
 - `event_data` (JSONB) - Event-specific data payload
 - `timestamp` (TIMESTAMP) - When event occurred
 - `source` (ENUM: 'system', 'telephony', 'ai', 'customer') - Event source
 - `metadata` (JSONB, nullable) - Additional event metadata
 
 **Relationships**:
+
 - Belongs to call_session
 
 **Validation Rules**:
+
 - Timestamp must be chronological within session
 - Event type must be valid for current session state
 
 ### Call Response
-**Purpose**: Stores customer responses to specific questions
-**Table**: `call_responses`
+
+**Purpose**: Stores customer responses to specific questions **Table**:
+`call_responses`
 
 **Fields**:
+
 - `id` (UUID, primary key)
 - `call_session_id` (UUID, foreign key to call_sessions)
 - `question_id` (UUID, foreign key to question_configurations)
@@ -109,20 +124,24 @@
 - `created_at` (TIMESTAMP)
 
 **Relationships**:
+
 - Belongs to call_session
 - Belongs to question_configuration
 
 **Validation Rules**:
+
 - Response duration must be ≤ 60 seconds
 - Confidence score must be 0-1
 - Sentiment score must be -1 to 1
 - asked_at must be ≤ responded_at
 
 ### Question Selection Log
-**Purpose**: Tracks question selection algorithm decisions
-**Table**: `question_selection_logs`
+
+**Purpose**: Tracks question selection algorithm decisions **Table**:
+`question_selection_logs`
 
 **Fields**:
+
 - `id` (UUID, primary key)
 - `business_id` (UUID, foreign key to businesses table)
 - `customer_count` (INTEGER) - Customer number for frequency calculation
@@ -134,24 +153,29 @@
 - `created_at` (TIMESTAMP)
 
 **Relationships**:
+
 - Belongs to business
 - References question_configurations
 
 **Validation Rules**:
+
 - Customer count must be positive
 - Time budget must be 60-120 seconds
 - Estimated duration must be ≤ time budget
 
 ### Telephony Provider Log
-**Purpose**: Tracks telephony provider interactions and metrics
-**Table**: `telephony_provider_logs`
+
+**Purpose**: Tracks telephony provider interactions and metrics **Table**:
+`telephony_provider_logs`
 
 **Fields**:
+
 - `id` (UUID, primary key)
 - `call_session_id` (UUID, foreign key to call_sessions)
 - `provider` (ENUM: '46elks', 'twilio') - Telephony provider used
 - `provider_call_id` (VARCHAR) - Provider's call identifier
-- `operation` (ENUM: 'initiate', 'connect', 'record', 'hangup', 'webhook') - Operation type
+- `operation` (ENUM: 'initiate', 'connect', 'record', 'hangup', 'webhook') -
+  Operation type
 - `request_payload` (JSONB) - Request sent to provider
 - `response_payload` (JSONB) - Response from provider
 - `status_code` (INTEGER) - HTTP status code
@@ -161,9 +185,11 @@
 - `created_at` (TIMESTAMP)
 
 **Relationships**:
+
 - Belongs to call_session
 
 **Validation Rules**:
+
 - Status code must be valid HTTP status
 - Latency must be non-negative
 - Error message required if success = false
@@ -171,6 +197,7 @@
 ## State Transitions
 
 ### Call Session State Machine
+
 ```
 initiated → connecting → in_progress → completed
      ↓           ↓            ↓
@@ -178,6 +205,7 @@ initiated → connecting → in_progress → completed
 ```
 
 **Valid Transitions**:
+
 - `initiated` → `connecting` (call placed to customer)
 - `initiated` → `failed` (unable to place call)
 - `connecting` → `in_progress` (customer answered)
@@ -189,6 +217,7 @@ initiated → connecting → in_progress → completed
 ## Database Indexes
 
 ### Performance Indexes
+
 ```sql
 -- Call session lookups by business and status
 CREATE INDEX idx_call_sessions_business_status ON call_sessions(business_id, status);
@@ -212,6 +241,7 @@ CREATE INDEX idx_question_selection_business_time ON question_selection_logs(bus
 ## Row Level Security (RLS) Policies
 
 ### Call Sessions
+
 ```sql
 -- Businesses can only access their own call sessions
 CREATE POLICY call_sessions_business_isolation ON call_sessions
@@ -223,6 +253,7 @@ CREATE POLICY call_sessions_system_access ON call_sessions
 ```
 
 ### Question Configurations
+
 ```sql
 -- Businesses can only manage their own questions
 CREATE POLICY question_configs_business_isolation ON question_configurations
@@ -232,12 +263,14 @@ CREATE POLICY question_configs_business_isolation ON question_configurations
 ## Data Retention Policies
 
 ### Automatic Cleanup
+
 - Call events older than 90 days are archived
 - Telephony provider logs older than 30 days are purged
 - Failed call sessions older than 7 days are purged
 - Call recordings deleted after 30 days (GDPR compliance)
 
 ### Privacy Protection
+
 - Customer phone numbers encrypted at rest
 - Call transcripts anonymized for long-term storage
 - Personal data purged on customer request (GDPR Article 17)
@@ -245,6 +278,7 @@ CREATE POLICY question_configs_business_isolation ON question_configurations
 ---
 
 **Constitutional Compliance**:
+
 - ✅ Real data only (no mock entities)
 - ✅ RLS policies for all tables
 - ✅ TypeScript type generation ready

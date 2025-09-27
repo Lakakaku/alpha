@@ -24,32 +24,32 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/InitiateCallRequest'
+              $ref: "#/components/schemas/InitiateCallRequest"
       responses:
-        '201':
+        "201":
           description: Call initiated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CallSessionResponse'
-        '400':
+                $ref: "#/components/schemas/CallSessionResponse"
+        "400":
           description: Invalid request data
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '422':
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
           description: Verification not complete or invalid
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '429':
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
           description: Rate limit exceeded
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /calls/{sessionId}/status:
     get:
@@ -67,18 +67,18 @@ paths:
             format: uuid
           description: Call session identifier
       responses:
-        '200':
+        "200":
           description: Call status retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CallSessionResponse'
-        '404':
+                $ref: "#/components/schemas/CallSessionResponse"
+        "404":
           description: Call session not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /calls/{sessionId}/complete:
     post:
@@ -100,17 +100,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CompleteCallRequest'
+              $ref: "#/components/schemas/CompleteCallRequest"
       responses:
-        '200':
+        "200":
           description: Call completed successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CallSessionResponse'
-        '404':
+                $ref: "#/components/schemas/CallSessionResponse"
+        "404":
           description: Call session not found
-        '409':
+        "409":
           description: Call already completed or in invalid state
 
   /calls/{sessionId}/events:
@@ -135,12 +135,12 @@ paths:
             maximum: 100
             default: 50
       responses:
-        '200':
+        "200":
           description: Call events retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CallEventsResponse'
+                $ref: "#/components/schemas/CallEventsResponse"
 
   /questions/select:
     post:
@@ -154,15 +154,15 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/QuestionSelectionRequest'
+              $ref: "#/components/schemas/QuestionSelectionRequest"
       responses:
-        '200':
+        "200":
           description: Questions selected successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/QuestionSelectionResponse'
-        '400':
+                $ref: "#/components/schemas/QuestionSelectionResponse"
+        "400":
           description: Invalid selection criteria
 
   /questions/configurations:
@@ -185,12 +185,12 @@ paths:
             type: boolean
             default: true
       responses:
-        '200':
+        "200":
           description: Question configurations retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/QuestionConfigurationsResponse'
+                $ref: "#/components/schemas/QuestionConfigurationsResponse"
 
     post:
       summary: Create question configuration
@@ -203,14 +203,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateQuestionConfigurationRequest'
+              $ref: "#/components/schemas/CreateQuestionConfigurationRequest"
       responses:
-        '201':
+        "201":
           description: Question configuration created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/QuestionConfiguration'
+                $ref: "#/components/schemas/QuestionConfiguration"
 
   /calls/webhooks/telephony:
     post:
@@ -224,11 +224,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TelephonyWebhookEvent'
+              $ref: "#/components/schemas/TelephonyWebhookEvent"
       responses:
-        '200':
+        "200":
           description: Webhook processed successfully
-        '400':
+        "400":
           description: Invalid webhook payload
 
   /calls/webhooks/ai:
@@ -243,9 +243,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AiWebhookEvent'
+              $ref: "#/components/schemas/AiWebhookEvent"
       responses:
-        '200':
+        "200":
           description: Webhook processed successfully
 
 components:
@@ -328,7 +328,7 @@ components:
         responses:
           type: array
           items:
-            $ref: '#/components/schemas/CallResponse'
+            $ref: "#/components/schemas/CallResponse"
 
     CallResponse:
       type: object
@@ -369,9 +369,9 @@ components:
         events:
           type: array
           items:
-            $ref: '#/components/schemas/CallEvent'
+            $ref: "#/components/schemas/CallEvent"
         pagination:
-          $ref: '#/components/schemas/Pagination'
+          $ref: "#/components/schemas/Pagination"
 
     CallEvent:
       type: object
@@ -381,7 +381,19 @@ components:
           format: uuid
         eventType:
           type: string
-          enum: [initiated, connecting, answered, ai_connected, question_asked, response_received, warning_sent, timeout, completed, failed]
+          enum:
+            [
+              initiated,
+              connecting,
+              answered,
+              ai_connected,
+              question_asked,
+              response_received,
+              warning_sent,
+              timeout,
+              completed,
+              failed,
+            ]
         eventData:
           type: object
         timestamp:
@@ -418,7 +430,7 @@ components:
         selectedQuestions:
           type: array
           items:
-            $ref: '#/components/schemas/SelectedQuestion'
+            $ref: "#/components/schemas/SelectedQuestion"
         estimatedDuration:
           type: integer
           description: Estimated time needed for all questions
@@ -450,9 +462,9 @@ components:
         configurations:
           type: array
           items:
-            $ref: '#/components/schemas/QuestionConfiguration'
+            $ref: "#/components/schemas/QuestionConfiguration"
         pagination:
-          $ref: '#/components/schemas/Pagination'
+          $ref: "#/components/schemas/Pagination"
 
     QuestionConfiguration:
       type: object
@@ -539,7 +551,14 @@ components:
       properties:
         eventType:
           type: string
-          enum: [call_initiated, call_answered, call_completed, call_failed, recording_available]
+          enum:
+            [
+              call_initiated,
+              call_answered,
+              call_completed,
+              call_failed,
+              recording_available,
+            ]
         callId:
           type: string
         sessionId:
@@ -561,7 +580,8 @@ components:
       properties:
         eventType:
           type: string
-          enum: [session_started, response_generated, session_ended, error_occurred]
+          enum:
+            [session_started, response_generated, session_ended, error_occurred]
         sessionId:
           type: string
         timestamp:

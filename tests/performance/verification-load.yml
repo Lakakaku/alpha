@@ -32,23 +32,23 @@ config:
       arrivalRate: 50
       rampTo: 5
       name: "Recovery verification load"
-  
+
   # Performance thresholds specific to verification
   ensure:
     thresholds:
-      - http.response_time.p95: 600   # 95% under 600ms (verification is critical)
-      - http.response_time.p99: 1000  # 99% under 1s
+      - http.response_time.p95: 600 # 95% under 600ms (verification is critical)
+      - http.response_time.p99: 1000 # 99% under 1s
       - http.response_time.median: 300 # Median under 300ms
-      - http.codes.200: 98  # 98% success rate (higher than general APIs)
-      - http.codes.422: 2   # Accept up to 2% validation errors
-      - http.codes.500: 0   # No server errors allowed
-      - http.codes.429: 1   # Allow minimal rate limiting
-    
+      - http.codes.200: 98 # 98% success rate (higher than general APIs)
+      - http.codes.422: 2 # Accept up to 2% validation errors
+      - http.codes.500: 0 # No server errors allowed
+      - http.codes.429: 1 # Allow minimal rate limiting
+
   # Verification-specific configuration
   http:
-    timeout: 5  # Shorter timeout for verification
+    timeout: 5 # Shorter timeout for verification
     extendedMetrics: true
-    
+
   # Swedish customer test data
   payload:
     path: "{{ $processEnvironment.VERIFICATION_TEST_DATA || './tests/generators/verification-data.csv' }}"
@@ -266,7 +266,7 @@ defaults:
     Accept: "application/json"
     X-Load-Test: "artillery-verification"
     User-Agent: "VociliaLoadTest/1.0"
-  
+
   # Request timeout and retry logic
   beforeRequest: |
     function(requestParams, context, ee, next) {
@@ -277,7 +277,7 @@ defaults:
         return next();
       }, delay);
     }
-  
+
   afterResponse: |
     function(requestParams, response, context, ee, next) {
       // Log verification-specific errors

@@ -48,7 +48,7 @@ paths:
                   default: false
                   description: Force retry even if automatic retry limit exceeded
       responses:
-        '200':
+        "200":
           description: Payment retry initiated successfully
           content:
             application/json:
@@ -100,7 +100,7 @@ paths:
                   message:
                     type: string
                     example: "Payment retry initiated. Check status in 2-5 seconds."
-        '400':
+        "400":
           description: Invalid request
           content:
             application/json:
@@ -116,7 +116,7 @@ paths:
                   error:
                     type: string
                     example: "Invalid phone number format"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
@@ -132,7 +132,7 @@ paths:
                   error:
                     type: string
                     example: "Admin authentication required"
-        '404':
+        "404":
           description: Transaction not found
           content:
             application/json:
@@ -148,7 +148,7 @@ paths:
                   error:
                     type: string
                     example: "Payment transaction not found"
-        '409':
+        "409":
           description: Transaction already successful
           content:
             application/json:
@@ -164,7 +164,7 @@ paths:
                   error:
                     type: string
                     example: "Payment already successful, cannot retry"
-        '500':
+        "500":
           description: Internal server error
           content:
             application/json:

@@ -38,7 +38,7 @@ paths:
                     - "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
                     - "b2c3d4e5-f6a7-8901-bcde-f12345678901"
       responses:
-        '200':
+        "200":
           description: Rewards calculated successfully
           content:
             application/json:
@@ -124,7 +124,7 @@ paths:
                           type: string
                           format: date-time
                           example: "2025-09-25T12:00:00Z"
-        '400':
+        "400":
           description: Invalid request
           content:
             application/json:
@@ -146,7 +146,7 @@ paths:
                       type: string
                     example:
                       - "Feedback a1b2c3d4-e5f6-7890-abcd-ef1234567890 not found"
-        '401':
+        "401":
           description: Unauthorized - admin authentication required
           content:
             application/json:
@@ -162,7 +162,7 @@ paths:
                   error:
                     type: string
                     example: "Admin authentication required"
-        '500':
+        "500":
           description: Internal server error
           content:
             application/json:

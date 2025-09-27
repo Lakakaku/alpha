@@ -27,7 +27,7 @@ paths:
           description: Batch ID to reconcile
           example: "f6a7b8c9-d0e1-2345-f123-456789012345"
       responses:
-        '200':
+        "200":
           description: Reconciliation report retrieved successfully
           content:
             application/json:
@@ -150,7 +150,7 @@ paths:
                             failedPayments:
                               type: integer
                               example: 1
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
@@ -166,7 +166,7 @@ paths:
                   error:
                     type: string
                     example: "Admin authentication required"
-        '404':
+        "404":
           description: Reconciliation report not found
           content:
             application/json:
@@ -182,7 +182,7 @@ paths:
                   error:
                     type: string
                     example: "Reconciliation report not found for batch"
-        '500':
+        "500":
           description: Internal server error
           content:
             application/json:

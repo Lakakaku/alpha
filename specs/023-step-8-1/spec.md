@@ -60,28 +60,40 @@ feedback reward system with reliable performance, security, and monitoring.
 
 ### Edge Cases
 
-- What happens when deployment fails due to environment variable issues? System must provide verification and rollback capabilities
-- How does the system handle database connection failures during deployment? System must maintain stable database connectivity during deployments
-- What monitoring alerts are triggered during service outages? System must provide immediate alerting for uptime violations
-- How are rollbacks handled if deployment introduces critical issues? System must support rapid rollback procedures for failed deployments
+- What happens when deployment fails due to environment variable issues? System
+  must provide verification and rollback capabilities
+- How does the system handle database connection failures during deployment?
+  System must maintain stable database connectivity during deployments
+- What monitoring alerts are triggered during service outages? System must
+  provide immediate alerting for uptime violations
+- How are rollbacks handled if deployment introduces critical issues? System
+  must support rapid rollback procedures for failed deployments
 
 ## Clarifications
 
 ### Session 2025-09-27
-- Q: What is the expected traffic volume for sizing production infrastructure? → A: Medium volume: 1,000-10,000 customers/month, 100-500 concurrent users
-- Q: What should be the rollback timeframe for failed deployments? → A: Fast: Manual rollback capability within 15 minutes
-- Q: What domain structure should be used for the multi-domain setup? → A: Subdomain structure: api.vocilia.com, admin.vocilia.com, business.vocilia.com
-- Q: What uptime requirement should the production system meet? → A: Standard: 99.5% uptime (3.5 hours downtime per month)
-- Q: What backup frequency should be implemented for the production database? → A: Daily: Automated backups every 24 hours with 30-day retention
+
+- Q: What is the expected traffic volume for sizing production infrastructure? →
+  A: Medium volume: 1,000-10,000 customers/month, 100-500 concurrent users
+- Q: What should be the rollback timeframe for failed deployments? → A: Fast:
+  Manual rollback capability within 15 minutes
+- Q: What domain structure should be used for the multi-domain setup? → A:
+  Subdomain structure: api.vocilia.com, admin.vocilia.com, business.vocilia.com
+- Q: What uptime requirement should the production system meet? → A: Standard:
+  99.5% uptime (3.5 hours downtime per month)
+- Q: What backup frequency should be implemented for the production database? →
+  A: Daily: Automated backups every 24 hours with 30-day retention
 
 ## Requirements
 
 ### Functional Requirements
 
 - **FR-001**: System MUST deploy backend Node.js services to Railway with
-  production environment variables (DATABASE_URL, API_KEYS, JWT_SECRET, OPENAI_API_KEY)
+  production environment variables (DATABASE_URL, API_KEYS, JWT_SECRET,
+  OPENAI_API_KEY)
 - **FR-002**: System MUST deploy three Next.js applications (customer, business,
-  admin) to Vercel with build configurations (TypeScript compilation, environment variable injection, optimized bundles)
+  admin) to Vercel with build configurations (TypeScript compilation,
+  environment variable injection, optimized bundles)
 - **FR-003**: System MUST configure automatic deployments from GitHub
   repositories for continuous delivery
 - **FR-004**: System MUST provide staging environments for testing before
@@ -90,17 +102,26 @@ feedback reward system with reliable performance, security, and monitoring.
   user-facing applications
 - **FR-006**: System MUST establish secure connection to production Supabase
   database with connection pooling
-- **FR-007**: System MUST implement monitoring and logging (health checks, performance metrics, error tracking, uptime monitoring) for production environments to maintain 99.5% uptime (3.5 hours maximum unplanned downtime per month)
-- **FR-008**: System MUST configure daily automated backups for database and application configurations with 30-day retention
+- **FR-007**: System MUST implement monitoring and logging (health checks,
+  performance metrics, error tracking, uptime monitoring) for production
+  environments to maintain 99.5% uptime (3.5 hours maximum unplanned downtime
+  per month)
+- **FR-008**: System MUST configure daily automated backups for database and
+  application configurations with 30-day retention
 - **FR-009**: System MUST implement environment-specific configurations for
   development, staging, and production
 - **FR-010**: System MUST provide deployment status monitoring and alerting
   capabilities
-- **FR-011**: System MUST configure CDN and edge caching for medium-volume traffic (1,000-10,000 customers/month, 100-500 concurrent users) with <2 second page load times
+- **FR-011**: System MUST configure CDN and edge caching for medium-volume
+  traffic (1,000-10,000 customers/month, 100-500 concurrent users) with <2
+  second page load times
 - **FR-012**: System MUST implement background job processing for payment
   batches and AI analysis tasks
-- **FR-013**: System MUST establish proper DNS configuration for separate domains: api.vocilia.com (backend), admin.vocilia.com (admin), business.vocilia.com (business)
-- **FR-014**: System MUST provide manual rollback capabilities for failed deployments within 15 minutes of issue detection
+- **FR-013**: System MUST establish proper DNS configuration for separate
+  domains: api.vocilia.com (backend), admin.vocilia.com (admin),
+  business.vocilia.com (business)
+- **FR-014**: System MUST provide manual rollback capabilities for failed
+  deployments within 15 minutes of issue detection
 
 ### Key Entities
 

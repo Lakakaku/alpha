@@ -73,7 +73,7 @@ paths:
             type: boolean
             default: false
       responses:
-        '200':
+        "200":
           description: Audit logs retrieved successfully
           content:
             application/json:
@@ -89,17 +89,17 @@ paths:
                       logs:
                         type: array
                         items:
-                          $ref: '#/components/schemas/AuditLog'
+                          $ref: "#/components/schemas/AuditLog"
                       pagination:
-                        $ref: '#/components/schemas/Pagination'
+                        $ref: "#/components/schemas/Pagination"
                       summary:
-                        $ref: '#/components/schemas/AuditSummary'
-        '401':
+                        $ref: "#/components/schemas/AuditSummary"
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /admin/monitoring/dashboard:
     get:
@@ -111,7 +111,7 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: Monitoring data retrieved
           content:
             application/json:
@@ -125,19 +125,19 @@ paths:
                     type: object
                     properties:
                       system_health:
-                        $ref: '#/components/schemas/SystemHealth'
+                        $ref: "#/components/schemas/SystemHealth"
                       store_metrics:
-                        $ref: '#/components/schemas/StoreMetrics'
+                        $ref: "#/components/schemas/StoreMetrics"
                       recent_activity:
                         type: array
                         items:
-                          $ref: '#/components/schemas/RecentActivity'
-        '401':
+                          $ref: "#/components/schemas/RecentActivity"
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /admin/monitoring/stores/{storeId}/metrics:
     get:
@@ -178,7 +178,7 @@ paths:
             enum: [minute, hour, day]
             default: hour
       responses:
-        '200':
+        "200":
           description: Store metrics retrieved
           content:
             application/json:
@@ -197,15 +197,15 @@ paths:
                       metrics:
                         type: array
                         items:
-                          $ref: '#/components/schemas/MetricDataPoint'
+                          $ref: "#/components/schemas/MetricDataPoint"
                       summary:
-                        $ref: '#/components/schemas/MetricsSummary'
-        '404':
+                        $ref: "#/components/schemas/MetricsSummary"
+        "404":
           description: Store not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
 components:
   schemas:
@@ -334,7 +334,14 @@ components:
           format: uuid
         activity_type:
           type: string
-          enum: [store_created, store_updated, upload_completed, error_resolved, admin_login]
+          enum:
+            [
+              store_created,
+              store_updated,
+              upload_completed,
+              error_resolved,
+              admin_login,
+            ]
           example: store_created
         description:
           type: string

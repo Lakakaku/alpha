@@ -1,12 +1,14 @@
 # Data Model: Swish Payment Integration
 
-**Feature**: 019-step-6-1 | **Created**: 2025-09-25 | **Input**: [spec.md](./spec.md), [research.md](./research.md)
+**Feature**: 019-step-6-1 | **Created**: 2025-09-25 | **Input**:
+[spec.md](./spec.md), [research.md](./research.md)
 
 ## Database Schema
 
 ### Core Payment Tables
 
 #### payment_transactions
+
 Tracks individual Swish payment records sent to customers.
 
 ```sql
@@ -34,6 +36,7 @@ CREATE INDEX idx_payment_transactions_created ON payment_transactions(created_at
 ```
 
 #### reward_calculations
+
 Records how much cashback each feedback submission earns.
 
 ```sql
@@ -66,6 +69,7 @@ CREATE INDEX idx_reward_calculations_pending ON reward_calculations(verified_by_
 ```
 
 #### payment_batches
+
 Weekly batch processing records.
 
 ```sql
@@ -97,6 +101,7 @@ CREATE INDEX idx_payment_batches_created ON payment_batches(created_at DESC);
 ```
 
 #### payment_failures
+
 Detailed failure tracking for retry logic and manual intervention.
 
 ```sql
@@ -123,6 +128,7 @@ CREATE INDEX idx_payment_failures_created ON payment_failures(created_at DESC);
 ```
 
 #### reconciliation_reports
+
 Weekly summary reports for accounting and auditing.
 
 ```sql
@@ -151,6 +157,7 @@ CREATE INDEX idx_reconciliation_reports_discrepancies ON reconciliation_reports(
 ```
 
 #### business_invoices
+
 Invoices sent to businesses for verified feedback rewards.
 
 ```sql
@@ -421,11 +428,12 @@ CREATE POLICY business_invoices_service_all ON business_invoices
 ### Materialized Views
 
 #### weekly_payment_summary
+
 Pre-aggregated view for admin dashboard performance.
 
 ```sql
 CREATE MATERIALIZED VIEW weekly_payment_summary AS
-SELECT 
+SELECT
   pb.batch_week,
   pb.status AS batch_status,
   COUNT(DISTINCT pt.customer_phone) AS unique_customers,
@@ -445,11 +453,12 @@ CREATE UNIQUE INDEX idx_weekly_payment_summary_week ON weekly_payment_summary(ba
 ```
 
 #### store_reward_summary
+
 Pre-aggregated rewards by store for business dashboard.
 
 ```sql
 CREATE MATERIALIZED VIEW store_reward_summary AS
-SELECT 
+SELECT
   rc.store_id,
   DATE_TRUNC('week', rc.created_at) AS week_start,
   COUNT(rc.id) AS total_feedbacks,
@@ -489,6 +498,7 @@ EXECUTE FUNCTION refresh_weekly_payment_summary();
 ## Data Retention
 
 All payment tables use indefinite retention for accounting compliance:
+
 - **payment_transactions**: Permanent retention
 - **reward_calculations**: Permanent retention
 - **payment_batches**: Permanent retention
@@ -499,6 +509,7 @@ All payment tables use indefinite retention for accounting compliance:
 ## Migration Dependencies
 
 This schema depends on existing tables:
+
 - `feedback_sessions` (established)
 - `transactions` (established)
 - `stores` (established)
@@ -506,13 +517,16 @@ This schema depends on existing tables:
 - `admin_accounts` (established in 013-step-4-1)
 
 Migration order:
+
 1. Create `payment_batches` (no dependencies)
 2. Create `payment_transactions` (depends on payment_batches)
-3. Create `reward_calculations` (depends on feedback_sessions, transactions, stores, payment_transactions)
+3. Create `reward_calculations` (depends on feedback_sessions, transactions,
+   stores, payment_transactions)
 4. Create `payment_failures` (depends on payment_transactions, admin_accounts)
 5. Create `reconciliation_reports` (depends on payment_batches, admin_accounts)
 6. Create `business_invoices` (depends on businesses, payment_batches)
 7. Create materialized views and triggers
 
 ---
-*Based on spec.md FR-001 through FR-040 and research.md technical decisions*
+
+_Based on spec.md FR-001 through FR-040 and research.md technical decisions_

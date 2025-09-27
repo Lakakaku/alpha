@@ -1,16 +1,16 @@
 # Data Model: Feedback Analysis Dashboard
 
-**Feature**: 008-step-2-6
-**Date**: 2025-09-21
-**Status**: Draft
+**Feature**: 008-step-2-6 **Date**: 2025-09-21 **Status**: Draft
 
 ## Entity Definitions
 
 ### Feedback Record (extends existing)
-**Purpose**: Individual customer feedback with analysis metadata
-**Storage**: Supabase `feedback` table (existing, to be extended)
+
+**Purpose**: Individual customer feedback with analysis metadata **Storage**:
+Supabase `feedback` table (existing, to be extended)
 
 **Core Fields**:
+
 - `id`: UUID (primary key)
 - `store_id`: UUID (foreign key to stores)
 - `business_id`: UUID (foreign key to businesses)
@@ -23,6 +23,7 @@
 - `year`: INTEGER (for yearly partitioning)
 
 **New Analysis Fields**:
+
 - `sentiment`: ENUM('positive', 'negative', 'neutral', 'mixed')
 - `department_tags`: TEXT[] (array of department references)
 - `ai_summary`: TEXT (GPT-4o-mini generated summary)
@@ -31,11 +32,13 @@
 - `processed_at`: TIMESTAMPTZ
 
 **Relationships**:
+
 - belongs_to: Store (via store_id)
 - belongs_to: Business (via business_id)
 - has_many: FeedbackInsights (via feedback_id)
 
 **Validation Rules**:
+
 - content: minimum 10 characters, maximum 5000 characters
 - sentiment: required after analysis processing
 - department_tags: extracted from content via AI analysis
@@ -43,10 +46,12 @@
 - analysis_status: defaults to 'pending' on creation
 
 ### Analysis Report
-**Purpose**: AI-generated weekly summary with categorized insights
-**Storage**: Supabase `analysis_reports` table (new)
+
+**Purpose**: AI-generated weekly summary with categorized insights **Storage**:
+Supabase `analysis_reports` table (new)
 
 **Fields**:
+
 - `id`: UUID (primary key)
 - `store_id`: UUID (foreign key to stores)
 - `business_id`: UUID (foreign key to businesses)
@@ -65,21 +70,26 @@
 - `created_at`: TIMESTAMPTZ
 
 **Relationships**:
+
 - belongs_to: Store (via store_id)
 - belongs_to: Business (via business_id)
 - has_many: Feedback (via week_number, year, store_id)
 
 **Validation Rules**:
+
 - week_number: 1-53, based on ISO week calendar
 - year: current year ± 5 years
-- sentiment_breakdown: {"positive": int, "negative": int, "neutral": int, "mixed": int}
+- sentiment_breakdown: {"positive": int, "negative": int, "neutral": int,
+  "mixed": int}
 - actionable_insights: [{"title": str, "description": str, "priority": int}]
 
 ### Search Query
-**Purpose**: User search history and natural language processing
-**Storage**: Supabase `search_queries` table (new)
+
+**Purpose**: User search history and natural language processing **Storage**:
+Supabase `search_queries` table (new)
 
 **Fields**:
+
 - `id`: UUID (primary key)
 - `user_id`: UUID (foreign key to business users)
 - `store_id`: UUID (foreign key to stores)
@@ -91,20 +101,24 @@
 - `created_at`: TIMESTAMPTZ
 
 **Relationships**:
+
 - belongs_to: BusinessUser (via user_id)
 - belongs_to: Store (via store_id)
 - belongs_to: Business (via business_id)
 
 **Validation Rules**:
+
 - query_text: minimum 1 character, maximum 500 characters
 - processed_query: {"departments": str[], "sentiment": str, "date_range": obj}
 - execution_time_ms: positive integer
 
 ### Temporal Comparison
-**Purpose**: Week-over-week analysis and trend tracking
-**Storage**: Computed view `temporal_comparisons` (new)
+
+**Purpose**: Week-over-week analysis and trend tracking **Storage**: Computed
+view `temporal_comparisons` (new)
 
 **Fields**:
+
 - `store_id`: UUID
 - `business_id`: UUID
 - `current_week`: INTEGER
@@ -118,19 +132,23 @@
 - `computed_at`: TIMESTAMPTZ
 
 **Relationships**:
+
 - references: AnalysisReport (current week)
 - references: AnalysisReport (previous week)
 
 **Validation Rules**:
+
 - current_week/previous_week: valid ISO week numbers
 - sentiment_change: percentage changes between weeks
 - trend_direction: calculated based on overall sentiment shift
 
 ### Insight
+
 **Purpose**: Actionable recommendations derived from feedback analysis
 **Storage**: Supabase `feedback_insights` table (new)
 
 **Fields**:
+
 - `id`: UUID (primary key)
 - `store_id`: UUID (foreign key to stores)
 - `business_id`: UUID (foreign key to businesses)
@@ -147,11 +165,13 @@
 - `updated_at`: TIMESTAMPTZ
 
 **Relationships**:
+
 - belongs_to: Store (via store_id)
 - belongs_to: Business (via business_id)
 - belongs_to: Feedback (via feedback_id)
 
 **Validation Rules**:
+
 - title: required, minimum 5 characters
 - confidence_score: between 0.00 and 1.00
 - suggested_actions: array of actionable text items
@@ -160,6 +180,7 @@
 ## Database Schema Changes
 
 ### New Tables
+
 ```sql
 -- Analysis Reports table
 CREATE TABLE analysis_reports (
@@ -215,6 +236,7 @@ CREATE TABLE feedback_insights (
 ```
 
 ### Extended Tables
+
 ```sql
 -- Add analysis fields to existing feedback table
 ALTER TABLE feedback ADD COLUMN IF NOT EXISTS sentiment sentiment_enum;
@@ -228,6 +250,7 @@ ALTER TABLE feedback ADD COLUMN IF NOT EXISTS year INTEGER;
 ```
 
 ### Indexes for Performance
+
 ```sql
 -- Analysis Reports indexes
 CREATE INDEX idx_analysis_reports_store_week ON analysis_reports(store_id, week_number, year);
@@ -249,6 +272,7 @@ CREATE INDEX idx_insights_status ON feedback_insights(status);
 ```
 
 ### Row Level Security (RLS) Policies
+
 ```sql
 -- Analysis Reports RLS
 ALTER TABLE analysis_reports ENABLE ROW LEVEL SECURITY;
@@ -269,18 +293,21 @@ CREATE POLICY "insights_business_access" ON feedback_insights
 ## State Transitions
 
 ### Feedback Analysis Lifecycle
+
 1. **pending** → **processing**: When AI analysis job starts
 2. **processing** → **completed**: When analysis finishes successfully
 3. **processing** → **failed**: When analysis encounters errors
 4. **failed** → **pending**: When retry is requested
 
 ### Insight Status Lifecycle
+
 1. **new** → **acknowledged**: Business user views insight
 2. **acknowledged** → **in_progress**: Business takes action
 3. **in_progress** → **resolved**: Issue is addressed
 4. **new/acknowledged** → **dismissed**: Business rejects insight
 
 ### Report Generation Lifecycle
+
 1. Weekly cron job triggers analysis for completed week
 2. Aggregate all feedback for store/week combination
 3. Generate AI summaries for each sentiment category

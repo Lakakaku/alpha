@@ -1,12 +1,13 @@
 # Quickstart: AI Assistant Interface (Context Builder)
 
-**Date**: 2025-09-21
-**Feature**: AI Assistant Interface for business context building
-**Prerequisites**: Business authentication, store access, development environment
+**Date**: 2025-09-21 **Feature**: AI Assistant Interface for business context
+building **Prerequisites**: Business authentication, store access, development
+environment
 
 ## Development Setup
 
 ### 1. Environment Preparation
+
 ```bash
 # Navigate to project root
 cd /path/to/vocilia-alpha
@@ -19,6 +20,7 @@ pnpm dev  # Starts all apps including business dashboard
 ```
 
 ### 2. Database Migration
+
 ```bash
 # Apply AI assistant database schema
 npx supabase db push
@@ -28,9 +30,11 @@ npx supabase gen types --lang=typescript --local > packages/types/src/database.d
 ```
 
 ### 3. Environment Variables
+
 Add to your `.env.local` files:
 
 **Business App (`apps/business/.env.local`)**:
+
 ```env
 # OpenAI API for AI assistant
 OPENAI_API_KEY=your_openai_api_key
@@ -42,6 +46,7 @@ AI_ASSISTANT_STREAMING=true
 ```
 
 **Backend (`apps/backend/.env.local`)**:
+
 ```env
 # OpenAI configuration
 OPENAI_API_KEY=your_openai_api_key
@@ -56,10 +61,13 @@ AI_SUGGESTION_BATCH_SIZE=10
 ## User Journey Validation
 
 ### Test Scenario 1: New Business Manager First Use
+
 **Objective**: Validate complete onboarding flow through AI assistant
 
 **Steps**:
+
 1. **Access AI Assistant**
+
    ```
    Navigate to: /context/ai-assistant
    Expected: Chat interface loads with welcome message
@@ -67,6 +75,7 @@ AI_SUGGESTION_BATCH_SIZE=10
    ```
 
 2. **Start Conversation**
+
    ```
    User Input: "I need help setting up context for my grocery store"
    Expected: AI responds with store type questions
@@ -74,6 +83,7 @@ AI_SUGGESTION_BATCH_SIZE=10
    ```
 
 3. **Provide Store Information**
+
    ```
    User Input: "We're a medium-sized grocery store, about 5000 sq ft"
    Expected: AI extracts store_type=grocery, size=5000
@@ -82,6 +92,7 @@ AI_SUGGESTION_BATCH_SIZE=10
    ```
 
 4. **Follow AI Guidance**
+
    ```
    User continues conversation following AI prompts
    Expected: Context score gradually increases
@@ -97,6 +108,7 @@ AI_SUGGESTION_BATCH_SIZE=10
    ```
 
 **Success Criteria**:
+
 - ✅ Conversation saves automatically every 2 seconds
 - ✅ Context score reaches >70% within 10 minutes
 - ✅ AI provides relevant suggestions throughout
@@ -104,10 +116,13 @@ AI_SUGGESTION_BATCH_SIZE=10
 - ✅ All extracted information is accurate
 
 ### Test Scenario 2: Returning User Context Enhancement
+
 **Objective**: Validate conversation resume and context improvement
 
 **Steps**:
+
 1. **Resume Existing Conversation**
+
    ```
    Navigate to: /context/ai-assistant
    Expected: Previous conversation loads
@@ -116,6 +131,7 @@ AI_SUGGESTION_BATCH_SIZE=10
    ```
 
 2. **Review AI Suggestions**
+
    ```
    Check suggestions panel
    Expected: Context gap suggestions visible
@@ -124,6 +140,7 @@ AI_SUGGESTION_BATCH_SIZE=10
    ```
 
 3. **Accept Suggestion**
+
    ```
    Click "Accept" on high-priority suggestion
    Expected: Suggestion implements immediately
@@ -140,16 +157,20 @@ AI_SUGGESTION_BATCH_SIZE=10
    ```
 
 **Success Criteria**:
+
 - ✅ Conversation history loads <1 second
 - ✅ Suggestions apply correctly when accepted
 - ✅ Manual updates trigger relevant follow-up questions
 - ✅ Context versioning tracks all changes
 
 ### Test Scenario 3: Multi-Store Business Context
+
 **Objective**: Validate store-specific context management
 
 **Steps**:
+
 1. **Select Specific Store**
+
    ```
    Use store selector to choose Store A
    Expected: Context loads for Store A only
@@ -157,6 +178,7 @@ AI_SUGGESTION_BATCH_SIZE=10
    ```
 
 2. **Store-Specific Questions**
+
    ```
    User Input: "This location has limited parking"
    Expected: AI asks follow-up about parking impact
@@ -173,6 +195,7 @@ AI_SUGGESTION_BATCH_SIZE=10
    ```
 
 **Success Criteria**:
+
 - ✅ Store context isolation works correctly
 - ✅ No data leakage between stores
 - ✅ Performance acceptable when switching stores
@@ -181,6 +204,7 @@ AI_SUGGESTION_BATCH_SIZE=10
 ## API Contract Validation
 
 ### Conversation Management Tests
+
 ```bash
 # Test conversation creation
 curl -X POST http://localhost:3001/api/ai-assistant/conversations \
@@ -194,6 +218,7 @@ curl -X POST http://localhost:3001/api/ai-assistant/conversations \
 ```
 
 ### Message Exchange Tests
+
 ```bash
 # Test message sending
 curl -X POST http://localhost:3001/api/ai-assistant/conversations/$CONV_ID/messages \
@@ -207,6 +232,7 @@ curl -X POST http://localhost:3001/api/ai-assistant/conversations/$CONV_ID/messa
 ```
 
 ### Context Entry Tests
+
 ```bash
 # Test context retrieval
 curl -X GET "http://localhost:3001/api/ai-assistant/context/entries?category=store_profile" \
@@ -218,6 +244,7 @@ curl -X GET "http://localhost:3001/api/ai-assistant/context/entries?category=sto
 ```
 
 ### Validation Tests
+
 ```bash
 # Test context scoring
 curl -X GET "http://localhost:3001/api/ai-assistant/validation/score?recalculate=true" \
@@ -232,12 +259,14 @@ curl -X GET "http://localhost:3001/api/ai-assistant/validation/score?recalculate
 ## Performance Validation
 
 ### Response Time Requirements
+
 - **AI Response**: <3 seconds for typical queries
 - **Context Validation**: <2 seconds for scoring
 - **Conversation Load**: <1 second for recent conversations
 - **Auto-save**: <500ms for context updates
 
 ### Load Testing
+
 ```bash
 # Simulate concurrent conversations
 # Run 10 concurrent users for 5 minutes
@@ -246,6 +275,7 @@ curl -X GET "http://localhost:3001/api/ai-assistant/validation/score?recalculate
 ```
 
 ### Memory and Resource Usage
+
 - Monitor browser memory usage during long conversations
 - Check for memory leaks in React components
 - Validate WebSocket connection stability
@@ -254,12 +284,14 @@ curl -X GET "http://localhost:3001/api/ai-assistant/validation/score?recalculate
 ## Security Validation
 
 ### Authentication Tests
+
 - Verify JWT token validation on all endpoints
 - Test token expiration handling
 - Validate refresh token flow
 - Check unauthorized access rejection
 
 ### Row Level Security Tests
+
 ```sql
 -- Test business isolation
 -- User A should not see User B's conversations
@@ -268,6 +300,7 @@ curl -X GET "http://localhost:3001/api/ai-assistant/validation/score?recalculate
 ```
 
 ### Data Privacy Tests
+
 - Verify no sensitive data in browser console
 - Check that API responses don't include other businesses' data
 - Validate that conversation content is properly anonymized
@@ -278,6 +311,7 @@ curl -X GET "http://localhost:3001/api/ai-assistant/validation/score?recalculate
 ### Common Issues
 
 **AI Assistant Not Responding**
+
 ```bash
 # Check OpenAI API configuration
 curl -X GET "https://api.openai.com/v1/models" \
@@ -289,6 +323,7 @@ echo $OPENAI_MODEL
 ```
 
 **Conversation Not Saving**
+
 ```sql
 -- Check database connectivity
 SELECT COUNT(*) FROM ai_conversations WHERE business_id = 'your-business-id';
@@ -299,19 +334,23 @@ SELECT * FROM ai_conversations WHERE business_id = 'your-business-id';
 ```
 
 **Poor Completeness Scores**
+
 - Check validation rules in database
 - Verify category scoring weights
 - Review context entry data quality
 - Examine AI extraction accuracy
 
 **Slow Response Times**
+
 - Monitor OpenAI API latency
 - Check database query performance
 - Review React component re-renders
 - Validate caching effectiveness
 
 ### Debug Mode
+
 Enable detailed logging:
+
 ```env
 # Add to environment
 DEBUG_AI_ASSISTANT=true
@@ -320,6 +359,7 @@ TRACE_API_CALLS=true
 ```
 
 ### Health Checks
+
 ```bash
 # Verify all systems operational
 curl http://localhost:3001/health
@@ -335,6 +375,7 @@ node -e "console.log('OpenAI test:', process.env.OPENAI_API_KEY ? 'OK' : 'MISSIN
 ## Success Metrics
 
 ### Feature Completion Checklist
+
 - [ ] All user scenarios complete successfully
 - [ ] API contracts pass validation
 - [ ] Performance requirements met
@@ -347,6 +388,7 @@ node -e "console.log('OpenAI test:', process.env.OPENAI_API_KEY ? 'OK' : 'MISSIN
 - [ ] Documentation complete
 
 ### Quality Gates
+
 - **Test Coverage**: >85% for new code
 - **Performance**: All response times <3s
 - **Security**: Zero SQL injection vulnerabilities
@@ -355,6 +397,7 @@ node -e "console.log('OpenAI test:', process.env.OPENAI_API_KEY ? 'OK' : 'MISSIN
 - **Mobile**: Responsive design functions correctly
 
 ### Production Readiness
+
 - [ ] Environment variables configured
 - [ ] Database migrations applied
 - [ ] Monitoring and alerts set up

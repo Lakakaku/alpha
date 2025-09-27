@@ -2,37 +2,16 @@
   "extends": "../../packages/tsconfig/nextjs.json",
   "compilerOptions": {
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@alpha/ui": [
-        "../../packages/ui/src"
-      ],
-      "@alpha/ui/*": [
-        "../../packages/ui/src/*"
-      ],
-      "@alpha/shared": [
-        "../../packages/shared/src"
-      ],
-      "@alpha/shared/*": [
-        "../../packages/shared/src/*"
-      ],
-      "@/context/*": [
-        "./src/components/context/*"
-      ],
-      "@/types/context": [
-        "../../packages/types/src/context"
-      ]
+      "@/*": ["./src/*"],
+      "@alpha/ui": ["../../packages/ui/src"],
+      "@alpha/ui/*": ["../../packages/ui/src/*"],
+      "@alpha/shared": ["../../packages/shared/src"],
+      "@alpha/shared/*": ["../../packages/shared/src/*"],
+      "@/context/*": ["./src/components/context/*"],
+      "@/types/context": ["../../packages/types/src/context"]
     },
     "strictNullChecks": true
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
 }

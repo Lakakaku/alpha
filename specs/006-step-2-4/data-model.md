@@ -7,6 +7,7 @@
 ### Core Tables
 
 #### 1. custom_questions
+
 Primary table for storing business-created feedback questions.
 
 ```sql
@@ -61,6 +62,7 @@ CREATE INDEX idx_custom_questions_category ON custom_questions(category_id);
 ```
 
 #### 2. question_categories
+
 Organizational grouping for questions within a business.
 
 ```sql
@@ -92,6 +94,7 @@ CREATE INDEX idx_question_categories_business_sort ON question_categories(busine
 ```
 
 #### 3. question_triggers
+
 Conditional logic for when questions should be presented.
 
 ```sql
@@ -118,6 +121,7 @@ CREATE INDEX idx_question_triggers_type_enabled ON question_triggers(trigger_typ
 ```
 
 #### 4. question_responses
+
 Store customer responses to custom questions (for analytics).
 
 ```sql
@@ -151,6 +155,7 @@ CREATE INDEX idx_question_responses_business_store ON question_responses(busines
 ```
 
 #### 5. question_analytics_summary
+
 Aggregated analytics for question performance.
 
 ```sql
@@ -195,6 +200,7 @@ CREATE INDEX idx_question_analytics_business_period ON question_analytics_summar
 ## Row Level Security (RLS) Policies
 
 ### custom_questions
+
 ```sql
 -- Enable RLS
 ALTER TABLE custom_questions ENABLE ROW LEVEL SECURITY;
@@ -231,6 +237,7 @@ CREATE POLICY "store_questions_access" ON custom_questions
 ```
 
 ### question_categories
+
 ```sql
 ALTER TABLE question_categories ENABLE ROW LEVEL SECURITY;
 
@@ -246,6 +253,7 @@ CREATE POLICY "business_categories_access" ON question_categories
 ```
 
 ### question_triggers
+
 ```sql
 ALTER TABLE question_triggers ENABLE ROW LEVEL SECURITY;
 
@@ -264,6 +272,7 @@ CREATE POLICY "question_triggers_access" ON question_triggers
 ```
 
 ### question_responses
+
 ```sql
 ALTER TABLE question_responses ENABLE ROW LEVEL SECURITY;
 
@@ -286,6 +295,7 @@ CREATE POLICY "customer_responses_insert" ON question_responses
 ```
 
 ### question_analytics_summary
+
 ```sql
 ALTER TABLE question_analytics_summary ENABLE ROW LEVEL SECURITY;
 
@@ -304,6 +314,7 @@ CREATE POLICY "business_analytics_access" ON question_analytics_summary
 ## Data Relationships
 
 ### Entity Relationships
+
 - **Business (1) → (N) Custom Questions**: Business ownership
 - **Store (1) → (N) Custom Questions**: Optional store-specific questions
 - **Question Category (1) → (N) Custom Questions**: Organizational grouping
@@ -312,6 +323,7 @@ CREATE POLICY "business_analytics_access" ON question_analytics_summary
 - **Custom Question (1) → (N) Analytics Summary**: Performance metrics
 
 ### Key Constraints
+
 - Questions must belong to authenticated business
 - Store-specific questions inherit business permissions
 - Triggers must have valid JSON configuration
@@ -321,22 +333,27 @@ CREATE POLICY "business_analytics_access" ON question_analytics_summary
 ## Validation Rules
 
 ### Question Content
+
 - Text length: 10-500 characters
 - Question types: text, rating, multiple_choice, yes_no
 - Status progression: draft → active → inactive/archived
 
 ### Frequency Management
+
 - Target frequency: 1-100 customers per window
 - Window types: hourly, daily, weekly
 - Automatic reset based on window type
 
 ### Scheduling
+
 - Date ranges must be valid (start ≤ end)
 - Time ranges optional for daily scheduling
 - Days of week as integer array (0-6)
 
 ### Trigger Configuration
+
 Examples of trigger_config JSONB:
+
 ```json
 // Purchase amount trigger
 {
@@ -366,4 +383,5 @@ Examples of trigger_config JSONB:
 ```
 
 ---
+
 **Data Model Complete**: Ready for contract generation

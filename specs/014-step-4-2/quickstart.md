@@ -16,9 +16,11 @@
 
 ### Scenario 1: Complete Weekly Verification Cycle (Happy Path)
 
-**Goal**: Test the full verification workflow from database preparation to payment processing.
+**Goal**: Test the full verification workflow from database preparation to
+payment processing.
 
 #### Setup
+
 1. Create test data:
    - At least 10 feedback entries for a test store from the past week
    - Test business account with access to the store
@@ -27,16 +29,19 @@
 #### Test Steps
 
 **Phase 1: Database Preparation (Admin)**
+
 1. Login to admin dashboard as verification admin
 2. Navigate to Verification > Weekly Cycles
 3. Click "Create New Cycle" for current week
 4. Verify cycle appears with status "preparing"
 5. Click "Prepare Databases" action
-6. Wait for background job completion (should complete within 2 minutes for test data)
+6. Wait for background job completion (should complete within 2 minutes for test
+   data)
 7. Verify cycle status changes to "ready"
 8. Verify verification databases created for each store with transaction count
 
 **Phase 2: Database Distribution (Admin)**
+
 1. Navigate to Verification > Databases for the cycle
 2. Verify each database shows transaction count and deadline (5 business days)
 3. Test download links for CSV, Excel, and JSON formats
@@ -46,6 +51,7 @@
    - Proper format structure
 
 **Phase 3: Business Verification (Business User)**
+
 1. Login to business portal as test business
 2. Navigate to Verification section
 3. Verify new verification database appears with "ready" status
@@ -56,6 +62,7 @@
 8. Verify database status changes to "submitted"
 
 **Phase 4: Payment Processing (Admin)**
+
 1. Return to admin dashboard
 2. Navigate to completed verification databases
 3. Click "Generate Invoices" for the cycle
@@ -68,6 +75,7 @@
 7. Verify customer rewards batch created for Swish payments
 
 #### Expected Results
+
 - Complete cycle from preparation to payment in under 30 minutes
 - All transaction data properly sanitized for business verification
 - Accurate reward calculations and fee application
@@ -79,6 +87,7 @@
 **Goal**: Test deadline monitoring and notification system.
 
 #### Test Steps
+
 1. Create verification cycle with test data
 2. Prepare and distribute databases to businesses
 3. Wait for notification triggers (use shorter deadlines for testing)
@@ -89,6 +98,7 @@
    - No feedback delivery for expired submissions
 
 #### Expected Results
+
 - Timely notifications via email and in-app
 - Proper deadline enforcement
 - Clear messaging about verification requirements
@@ -98,6 +108,7 @@
 **Goal**: Test multiple export formats and business submission validation.
 
 #### Test Steps
+
 1. Generate verification database with sample transactions
 2. Download and validate each format:
    - **CSV**: Proper comma separation, UTF-8 encoding, headers
@@ -110,6 +121,7 @@
    - Missing required fields
 
 #### Expected Results
+
 - All formats generate correctly and contain identical data
 - Proper validation errors for invalid submissions
 - Clear error messages for businesses
@@ -119,6 +131,7 @@
 **Goal**: Test system behavior under error conditions.
 
 #### Test Steps
+
 1. **Partial Verification Testing**:
    - Submit verification with some transactions unmarked
    - Verify system handling of incomplete submissions
@@ -138,6 +151,7 @@
    - Verify proper error handling and admin notification
 
 #### Expected Results
+
 - Graceful error handling with clear messaging
 - Admin tools for manual intervention
 - Performance targets maintained under load
@@ -146,16 +160,19 @@
 ## Performance Validation
 
 ### Database Preparation Performance
+
 - **Target**: Complete within 2 hours for full weekly cycle
 - **Test**: Measure preparation time with 1,000 transactions per store
 - **Validation**: Background job completion time tracking
 
 ### File Export Performance
+
 - **Target**: Generate exports within 15 minutes per store
 - **Test**: Time individual store database generation
 - **Validation**: Export process monitoring and alerts
 
 ### API Response Performance
+
 - **Target**: <500ms for CRUD operations
 - **Test**: Use API testing tools to measure response times
 - **Validation**: All verification endpoints meet performance targets
@@ -163,20 +180,24 @@
 ## Security Validation
 
 ### Data Privacy
+
 - **Test**: Verify verification databases contain no sensitive data
 - **Validation**: Automated checks for phone numbers and feedback content
 
 ### Access Control
+
 - **Test**: Verify RLS policies prevent cross-business data access
 - **Validation**: Attempt unauthorized access with different business accounts
 
 ### File Security
+
 - **Test**: Verify signed URLs expire properly
 - **Validation**: Test expired URL access and proper error responses
 
 ## Cleanup
 
 After testing completion:
+
 1. Remove test verification cycles and databases
 2. Clear test payment invoices and reward batches
 3. Reset test business and admin accounts

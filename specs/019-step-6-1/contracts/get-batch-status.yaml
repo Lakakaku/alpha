@@ -26,7 +26,7 @@ paths:
           description: Batch ID to query
           example: "f6a7b8c9-d0e1-2345-f123-456789012345"
       responses:
-        '200':
+        "200":
           description: Batch status retrieved successfully
           content:
             application/json:
@@ -109,7 +109,7 @@ paths:
                         nullable: true
                         description: Railway instance/pod ID that processed the batch
                         example: "railway-pod-abc123"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
@@ -125,7 +125,7 @@ paths:
                   error:
                     type: string
                     example: "Admin authentication required"
-        '404':
+        "404":
           description: Batch not found
           content:
             application/json:
@@ -141,7 +141,7 @@ paths:
                   error:
                     type: string
                     example: "Batch not found"
-        '500':
+        "500":
           description: Internal server error
           content:
             application/json:

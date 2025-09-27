@@ -1,13 +1,14 @@
 # Support API Contract
 
-**Version**: 1.0.0
-**Base Path**: `/api/support`
-**Authentication**: Required (JWT token in Authorization header)
+**Version**: 1.0.0 **Base Path**: `/api/support` **Authentication**: Required
+(JWT token in Authorization header)
 
 ## POST /api/support/tickets
+
 Create new support ticket
 
 **Request Body**:
+
 ```json
 {
   "category": "payment" | "verification" | "technical" | "feedback" | "general",
@@ -20,6 +21,7 @@ Create new support ticket
 ```
 
 **Response (201 Created)**:
+
 ```json
 {
   "id": "uuid",
@@ -33,6 +35,7 @@ Create new support ticket
 ```
 
 **Response (400 Bad Request)**:
+
 ```json
 {
   "error": "validation_error",
@@ -46,12 +49,15 @@ Create new support ticket
 ```
 
 ## GET /api/support/tickets/{id}
+
 Get support ticket details and conversation history
 
 **Path Parameters**:
+
 - `id`: Ticket UUID or ticket_number
 
 **Response (200 OK)**:
+
 ```json
 {
   "id": "uuid",
@@ -93,9 +99,11 @@ Get support ticket details and conversation history
 ```
 
 ## GET /api/support/tickets
+
 List support tickets with filtering
 
 **Query Parameters**:
+
 - `status`: Filter by ticket status
 - `category`: Filter by category
 - `priority`: Filter by priority
@@ -105,6 +113,7 @@ List support tickets with filtering
 - `offset`: Pagination offset
 
 **Response (200 OK)**:
+
 ```json
 {
   "tickets": [
@@ -126,12 +135,15 @@ List support tickets with filtering
 ```
 
 ## POST /api/support/tickets/{id}/messages
+
 Add message to support ticket
 
 **Path Parameters**:
+
 - `id`: Ticket UUID
 
 **Request Body**:
+
 ```json
 {
   "message_content": "string",
@@ -141,6 +153,7 @@ Add message to support ticket
 ```
 
 **Response (201 Created)**:
+
 ```json
 {
   "id": "uuid",
@@ -153,12 +166,15 @@ Add message to support ticket
 ```
 
 ## PUT /api/support/tickets/{id}/status
+
 Update ticket status (Admin only)
 
 **Path Parameters**:
+
 - `id`: Ticket UUID
 
 **Request Body**:
+
 ```json
 {
   "status": "in_progress" | "pending_customer" | "resolved" | "closed",
@@ -167,6 +183,7 @@ Update ticket status (Admin only)
 ```
 
 **Response (200 OK)**:
+
 ```json
 {
   "id": "uuid",
@@ -177,12 +194,15 @@ Update ticket status (Admin only)
 ```
 
 ## PUT /api/support/tickets/{id}/assign
+
 Assign ticket to admin user (Admin only)
 
 **Path Parameters**:
+
 - `id`: Ticket UUID
 
 **Request Body**:
+
 ```json
 {
   "assigned_to": "uuid" // Admin user ID, null to unassign
@@ -190,6 +210,7 @@ Assign ticket to admin user (Admin only)
 ```
 
 **Response (200 OK)**:
+
 ```json
 {
   "id": "uuid",
@@ -204,12 +225,15 @@ Assign ticket to admin user (Admin only)
 ```
 
 ## PUT /api/support/tickets/{id}/priority
+
 Update ticket priority (Admin only)
 
 **Path Parameters**:
+
 - `id`: Ticket UUID
 
 **Request Body**:
+
 ```json
 {
   "priority": "low" | "normal" | "high" | "urgent",
@@ -218,6 +242,7 @@ Update ticket priority (Admin only)
 ```
 
 **Response (200 OK)**:
+
 ```json
 {
   "id": "uuid",
@@ -228,12 +253,15 @@ Update ticket priority (Admin only)
 ```
 
 ## POST /api/support/tickets/{id}/satisfaction
+
 Submit customer satisfaction rating
 
 **Path Parameters**:
+
 - `id`: Ticket UUID
 
 **Request Body**:
+
 ```json
 {
   "rating": 5, // 1-5 scale
@@ -242,6 +270,7 @@ Submit customer satisfaction rating
 ```
 
 **Response (200 OK)**:
+
 ```json
 {
   "id": "uuid",
@@ -252,6 +281,7 @@ Submit customer satisfaction rating
 ```
 
 **Response (409 Conflict)**:
+
 ```json
 {
   "error": "invalid_status",
@@ -260,14 +290,17 @@ Submit customer satisfaction rating
 ```
 
 ## GET /api/support/sla-report
+
 Get SLA performance report (Admin only)
 
 **Query Parameters**:
+
 - `start_date`: Filter from date (ISO 8601)
 - `end_date`: Filter to date (ISO 8601)
 - `category`: Filter by category
 
 **Response (200 OK)**:
+
 ```json
 {
   "period": {
@@ -300,9 +333,11 @@ Get SLA performance report (Admin only)
 ```
 
 ## GET /api/support/templates
+
 Get support response templates (Admin only)
 
 **Response (200 OK)**:
+
 ```json
 {
   "templates": [
@@ -320,6 +355,7 @@ Get support response templates (Admin only)
 ## Error Responses
 
 **400 Bad Request**:
+
 ```json
 {
   "error": "validation_error",
@@ -333,6 +369,7 @@ Get support response templates (Admin only)
 ```
 
 **403 Forbidden**:
+
 ```json
 {
   "error": "forbidden",
@@ -341,6 +378,7 @@ Get support response templates (Admin only)
 ```
 
 **404 Not Found**:
+
 ```json
 {
   "error": "ticket_not_found",
@@ -349,6 +387,7 @@ Get support response templates (Admin only)
 ```
 
 **409 Conflict**:
+
 ```json
 {
   "error": "invalid_status_transition",

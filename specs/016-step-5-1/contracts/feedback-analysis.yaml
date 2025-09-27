@@ -42,7 +42,7 @@ paths:
                   enum: [normal, high]
                   default: normal
       responses:
-        '202':
+        "202":
           description: Analysis queued successfully
           content:
             application/json:
@@ -58,18 +58,18 @@ paths:
                   status:
                     type: string
                     enum: [queued, processing]
-        '400':
+        "400":
           description: Invalid analysis request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
           description: Call session or transcript not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /ai/analysis/{analysis_id}/status:
     get:
@@ -87,7 +87,7 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Analysis status retrieved
           content:
             application/json:
@@ -106,7 +106,14 @@ paths:
                     maximum: 100
                   current_stage:
                     type: string
-                    enum: [legitimacy_check, depth_analysis, usefulness_analysis, scoring, summarization]
+                    enum:
+                      [
+                        legitimacy_check,
+                        depth_analysis,
+                        usefulness_analysis,
+                        scoring,
+                        summarization,
+                      ]
                   error_message:
                     type: string
                     nullable: true
@@ -127,18 +134,18 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Analysis results retrieved
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/QualityAssessment'
-        '404':
+                $ref: "#/components/schemas/QualityAssessment"
+        "404":
           description: Analysis not found or not completed
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /ai/analysis/fraud-check:
     post:
@@ -174,7 +181,7 @@ paths:
                   type: boolean
                   default: false
       responses:
-        '200':
+        "200":
           description: Fraud detection completed
           content:
             application/json:
@@ -184,7 +191,7 @@ paths:
                   fraud_results:
                     type: array
                     items:
-                      $ref: '#/components/schemas/FraudDetectionResult'
+                      $ref: "#/components/schemas/FraudDetectionResult"
                   overall_is_fraudulent:
                     type: boolean
                   confidence_level:
@@ -229,7 +236,7 @@ paths:
                   enum: [brief, standard, detailed]
                   default: standard
       responses:
-        '200':
+        "200":
           description: Summary generated successfully
           content:
             application/json:
@@ -249,7 +256,7 @@ paths:
                   actionable_items:
                     type: array
                     items:
-                      $ref: '#/components/schemas/ActionableItem'
+                      $ref: "#/components/schemas/ActionableItem"
                   summary_metadata:
                     type: object
                     description: Generation parameters and model info
@@ -283,7 +290,7 @@ paths:
             type: boolean
             default: false
       responses:
-        '200':
+        "200":
           description: Cleanup completed
           content:
             application/json:
@@ -364,7 +371,7 @@ components:
         business_actionable_items:
           type: array
           items:
-            $ref: '#/components/schemas/ActionableItem'
+            $ref: "#/components/schemas/ActionableItem"
         analysis_metadata:
           type: object
           properties:

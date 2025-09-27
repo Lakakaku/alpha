@@ -5,11 +5,13 @@
 ## Prerequisites
 
 ### System Requirements
+
 - Node.js 18+ and pnpm 8+
 - Supabase project "alpha" configured
 - Existing Vocilia monorepo with business authentication
 
 ### Environment Setup
+
 ```bash
 # Verify monorepo structure
 cd /path/to/alpha
@@ -25,6 +27,7 @@ cd apps/backend && pnpm dev
 ```
 
 ### Database Prerequisites
+
 ```bash
 # Verify business authentication tables exist
 npx supabase db pull
@@ -37,13 +40,15 @@ npx supabase db push
 ## Quick Test Scenarios
 
 ### Scenario 1: Store Profile Configuration ⏱️ 3 minutes
+
 **Goal**: Business owner configures basic store information
 
 1. **Access Context Route**
+
    ```bash
    # Start business app
    cd apps/business && pnpm dev
-   
+
    # Navigate to: http://localhost:3001/login
    # Login with existing business account
    # Navigate to: http://localhost:3001/context
@@ -57,6 +62,7 @@ npx supabase db push
    - Operating Hours: Mon-Fri 8:00-20:00, Sat-Sun 10:00-18:00
 
 3. **Verify API Integration**
+
    ```bash
    # Check backend logs for context API calls
    curl -H "Authorization: Bearer TOKEN" \
@@ -69,9 +75,11 @@ npx supabase db push
    - Navigation shows "Personnel" as next step
 
 ### Scenario 2: Personnel Management ⏱️ 4 minutes
+
 **Goal**: Business configures staff information and service points
 
 1. **Access Personnel Section**
+
    ```bash
    # From previous scenario or direct navigation
    # Navigate to: http://localhost:3001/context/personnel
@@ -94,9 +102,11 @@ npx supabase db push
    - Shift calculations display correctly
 
 ### Scenario 3: Interactive Layout Builder ⏱️ 5 minutes
+
 **Goal**: Business documents store layout and department positioning
 
 1. **Access Layout Section**
+
    ```bash
    # Navigate to: http://localhost:3001/context/layout
    ```
@@ -114,6 +124,7 @@ npx supabase db push
    - Returns: Side entrance area
 
 4. **Test Image Upload** (when available)
+
    ```bash
    # Upload store layout image (optional)
    # File should be <2MB, formats: JPG, PNG, PDF
@@ -125,9 +136,11 @@ npx supabase db push
    - Store map displays department locations
 
 ### Scenario 4: Inventory & Services Configuration ⏱️ 3 minutes
+
 **Goal**: Complete context with product categories and services
 
 1. **Access Inventory Section**
+
    ```bash
    # Navigate to: http://localhost:3001/context/inventory
    ```
@@ -153,9 +166,11 @@ npx supabase db push
    - Export for AI integration available
 
 ### Scenario 5: Version Management & AI Export ⏱️ 2 minutes
+
 **Goal**: Test context versioning and AI integration export
 
 1. **Create Context Version**
+
    ```bash
    # API call to create version snapshot
    curl -X POST \
@@ -166,11 +181,12 @@ npx supabase db push
    ```
 
 2. **Test AI Export**
+
    ```bash
    # Export structured format for AI
    curl -H "Authorization: Bearer TOKEN" \
         "http://localhost:3000/api/business/stores/STORE_ID/context/export?format=structured"
-   
+
    # Export narrative format for AI
    curl -H "Authorization: Bearer TOKEN" \
         "http://localhost:3000/api/business/stores/STORE_ID/context/export?format=narrative"
@@ -189,6 +205,7 @@ npx supabase db push
 ## Integration Verification
 
 ### API Contract Validation
+
 ```bash
 # Run contract tests (when available)
 cd apps/backend && pnpm test:contracts
@@ -198,6 +215,7 @@ npm run test:integration -- --grep "context"
 ```
 
 ### Database Validation
+
 ```bash
 # Check RLS policies
 npx supabase db test
@@ -207,6 +225,7 @@ npx supabase db test
 ```
 
 ### Frontend Validation
+
 ```bash
 # Component tests
 cd apps/business && pnpm test
@@ -221,8 +240,9 @@ npm run test:performance
 ## Common Issues & Solutions
 
 ### Issue 1: Context Not Saving
-**Symptoms**: Form submits but data not persisted
-**Solution**: 
+
+**Symptoms**: Form submits but data not persisted **Solution**:
+
 ```bash
 # Check backend logs for validation errors
 cd apps/backend && pnpm dev
@@ -232,8 +252,9 @@ cd apps/backend && pnpm dev
 ```
 
 ### Issue 2: Layout Image Upload Fails
-**Symptoms**: Image upload returns 403 or 413 error
-**Solution**:
+
+**Symptoms**: Image upload returns 403 or 413 error **Solution**:
+
 ```bash
 # Check Supabase storage bucket permissions
 # Verify file size <2MB
@@ -241,15 +262,17 @@ cd apps/backend && pnpm dev
 ```
 
 ### Issue 3: Personnel Shifts Don't Calculate
-**Symptoms**: Total staff doesn't match shift allocations
-**Solution**: 
+
+**Symptoms**: Total staff doesn't match shift allocations **Solution**:
+
 - Verify shift times don't overlap
 - Check department allocation numbers sum correctly
 - Ensure all shifts cover operating hours
 
 ### Issue 4: Context Completeness Stuck
-**Symptoms**: Score doesn't reach 100% despite filling all fields
-**Solution**:
+
+**Symptoms**: Score doesn't reach 100% despite filling all fields **Solution**:
+
 ```bash
 # Check validation rules in database
 # Verify required fields marked properly
@@ -259,6 +282,7 @@ cd apps/backend && pnpm dev
 ## Performance Benchmarks
 
 ### Response Time Targets
+
 - Context retrieval: <100ms
 - Form save operations: <200ms
 - Image upload: <2s for 2MB file
@@ -266,6 +290,7 @@ cd apps/backend && pnpm dev
 - Real-time updates: <100ms propagation
 
 ### Load Testing
+
 ```bash
 # Test concurrent context updates
 # Simulate 10 businesses updating context simultaneously
@@ -275,19 +300,23 @@ cd apps/backend && pnpm dev
 ## Next Steps
 
 ### Integration with AI Feedback
+
 1. Configure AI system to consume context exports
 2. Test context-based question generation
 3. Verify fraud detection uses context baseline
 
-### Multi-Store Support  
+### Multi-Store Support
+
 1. Test context configuration for businesses with multiple stores
 2. Verify context isolation between stores
 3. Test bulk context operations
 
 ### Advanced Features
+
 1. Context templates for similar store types
 2. AI-powered context suggestions
 3. Context sharing between business locations
 
 ---
-*Quickstart complete - Ready for implementation tasks*
+
+_Quickstart complete - Ready for implementation tasks_

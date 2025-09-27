@@ -1,10 +1,13 @@
 # Quickstart Guide: Swish Payment Integration Testing
 
-**Feature**: 019-step-6-1 | **Created**: 2025-09-25 | **Prerequisites**: [data-model.md](./data-model.md), [contracts/](./contracts/)
+**Feature**: 019-step-6-1 | **Created**: 2025-09-25 | **Prerequisites**:
+[data-model.md](./data-model.md), [contracts/](./contracts/)
 
 ## Overview
 
-This quickstart provides step-by-step scenarios to test the Swish payment integration system from feedback submission through reward calculation, batch processing, and reconciliation reporting.
+This quickstart provides step-by-step scenarios to test the Swish payment
+integration system from feedback submission through reward calculation, batch
+processing, and reconciliation reporting.
 
 ## Prerequisites
 
@@ -13,8 +16,10 @@ This quickstart provides step-by-step scenarios to test the Swish payment integr
 1. **Database**: Supabase PostgreSQL with payment schema migrated
 2. **Backend**: Railway deployment with payment services
 3. **Admin Dashboard**: Vercel deployment with payment UI
-4. **Mock Swish**: Mock Swish client configured (no real merchant account needed)
-5. **Test Data**: At least 3 stores, 2 businesses, 10 customers with valid Swedish phone numbers
+4. **Mock Swish**: Mock Swish client configured (no real merchant account
+   needed)
+5. **Test Data**: At least 3 stores, 2 businesses, 10 customers with valid
+   Swedish phone numbers
 
 ### Required Environment Variables
 
@@ -180,6 +185,7 @@ curl -X GET https://api.vocilia.com/api/admin/payments/reconciliation/f6a7b8c9-d
 ```
 
 **✅ Success Criteria**:
+
 - Reward calculation: 11.1% of 200 SEK = 22.20 SEK
 - Payment status: successful
 - Reconciliation: 0 discrepancies
@@ -244,6 +250,7 @@ curl -X GET https://api.vocilia.com/api/admin/payments/customer/467012345678 \
 ```
 
 **✅ Success Criteria**:
+
 - Single aggregated payment: 51.30 SEK
 - Reward count: 3 submissions
 - Store count: 3 unique stores
@@ -257,13 +264,13 @@ curl -X GET https://api.vocilia.com/api/admin/payments/customer/467012345678 \
 
 ### Test Cases
 
-| Quality Score | Expected Reward % | Formula |
-|--------------|------------------|---------|
-| 49 | 0% | Below threshold |
-| 50 | 2% | Minimum: (50-50)/(100-50) × 13% + 2% = 2% |
-| 75 | 8.5% | Mid-range: (75-50)/(100-50) × 13% + 2% = 8.5% |
-| 85 | 11.1% | High: (85-50)/(100-50) × 13% + 2% = 11.1% |
-| 100 | 15% | Maximum: (100-50)/(100-50) × 13% + 2% = 15% |
+| Quality Score | Expected Reward % | Formula                                       |
+| ------------- | ----------------- | --------------------------------------------- |
+| 49            | 0%                | Below threshold                               |
+| 50            | 2%                | Minimum: (50-50)/(100-50) × 13% + 2% = 2%     |
+| 75            | 8.5%              | Mid-range: (75-50)/(100-50) × 13% + 2% = 8.5% |
+| 85            | 11.1%             | High: (85-50)/(100-50) × 13% + 2% = 11.1%     |
+| 100           | 15%               | Maximum: (100-50)/(100-50) × 13% + 2% = 15%   |
 
 ### Step 3.1: Test Below Threshold
 
@@ -272,7 +279,7 @@ curl -X GET https://api.vocilia.com/api/admin/payments/customer/467012345678 \
 # Expected: No reward calculation created (score < 50)
 
 # Verify in database:
-SELECT COUNT(*) FROM reward_calculations 
+SELECT COUNT(*) FROM reward_calculations
 WHERE quality_score < 50;
 # Expected: 0 rows
 ```
@@ -294,6 +301,7 @@ curl -X POST https://api.vocilia.com/api/admin/payments/calculate-rewards \
 ```
 
 **✅ Success Criteria**:
+
 - Score 49: No reward
 - Score 50: Exactly 2%
 - Score 75: Exactly 8.5%
@@ -370,6 +378,7 @@ curl -X GET https://api.vocilia.com/api/admin/payments/batch/f6a7b8c9-d0e1-2345-
 ```
 
 **✅ Success Criteria**:
+
 - First attempt fails immediately
 - Retry 1 after 1 minute (exponential backoff: 2^0 = 1 min)
 - Retry 2 after 2 minutes (exponential backoff: 2^1 = 2 min)
@@ -422,6 +431,7 @@ curl -X GET https://api.vocilia.com/api/admin/payments/failed \
 ```
 
 **✅ Success Criteria**:
+
 - Original phone fails 4 times (initial + 3 retries)
 - Admin manually updates phone
 - Retry with new phone succeeds
@@ -455,8 +465,8 @@ curl -X POST https://api.vocilia.com/api/admin/payments/process-batch \
 
 ```sql
 -- Check payment_transactions for customer
-SELECT * FROM payment_transactions 
-WHERE customer_phone = '467033333333' 
+SELECT * FROM payment_transactions
+WHERE customer_phone = '467033333333'
 AND batch_id IN (
   SELECT id FROM payment_batches WHERE batch_week = '2025-W09'
 );
@@ -486,6 +496,7 @@ AND batch_id IN (
 ```
 
 **✅ Success Criteria**:
+
 - Week 1 (1.26 SEK): No payment, carried forward
 - Week 2 (4.14 SEK total): No payment, carried forward
 - Week 3 (7.09 SEK total): Payment created and sent
@@ -540,6 +551,7 @@ curl -X GET https://api.vocilia.com/api/admin/payments/reconciliation/{batchId} 
 ```
 
 **✅ Success Criteria**:
+
 - Only verified feedback generates rewards
 - Fraudulent feedback excluded
 - Unverified feedback excluded
@@ -567,6 +579,7 @@ time curl -X POST https://api.vocilia.com/api/admin/payments/process-batch \
 ```
 
 **✅ Performance Targets**:
+
 - Reward calculation: <500ms per feedback
 - Batch processing: <10 minutes for 10k customers
 - Payment API calls: <2s per Swish transaction
@@ -580,13 +593,13 @@ time curl -X POST https://api.vocilia.com/api/admin/payments/process-batch \
 
 ```bash
 # Check job lock status
-SELECT * FROM payment_batches 
-WHERE job_lock_key IS NOT NULL 
+SELECT * FROM payment_batches
+WHERE job_lock_key IS NOT NULL
 AND job_locked_at < NOW() - INTERVAL '30 minutes';
 
 # Release stuck lock manually
-UPDATE payment_batches 
-SET job_lock_key = NULL, job_locked_at = NULL 
+UPDATE payment_batches
+SET job_lock_key = NULL, job_locked_at = NULL
 WHERE id = '{stuck_batch_id}';
 ```
 
@@ -597,7 +610,7 @@ WHERE id = '{stuck_batch_id}';
 curl -X GET http://localhost:3000/mock-swish/admin/logs
 
 # Verify phone number format
-SELECT customer_phone FROM payment_transactions 
+SELECT customer_phone FROM payment_transactions
 WHERE customer_phone !~ '^467\d{8}$';
 # Expected: 0 rows (all valid Swedish mobile numbers)
 ```
@@ -606,11 +619,11 @@ WHERE customer_phone !~ '^467\d{8}$';
 
 ```bash
 # Verify quality score mapping
-SELECT 
+SELECT
   quality_score,
   reward_percentage,
   ROUND((quality_score - 50.0) / (100.0 - 50.0) * 0.13 + 0.02, 3) AS expected_percentage
-FROM reward_calculations 
+FROM reward_calculations
 WHERE reward_percentage != ROUND((quality_score - 50.0) / (100.0 - 50.0) * 0.13 + 0.02, 3);
 # Expected: 0 rows (all calculations correct)
 ```
@@ -621,10 +634,12 @@ WHERE reward_percentage != ROUND((quality_score - 50.0) / (100.0 - 50.0) * 0.13 
 
 After completing all scenarios:
 
-1. **Production Swish Integration**: Replace mock client with real Swish merchant credentials
+1. **Production Swish Integration**: Replace mock client with real Swish
+   merchant credentials
 2. **Monitoring**: Set up alerts for failed payments, batch processing delays
 3. **Business Training**: Train business admins on verification workflow
 4. **Customer Communication**: Design Swish payment notification messages
 
 ---
-*Based on spec.md acceptance scenarios and constitutional testing principles*
+
+_Based on spec.md acceptance scenarios and constitutional testing principles_

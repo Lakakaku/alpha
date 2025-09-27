@@ -2,11 +2,14 @@
 
 ## Overview
 
-This guide covers the comprehensive monitoring system for the Vocilia customer feedback reward platform. The monitoring infrastructure ensures 99.5% uptime, <2s response times, and proactive alerting for all production systems.
+This guide covers the comprehensive monitoring system for the Vocilia customer
+feedback reward platform. The monitoring infrastructure ensures 99.5% uptime,
+<2s response times, and proactive alerting for all production systems.
 
 ## Monitoring Architecture
 
 ### Monitoring Stack
+
 - **Railway**: Backend infrastructure monitoring
 - **Vercel**: Frontend performance and analytics
 - **Supabase**: Database monitoring and query analysis
@@ -14,6 +17,7 @@ This guide covers the comprehensive monitoring system for the Vocilia customer f
 - **External Tools**: Uptime monitoring and alerting services
 
 ### Key Metrics Tracked
+
 - **Uptime**: Service availability across all platforms
 - **Performance**: Response times, throughput, error rates
 - **Infrastructure**: CPU, memory, disk usage
@@ -25,6 +29,7 @@ This guide covers the comprehensive monitoring system for the Vocilia customer f
 ### Health Check Endpoints
 
 #### Basic Health Check - `/health`
+
 **Purpose**: Quick service status verification  
 **Response Time**: <100ms expected  
 **Frequency**: Every 30 seconds
@@ -34,6 +39,7 @@ curl https://api.vocilia.com/health
 ```
 
 **Expected Response**:
+
 ```json
 {
   "status": "healthy",
@@ -45,6 +51,7 @@ curl https://api.vocilia.com/health
 ```
 
 #### Detailed Health Check - `/health/detailed`
+
 **Purpose**: Comprehensive system status  
 **Response Time**: <500ms expected  
 **Frequency**: Every 2 minutes
@@ -54,6 +61,7 @@ curl https://api.vocilia.com/health/detailed
 ```
 
 **Expected Response**:
+
 ```json
 {
   "status": "healthy",
@@ -103,6 +111,7 @@ curl https://api.vocilia.com/health/detailed
 ```
 
 #### Database Health Check - `/health/database`
+
 **Purpose**: Database connectivity and performance  
 **Response Time**: <200ms expected  
 **Frequency**: Every minute
@@ -112,6 +121,7 @@ curl https://api.vocilia.com/health/database
 ```
 
 **Expected Response**:
+
 ```json
 {
   "status": "healthy",
@@ -141,6 +151,7 @@ curl https://api.vocilia.com/health/database
 ```
 
 #### Jobs Health Check - `/health/jobs`
+
 **Purpose**: Background job scheduler status  
 **Response Time**: <100ms expected  
 **Frequency**: Every minute
@@ -150,6 +161,7 @@ curl https://api.vocilia.com/health/jobs
 ```
 
 **Expected Response**:
+
 ```json
 {
   "status": "healthy",
@@ -187,12 +199,14 @@ curl https://api.vocilia.com/health/jobs
 ### Response Time Monitoring
 
 #### SLA Targets
+
 - **API Endpoints**: P95 < 2000ms
 - **Frontend Pages**: Load time < 2s
 - **Health Checks**: < 500ms
 - **Database Queries**: Average < 100ms
 
 #### Monitoring API
+
 ```bash
 # Get performance metrics for last hour
 curl -H "Authorization: Bearer [admin-token]" \
@@ -200,6 +214,7 @@ curl -H "Authorization: Bearer [admin-token]" \
 ```
 
 **Response**:
+
 ```json
 {
   "timeframe": "1h",
@@ -243,13 +258,16 @@ curl -H "Authorization: Bearer [admin-token]" \
 ### Frontend Performance Monitoring
 
 #### Vercel Analytics Integration
+
 Each frontend application integrates with Vercel Analytics for:
+
 - Real User Monitoring (RUM)
 - Core Web Vitals tracking
 - Page load performance
 - User interaction metrics
 
 #### Key Metrics
+
 - **First Contentful Paint (FCP)**: <1.5s
 - **Largest Contentful Paint (LCP)**: <2.5s
 - **Cumulative Layout Shift (CLS)**: <0.1
@@ -264,19 +282,22 @@ curl -H "Authorization: Bearer [admin-token]" \
 ## Uptime Monitoring
 
 ### SLA Requirements
+
 - **Monthly Uptime**: 99.5% minimum
-- **Downtime Definition**: 
+- **Downtime Definition**:
   - HTTP 5xx errors >50% for >1 minute
   - Complete service unavailability >30 seconds
 - **Scheduled Maintenance**: Excluded from SLA calculations
 
 ### Uptime Calculation API
+
 ```bash
 curl -H "Authorization: Bearer [admin-token]" \
      "https://api.vocilia.com/api/admin/monitoring/uptime?period=month"
 ```
 
 **Response**:
+
 ```json
 {
   "period": "month",
@@ -326,17 +347,20 @@ curl -H "Authorization: Bearer [admin-token]" \
 ## Backup Monitoring
 
 ### Backup Schedule
+
 - **Daily**: 02:00 Europe/Stockholm (30-day retention)
 - **Weekly**: Sunday 03:00 Europe/Stockholm (6-month retention)
 - **Monthly**: 1st day 04:00 Europe/Stockholm (2-year retention)
 
 ### Backup Status API
+
 ```bash
 curl -H "Authorization: Bearer [admin-token]" \
      "https://api.vocilia.com/api/admin/monitoring/backups"
 ```
 
 **Response**:
+
 ```json
 {
   "backup_health": "healthy",
@@ -383,6 +407,7 @@ curl -H "Authorization: Bearer [admin-token]" \
 ```
 
 ### Backup Verification
+
 ```bash
 # Verify backup integrity
 curl -X POST -H "Authorization: Bearer [admin-token]" \
@@ -393,6 +418,7 @@ curl -X POST -H "Authorization: Bearer [admin-token]" \
 ## Alert Management
 
 ### Alert Severity Levels
+
 - **Critical**: Immediate response required (service down)
 - **Warning**: Investigation needed (performance degradation)
 - **Info**: Awareness notification (maintenance scheduled)
@@ -400,28 +426,34 @@ curl -X POST -H "Authorization: Bearer [admin-token]" \
 ### Alert Rules
 
 #### Response Time Alerts
+
 - **Critical**: P95 > 2000ms for 5 minutes
 - **Warning**: P95 > 1500ms for 10 minutes
 
 #### Error Rate Alerts
+
 - **Critical**: Error rate > 5% for 2 minutes
 - **Warning**: Error rate > 2% for 5 minutes
 
 #### Uptime Alerts
+
 - **Critical**: Service unavailable for > 1 minute
 - **Warning**: Multiple 5xx errors detected
 
 #### Backup Alerts
+
 - **Critical**: Backup failed for 2 consecutive days
 - **Warning**: Backup took >60 minutes to complete
 
 ### Active Alerts API
+
 ```bash
 curl -H "Authorization: Bearer [admin-token]" \
      "https://api.vocilia.com/api/admin/monitoring/alerts?status=active"
 ```
 
 **Response**:
+
 ```json
 {
   "active_alerts": [
@@ -461,6 +493,7 @@ curl -H "Authorization: Bearer [admin-token]" \
 ```
 
 ### Alert Acknowledgment
+
 ```bash
 # Acknowledge alert
 curl -X POST -H "Authorization: Bearer [admin-token]" \
@@ -469,6 +502,7 @@ curl -X POST -H "Authorization: Bearer [admin-token]" \
 ```
 
 ### Alert Resolution
+
 ```bash
 # Resolve alert
 curl -X POST -H "Authorization: Bearer [admin-token]" \
@@ -479,12 +513,14 @@ curl -X POST -H "Authorization: Bearer [admin-token]" \
 ## SSL Certificate Monitoring
 
 ### Certificate Status API
+
 ```bash
 curl -H "Authorization: Bearer [admin-token]" \
      "https://api.vocilia.com/api/admin/monitoring/ssl-certificates"
 ```
 
 **Response**:
+
 ```json
 {
   "certificates": [
@@ -530,6 +566,7 @@ curl -H "Authorization: Bearer [admin-token]" \
 ```
 
 ### Certificate Renewal
+
 ```bash
 # Force certificate renewal
 curl -X POST -H "Authorization: Bearer [admin-token]" \
@@ -540,12 +577,14 @@ curl -X POST -H "Authorization: Bearer [admin-token]" \
 ## Deployment Monitoring
 
 ### Deployment Status API
+
 ```bash
 curl -H "Authorization: Bearer [admin-token]" \
      "https://api.vocilia.com/api/admin/deployment/status?include_history=true"
 ```
 
 **Response**:
+
 ```json
 {
   "current_deployments": [
@@ -597,9 +636,11 @@ curl -H "Authorization: Bearer [admin-token]" \
 ## Custom Dashboards
 
 ### Admin Monitoring Dashboard
+
 Access: `https://admin.vocilia.com/admin/monitoring`
 
 **Features**:
+
 - Real-time system status overview
 - Performance metrics visualization
 - Alert management interface
@@ -610,24 +651,28 @@ Access: `https://admin.vocilia.com/admin/monitoring`
 ### Dashboard Widgets
 
 #### System Overview Widget
+
 - Current uptime percentage
 - Active alerts count
 - Average response time (last hour)
 - Recent deployment status
 
 #### Performance Chart Widget
+
 - Response time trends (24 hours)
 - Error rate trends
 - Throughput metrics
 - Resource utilization
 
 #### Backup Status Widget
+
 - Last backup status
 - Backup schedule progress
 - Storage utilization
 - Retention compliance
 
 #### SSL Certificate Widget
+
 - Certificate expiry timeline
 - Renewal status
 - Certificate health scores
@@ -636,24 +681,28 @@ Access: `https://admin.vocilia.com/admin/monitoring`
 ## Log Aggregation
 
 ### Log Sources
+
 - **Railway**: Backend application logs
 - **Vercel**: Frontend build and runtime logs
 - **Supabase**: Database query logs
 - **Admin Dashboard**: Audit and security logs
 
 ### Log Levels
+
 - **ERROR**: Application errors requiring attention
 - **WARN**: Warning conditions
 - **INFO**: General information
 - **DEBUG**: Detailed debug information
 
 ### Log Retention
+
 - **Error logs**: 90 days
 - **Warning logs**: 60 days
 - **Info logs**: 30 days
 - **Debug logs**: 7 days
 
 ### Log Search API
+
 ```bash
 curl -H "Authorization: Bearer [admin-token]" \
      "https://api.vocilia.com/api/admin/monitoring/logs?level=error&since=1h"
@@ -662,18 +711,21 @@ curl -H "Authorization: Bearer [admin-token]" \
 ## Monitoring Best Practices
 
 ### Alert Fatigue Prevention
+
 1. **Intelligent Thresholds**: Adjust based on historical data
 2. **Alert Grouping**: Combine related alerts
 3. **Escalation Policies**: Progressive notification levels
 4. **Regular Review**: Monthly alert effectiveness review
 
 ### Performance Optimization
+
 1. **Continuous Monitoring**: Track all critical metrics
 2. **Trend Analysis**: Identify performance patterns
 3. **Proactive Scaling**: Scale before hitting limits
 4. **Regular Optimization**: Monthly performance reviews
 
 ### Security Monitoring
+
 1. **Failed Login Tracking**: Monitor authentication attempts
 2. **Anomaly Detection**: Identify unusual access patterns
 3. **Compliance Logging**: Maintain audit trails
@@ -682,24 +734,28 @@ curl -H "Authorization: Bearer [admin-token]" \
 ## Troubleshooting Common Issues
 
 ### High Response Times
+
 1. Check database query performance
 2. Review recent deployments
 3. Analyze traffic patterns
 4. Check resource utilization
 
 ### Backup Failures
+
 1. Verify storage availability
 2. Check database connectivity
 3. Review backup process logs
 4. Validate retention policies
 
 ### SSL Certificate Issues
+
 1. Check certificate expiry dates
 2. Verify auto-renewal settings
 3. Test certificate validation
 4. Review DNS configuration
 
 ### Alert Management Issues
+
 1. Review alert thresholds
 2. Check notification delivery
 3. Validate escalation policies
@@ -708,6 +764,7 @@ curl -H "Authorization: Bearer [admin-token]" \
 ## Emergency Procedures
 
 ### System Down Scenario
+
 1. **Immediate Response**: Check system status dashboard
 2. **Impact Assessment**: Determine affected services
 3. **Communication**: Update status page and notify stakeholders
@@ -716,6 +773,7 @@ curl -H "Authorization: Bearer [admin-token]" \
 6. **Post-Incident**: Conduct review and update procedures
 
 ### Performance Degradation
+
 1. **Detection**: Automated alerts or manual observation
 2. **Assessment**: Determine severity and impact
 3. **Mitigation**: Scale resources or optimize performance
@@ -723,6 +781,7 @@ curl -H "Authorization: Bearer [admin-token]" \
 5. **Root Cause**: Identify and address underlying issues
 
 ### Data Backup Emergency
+
 1. **Verification**: Confirm backup integrity
 2. **Recovery Planning**: Determine restore strategy
 3. **Execution**: Restore from latest healthy backup
@@ -732,17 +791,19 @@ curl -H "Authorization: Bearer [admin-token]" \
 ## Contact Information
 
 ### On-Call Rotation
+
 - **Primary**: DevOps Engineer (alerts@vocilia.com)
 - **Secondary**: Backend Developer (backend@vocilia.com)
 - **Escalation**: Technical Lead (tech-lead@vocilia.com)
 
 ### Emergency Contacts
+
 - **Immediate Response**: +46-xxx-xxx-xxxx
 - **Business Hours**: devops@vocilia.com
 - **Status Updates**: status.vocilia.com
 
 ---
 
-*Last Updated: 2024-01-15*  
-*Version: 1.0.0*  
-*Contact: devops@vocilia.com*
+_Last Updated: 2024-01-15_  
+_Version: 1.0.0_  
+_Contact: devops@vocilia.com_

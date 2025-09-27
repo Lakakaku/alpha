@@ -5,9 +5,11 @@
 ## Fraud Detection Entities
 
 ### FraudScore
+
 Composite fraud detection score for each feedback submission.
 
 **Table**: `fraud_scores`
+
 ```sql
 CREATE TABLE fraud_scores (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -26,14 +28,18 @@ CREATE TABLE fraud_scores (
 ```
 
 **Validation Rules**:
-- overall_score = (context_score * 0.4) + (keyword_score * 0.2) + (behavioral_score * 0.3) + (transaction_score * 0.1)
+
+- overall_score = (context_score _ 0.4) + (keyword_score _ 0.2) +
+  (behavioral_score _ 0.3) + (transaction_score _ 0.1)
 - is_fraudulent triggers reward blocking when true
 - analysis_metadata stores detailed scoring breakdown
 
 ### ContextAnalysis
+
 Store-specific legitimacy assessment for feedback content.
 
 **Table**: `context_analyses`
+
 ```sql
 CREATE TABLE context_analyses (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -51,14 +57,17 @@ CREATE TABLE context_analyses (
 ```
 
 **Validation Rules**:
+
 - legitimacy_score combines semantic similarity and rule-based validation
 - context_matches array contains matched business context elements
 - impossibility_flags captures contextually impossible suggestions
 
 ### BehavioralPattern
+
 Customer usage patterns and fraud indicators.
 
 **Table**: `behavioral_patterns`
+
 ```sql
 CREATE TABLE behavioral_patterns (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -76,14 +85,17 @@ CREATE TABLE behavioral_patterns (
 ```
 
 **State Transitions**:
+
 - new → monitoring → suspicious → flagged
 - pattern_data structure varies by pattern_type
 - violation_count tracks repeated infractions
 
 ### RedFlagKeyword
+
 Categorized keyword database for fraud detection.
 
 **Table**: `red_flag_keywords`
+
 ```sql
 CREATE TABLE red_flag_keywords (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -101,6 +113,7 @@ CREATE TABLE red_flag_keywords (
 ```
 
 **Validation Rules**:
+
 - severity_level 1-3: warning, 4-7: suspicious, 8-10: blocking
 - detection_pattern enables regex matching for variations
 - Swedish (sv) language support required
@@ -108,9 +121,11 @@ CREATE TABLE red_flag_keywords (
 ## Security Entities
 
 ### AuditLog
+
 Comprehensive security event recording.
 
 **Table**: `audit_logs`
+
 ```sql
 CREATE TABLE audit_logs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -137,14 +152,17 @@ USING (false) WITH CHECK (false);
 ```
 
 **Validation Rules**:
+
 - Immutable records - no updates or deletes permitted
 - correlation_id links related events across services
 - event_metadata contains structured event details
 
 ### RLSPolicy
+
 Enhanced Row Level Security policy management.
 
 **Table**: `rls_policies`
+
 ```sql
 CREATE TABLE rls_policies (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -163,14 +181,17 @@ CREATE TABLE rls_policies (
 ```
 
 **Validation Rules**:
+
 - policy_expression contains SQL expression for RLS
 - data_classification determines access requirements
 - violation tracking through audit_logs
 
 ### IntrusionEvent
+
 Security incident detection and response.
 
 **Table**: `intrusion_events`
+
 ```sql
 CREATE TABLE intrusion_events (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -195,14 +216,17 @@ CREATE TABLE intrusion_events (
 ```
 
 **State Transitions**:
+
 - detected → investigating → (contained | false_positive) → resolved
 - automated_response records blocking/alerting actions taken
 - admin notification triggers for severity >= 7
 
 ### EncryptionKey
+
 Data protection key management.
 
 **Table**: `encryption_keys`
+
 ```sql
 CREATE TABLE encryption_keys (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -224,6 +248,7 @@ WITH CHECK (auth.jwt() ->> 'role' = 'super_admin');
 ```
 
 **Validation Rules**:
+
 - Key material never stored in database - environment variables only
 - key_fingerprint enables key verification without exposure
 - Automated rotation scheduling for compliance
@@ -231,6 +256,7 @@ WITH CHECK (auth.jwt() ->> 'role' = 'super_admin');
 ## Entity Relationships
 
 ### Fraud Detection Flow
+
 ```
 feedback_submissions → fraud_scores → (reward processing decision)
                    ↓
@@ -242,6 +268,7 @@ feedback_submissions → fraud_scores → (reward processing decision)
 ```
 
 ### Security Audit Chain
+
 ```
 user_actions → audit_logs → correlation_id
               ↓
@@ -255,18 +282,25 @@ user_actions → audit_logs → correlation_id
 ## Integration Points
 
 ### Existing System Integration
+
 - **feedback_submissions**: Links fraud scores to existing feedback system
 - **stores**: Context analysis requires store information and context windows
 - **customers**: Behavioral patterns tied to customer records
 - **admin_accounts**: All security administration requires admin authentication
 
 ### Performance Considerations
-- **Indexes**: fraud_scores.feedback_id, behavioral_patterns.phone_number_hash, audit_logs.correlation_id
-- **Partitioning**: audit_logs by created_at (monthly), intrusion_events by severity
+
+- **Indexes**: fraud_scores.feedback_id, behavioral_patterns.phone_number_hash,
+  audit_logs.correlation_id
+- **Partitioning**: audit_logs by created_at (monthly), intrusion_events by
+  severity
 - **Caching**: red_flag_keywords in Redis for real-time detection
 
 ## Constitutional Compliance
-✅ **Real Data**: All entities work with production customer feedback and business data  
+
+✅ **Real Data**: All entities work with production customer feedback and
+business data  
 ✅ **TypeScript Strict**: All entity interfaces will be strictly typed  
 ✅ **Security First**: Comprehensive RLS policies and audit logging built-in  
-✅ **Production Ready**: Immutable audit logs, encrypted sensitive data, proper indexing
+✅ **Production Ready**: Immutable audit logs, encrypted sensitive data, proper
+indexing

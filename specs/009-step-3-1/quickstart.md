@@ -6,6 +6,7 @@
 ## Quick Validation Tests
 
 ### **Prerequisites**
+
 ```bash
 # Ensure services are running
 pnpm dev                    # Start all services
@@ -13,6 +14,7 @@ supabase start             # Local Supabase instance
 ```
 
 ### **Environment Setup**
+
 ```bash
 # Required environment variables
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
@@ -24,10 +26,14 @@ API_BASE_URL=http://localhost:3001  # Backend API
 ## User Story Validation Tests
 
 ### **Test 1: Successful QR Scan and Verification**
-**User Story**: Customer scans QR code and completes verification within tolerance
+
+**User Story**: Customer scans QR code and completes verification within
+tolerance
 
 **Steps**:
+
 1. **Generate Test QR Code**:
+
    ```bash
    curl -X POST http://localhost:3001/api/qr/generate \
      -H "Content-Type: application/json" \
@@ -35,6 +41,7 @@ API_BASE_URL=http://localhost:3001  # Backend API
    ```
 
 2. **Scan QR Code** (simulate by visiting URL):
+
    ```
    http://localhost:3000/feedback/550e8400-e29b-41d4-a716-446655440000?v=1&t=1703097600
    ```
@@ -46,6 +53,7 @@ API_BASE_URL=http://localhost:3001  # Backend API
    - ✅ Current time pre-populated in time field
 
 4. **Submit Valid Form**:
+
    ```javascript
    // Form data within tolerance
    {
@@ -62,10 +70,13 @@ API_BASE_URL=http://localhost:3001  # Backend API
    - ✅ All validation statuses = "valid"
 
 ### **Test 2: Time Tolerance Validation**
+
 **User Story**: Customer enters time outside ±2 minute tolerance
 
 **Steps**:
+
 1. **Submit Form with Out-of-Range Time**:
+
    ```javascript
    {
      "transaction_time": "14:25",        // >2 minutes ago if current is 14:32
@@ -76,15 +87,19 @@ API_BASE_URL=http://localhost:3001  # Backend API
 
 2. **Expected Results**:
    - ❌ Form validation fails
-   - ✅ Error message: "Time must be within 2 minutes of transaction (14:30-14:34)"
+   - ✅ Error message: "Time must be within 2 minutes of transaction
+     (14:30-14:34)"
    - ✅ time_validation.status = "out_of_tolerance"
    - ✅ Form remains editable for correction
 
 ### **Test 3: Amount Tolerance Validation**
+
 **User Story**: Customer enters amount outside ±2 SEK tolerance
 
 **Steps**:
+
 1. **Submit Form with Out-of-Range Amount**:
+
    ```javascript
    {
      "transaction_time": "14:32",
@@ -95,44 +110,52 @@ API_BASE_URL=http://localhost:3001  # Backend API
 
 2. **Expected Results**:
    - ❌ Form validation fails
-   - ✅ Error message: "Amount should be within 2 SEK of receipt total (123.50-127.50 SEK)"
+   - ✅ Error message: "Amount should be within 2 SEK of receipt total
+     (123.50-127.50 SEK)"
    - ✅ amount_validation.status = "out_of_tolerance"
    - ✅ Tolerance range displayed to user
 
 ### **Test 4: Swedish Phone Number Validation**
+
 **User Story**: Customer enters invalid phone number format
 
 **Steps**:
+
 1. **Test Invalid Formats**:
+
    ```javascript
    // Test cases
-   [
-     "123-456-7890",           // US format
-     "08-123 45 67",           // Swedish landline
-     "060-123 45 67",          // Invalid mobile prefix
-     "+1-555-123-4567",        // International non-Swedish
-     "07012345",               // Too short
-     "070-123-45-678"          // Too long
+   ;[
+     '123-456-7890', // US format
+     '08-123 45 67', // Swedish landline
+     '060-123 45 67', // Invalid mobile prefix
+     '+1-555-123-4567', // International non-Swedish
+     '07012345', // Too short
+     '070-123-45-678', // Too long
    ]
    ```
 
 2. **Expected Results**:
    - ❌ Form validation fails for all invalid formats
-   - ✅ Error message: "Please enter a valid Swedish mobile number (070-123 45 67)"
+   - ✅ Error message: "Please enter a valid Swedish mobile number (070-123 45
+     67)"
    - ✅ phone_validation.status = "invalid_format" or "not_swedish"
 
 ### **Test 5: Invalid QR Code Handling**
+
 **User Story**: Customer scans corrupted or invalid QR code
 
 **Steps**:
+
 1. **Test Invalid QR URLs**:
+
    ```bash
    # Non-existent store ID
    http://localhost:3000/feedback/invalid-uuid
-   
+
    # Invalid QR version
    http://localhost:3000/feedback/550e8400-e29b-41d4-a716-446655440000?v=999999999
-   
+
    # Missing required parameters
    http://localhost:3000/feedback/550e8400-e29b-41d4-a716-446655440000
    ```
@@ -146,6 +169,7 @@ API_BASE_URL=http://localhost:3001  # Backend API
 ## API Contract Validation
 
 ### **API Test 1: QR Verification Initialization**
+
 ```bash
 # Test successful QR verification
 curl -X POST http://localhost:3001/api/v1/qr/verify/550e8400-e29b-41d4-a716-446655440000?v=1&t=1703097600 \
@@ -170,6 +194,7 @@ curl -X POST http://localhost:3001/api/v1/qr/verify/550e8400-e29b-41d4-a716-4466
 ```
 
 ### **API Test 2: Customer Verification Submission**
+
 ```bash
 # Test successful verification submission
 curl -X POST http://localhost:3001/api/v1/verification/submit \
@@ -208,6 +233,7 @@ curl -X POST http://localhost:3001/api/v1/verification/submit \
 ```
 
 ### **API Test 3: Session Details Retrieval**
+
 ```bash
 # Test session details retrieval
 curl -X GET http://localhost:3001/api/v1/verification/session/abc123def456ghi789jkl012mno345pqr678stu901vwx234yz
@@ -231,27 +257,29 @@ curl -X GET http://localhost:3001/api/v1/verification/session/abc123def456ghi789
 ## Database Validation Tests
 
 ### **Data Integrity Test 1: Verification Session Creation**
+
 ```sql
 -- Verify session record created correctly
-SELECT 
+SELECT
     id,
     store_id,
     qr_version,
     status,
     session_token,
     created_at
-FROM verification_sessions 
+FROM verification_sessions
 WHERE store_id = '550e8400-e29b-41d4-a716-446655440000'
-ORDER BY created_at DESC 
+ORDER BY created_at DESC
 LIMIT 1;
 
 -- Expected: Single record with status='pending'
 ```
 
 ### **Data Integrity Test 2: Customer Verification Record**
+
 ```sql
 -- Verify customer verification data saved correctly
-SELECT 
+SELECT
     cv.id,
     cv.transaction_time,
     cv.transaction_amount,
@@ -268,6 +296,7 @@ WHERE vs.session_token = 'abc123def456ghi789jkl012mno345pqr678stu901vwx234yz';
 ```
 
 ### **Data Integrity Test 3: RLS Policy Enforcement**
+
 ```sql
 -- Test Row Level Security policies
 SET request.jwt.claims = '{"role": "anon"}';
@@ -284,6 +313,7 @@ RESET request.headers;
 ## Performance Validation
 
 ### **Load Test: Form Submission**
+
 ```bash
 # Test concurrent form submissions
 for i in {1..10}; do
@@ -298,11 +328,12 @@ wait
 ```
 
 ### **Mobile Performance Test**
+
 ```bash
 # Test page load performance
 curl -w "@curl-format.txt" -o /dev/null -s http://localhost:3000/feedback/550e8400-e29b-41d4-a716-446655440000?v=1&t=1703097600
 
-# Expected: 
+# Expected:
 # - time_total < 2.0s
 # - time_connect < 0.1s
 # - time_starttransfer < 0.5s
@@ -311,6 +342,7 @@ curl -w "@curl-format.txt" -o /dev/null -s http://localhost:3000/feedback/550e84
 ## Security Validation
 
 ### **Security Test 1: Session Token Validation**
+
 ```bash
 # Test with invalid session token
 curl -X POST http://localhost:3001/api/v1/verification/submit \
@@ -322,6 +354,7 @@ curl -X POST http://localhost:3001/api/v1/verification/submit \
 ```
 
 ### **Security Test 2: Rate Limiting**
+
 ```bash
 # Test rate limiting (10+ requests from same IP)
 for i in {1..15}; do
@@ -334,6 +367,7 @@ done
 ```
 
 ### **Security Test 3: Input Sanitization**
+
 ```bash
 # Test SQL injection attempt
 curl -X POST http://localhost:3001/api/v1/verification/submit \
@@ -352,9 +386,11 @@ curl -X POST http://localhost:3001/api/v1/verification/submit \
 
 - [ ] **QR Code Landing**: Store information displays correctly from QR scan
 - [ ] **Mobile Interface**: Form displays optimally on mobile devices (320px+)
-- [ ] **Time Validation**: ±2 minute tolerance enforced with clear error messages
+- [ ] **Time Validation**: ±2 minute tolerance enforced with clear error
+      messages
 - [ ] **Amount Validation**: ±2 SEK tolerance enforced with range display
-- [ ] **Phone Validation**: Swedish mobile numbers validated with Swish compatibility
+- [ ] **Phone Validation**: Swedish mobile numbers validated with Swish
+      compatibility
 - [ ] **Error Handling**: Invalid QR codes show helpful error messages
 - [ ] **Performance**: Page loads <2s, API responses <500ms
 - [ ] **Security**: RLS policies enforced, input sanitization active

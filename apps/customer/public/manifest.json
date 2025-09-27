@@ -11,7 +11,7 @@
   "lang": "sv-SE",
   "dir": "ltr",
   "categories": ["shopping", "lifestyle", "productivity"],
-  
+
   "icons": [
     {
       "src": "/icons/icon-72x72.png",
@@ -246,27 +246,12 @@
     }
   ],
 
-  "display_override": [
-    "window-controls-overlay",
-    "standalone",
-    "minimal-ui"
-  ],
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
 
   "id": "vocilia-customer-app",
   "iarc_rating_id": "",
 
-  "features": [
-    "camera",
-    "microphone",
-    "geolocation",
-    "notifications",
-    "background-sync",
-    "persistent-storage"
-  ],
+  "features": ["camera", "microphone", "geolocation", "notifications", "background-sync", "persistent-storage"],
 
-  "permissions": [
-    "notifications",
-    "background-sync",
-    "persistent-storage"
-  ]
+  "permissions": ["notifications", "background-sync", "persistent-storage"]
 }

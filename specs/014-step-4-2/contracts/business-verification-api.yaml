@@ -30,16 +30,16 @@ paths:
             type: string
             format: date
       responses:
-        '200':
+        "200":
           description: List of verification databases
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/VerificationDatabase'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+                  $ref: "#/components/schemas/VerificationDatabase"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /verification/databases/{databaseId}:
     get:
@@ -53,14 +53,14 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Verification database details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VerificationDatabaseDetail'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/VerificationDatabaseDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /verification/databases/{databaseId}/download/{format}:
     get:
@@ -80,7 +80,7 @@ paths:
             type: string
             enum: [csv, excel, json]
       responses:
-        '200':
+        "200":
           description: File download URL
           content:
             application/json:
@@ -95,8 +95,8 @@ paths:
                     format: date-time
                   filename:
                     type: string
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /verification/databases/{databaseId}/submit:
     post:
@@ -127,7 +127,7 @@ paths:
                 - verification_file
                 - format
       responses:
-        '200':
+        "200":
           description: Verification submitted successfully
           content:
             application/json:
@@ -142,12 +142,12 @@ paths:
                     type: integer
                   total_processed:
                     type: integer
-        '400':
+        "400":
           description: Invalid file format or data
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidationError'
+                $ref: "#/components/schemas/ValidationError"
 
   /verification/databases/{databaseId}/records:
     get:
@@ -172,7 +172,7 @@ paths:
             default: 50
             maximum: 100
       responses:
-        '200':
+        "200":
           description: List of verification records
           content:
             application/json:
@@ -182,9 +182,9 @@ paths:
                   records:
                     type: array
                     items:
-                      $ref: '#/components/schemas/VerificationRecord'
+                      $ref: "#/components/schemas/VerificationRecord"
                   pagination:
-                    $ref: '#/components/schemas/Pagination'
+                    $ref: "#/components/schemas/Pagination"
 
     patch:
       summary: Update verification records
@@ -220,7 +220,7 @@ paths:
               required:
                 - records
       responses:
-        '200':
+        "200":
           description: Records updated successfully
           content:
             application/json:
@@ -266,7 +266,7 @@ components:
 
     VerificationDatabaseDetail:
       allOf:
-        - $ref: '#/components/schemas/VerificationDatabase'
+        - $ref: "#/components/schemas/VerificationDatabase"
         - type: object
           properties:
             verified_count:
@@ -346,11 +346,11 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
-    
+            $ref: "#/components/schemas/Error"
+
     NotFound:
       description: Not found
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"

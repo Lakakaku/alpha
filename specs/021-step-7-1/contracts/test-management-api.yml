@@ -23,7 +23,14 @@ paths:
           in: query
           schema:
             type: string
-            enum: [customer-app, business-app, admin-app, backend-api, shared-packages]
+            enum:
+              [
+                customer-app,
+                business-app,
+                admin-app,
+                backend-api,
+                shared-packages,
+              ]
         - name: type
           in: query
           schema:
@@ -34,14 +41,14 @@ paths:
           schema:
             type: boolean
       responses:
-        '200':
+        "200":
           description: List of test suites
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/TestSuite'
+                  $ref: "#/components/schemas/TestSuite"
 
     post:
       summary: Create test suite
@@ -51,17 +58,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateTestSuiteRequest'
+              $ref: "#/components/schemas/CreateTestSuiteRequest"
       responses:
-        '201':
+        "201":
           description: Test suite created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TestSuite'
-        '400':
+                $ref: "#/components/schemas/TestSuite"
+        "400":
           description: Invalid request
-        '409':
+        "409":
           description: Test suite already exists
 
   /api/test/suites/{suiteId}:
@@ -75,13 +82,13 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Test suite details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TestSuiteDetails'
-        '404':
+                $ref: "#/components/schemas/TestSuiteDetails"
+        "404":
           description: Test suite not found
 
     put:
@@ -98,15 +105,15 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateTestSuiteRequest'
+              $ref: "#/components/schemas/UpdateTestSuiteRequest"
       responses:
-        '200':
+        "200":
           description: Test suite updated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TestSuite'
-        '404':
+                $ref: "#/components/schemas/TestSuite"
+        "404":
           description: Test suite not found
 
   /api/test/runs:
@@ -131,14 +138,14 @@ paths:
             maximum: 100
             default: 20
       responses:
-        '200':
+        "200":
           description: List of test runs
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/TestRun'
+                  $ref: "#/components/schemas/TestRun"
 
     post:
       summary: Trigger test run
@@ -148,15 +155,15 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TriggerTestRunRequest'
+              $ref: "#/components/schemas/TriggerTestRunRequest"
       responses:
-        '201':
+        "201":
           description: Test run started
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TestRun'
-        '400':
+                $ref: "#/components/schemas/TestRun"
+        "400":
           description: Invalid request
 
   /api/test/runs/{runId}:
@@ -170,13 +177,13 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Test run details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TestRunDetails'
-        '404':
+                $ref: "#/components/schemas/TestRunDetails"
+        "404":
           description: Test run not found
 
     delete:
@@ -189,11 +196,11 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Test run cancelled
-        '404':
+        "404":
           description: Test run not found
-        '409':
+        "409":
           description: Test run cannot be cancelled
 
   /api/test/runs/{runId}/results:
@@ -212,14 +219,14 @@ paths:
             type: string
             enum: [passed, failed, skipped, timeout, error]
       responses:
-        '200':
+        "200":
           description: Test results
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/TestResult'
+                  $ref: "#/components/schemas/TestResult"
 
   /api/test/performance/benchmarks:
     get:
@@ -236,14 +243,14 @@ paths:
             type: string
             enum: [response-time, page-load, throughput, error-rate]
       responses:
-        '200':
+        "200":
           description: List of performance benchmarks
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/PerformanceBenchmark'
+                  $ref: "#/components/schemas/PerformanceBenchmark"
 
     post:
       summary: Create performance benchmark
@@ -253,14 +260,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateBenchmarkRequest'
+              $ref: "#/components/schemas/CreateBenchmarkRequest"
       responses:
-        '201':
+        "201":
           description: Benchmark created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PerformanceBenchmark'
+                $ref: "#/components/schemas/PerformanceBenchmark"
 
   /api/test/performance/results:
     get:
@@ -281,14 +288,14 @@ paths:
             type: string
             enum: [pass, warning, fail]
       responses:
-        '200':
+        "200":
           description: Performance results
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/PerformanceResult'
+                  $ref: "#/components/schemas/PerformanceResult"
 
   /api/test/data/datasets:
     get:
@@ -301,14 +308,14 @@ paths:
             type: string
             enum: [users, stores, transactions, feedback, admin]
       responses:
-        '200':
+        "200":
           description: List of test datasets
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/TestDataSet'
+                  $ref: "#/components/schemas/TestDataSet"
 
     post:
       summary: Create test dataset
@@ -318,14 +325,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateDataSetRequest'
+              $ref: "#/components/schemas/CreateDataSetRequest"
       responses:
-        '201':
+        "201":
           description: Dataset created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TestDataSet'
+                $ref: "#/components/schemas/TestDataSet"
 
   /api/test/data/datasets/{datasetId}/generate:
     post:
@@ -342,16 +349,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GenerateDataRequest'
+              $ref: "#/components/schemas/GenerateDataRequest"
       responses:
-        '200':
+        "200":
           description: Test data generated
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/TestDataRecord'
+                  $ref: "#/components/schemas/TestDataRecord"
 
   /api/test/reports/{runId}:
     get:
@@ -370,12 +377,12 @@ paths:
             enum: [json, html, pdf]
             default: json
       responses:
-        '200':
+        "200":
           description: Test report
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TestReport'
+                $ref: "#/components/schemas/TestReport"
             text/html:
               schema:
                 type: string
@@ -416,13 +423,13 @@ components:
 
     TestSuiteDetails:
       allOf:
-        - $ref: '#/components/schemas/TestSuite'
+        - $ref: "#/components/schemas/TestSuite"
         - type: object
           properties:
             testCases:
               type: array
               items:
-                $ref: '#/components/schemas/TestCase'
+                $ref: "#/components/schemas/TestCase"
 
     TestCase:
       type: object
@@ -479,19 +486,19 @@ components:
         duration:
           type: number
         coverage:
-          $ref: '#/components/schemas/CoverageMetrics'
+          $ref: "#/components/schemas/CoverageMetrics"
         performanceMetrics:
-          $ref: '#/components/schemas/PerformanceMetrics'
+          $ref: "#/components/schemas/PerformanceMetrics"
 
     TestRunDetails:
       allOf:
-        - $ref: '#/components/schemas/TestRun'
+        - $ref: "#/components/schemas/TestRun"
         - type: object
           properties:
             results:
               type: array
               items:
-                $ref: '#/components/schemas/TestResult'
+                $ref: "#/components/schemas/TestResult"
 
     TestResult:
       type: object
@@ -518,9 +525,9 @@ components:
         logs:
           type: string
         assertions:
-          $ref: '#/components/schemas/AssertionResults'
+          $ref: "#/components/schemas/AssertionResults"
         coverage:
-          $ref: '#/components/schemas/CoverageData'
+          $ref: "#/components/schemas/CoverageData"
         retryAttempt:
           type: number
 
@@ -541,7 +548,7 @@ components:
         unit:
           type: string
         threshold:
-          $ref: '#/components/schemas/PerformanceThreshold'
+          $ref: "#/components/schemas/PerformanceThreshold"
         environment:
           type: string
         enabled:
@@ -562,9 +569,9 @@ components:
           type: string
           enum: [pass, warning, fail]
         measurements:
-          $ref: '#/components/schemas/PerformanceMeasurements'
+          $ref: "#/components/schemas/PerformanceMeasurements"
         conditions:
-          $ref: '#/components/schemas/TestConditions'
+          $ref: "#/components/schemas/TestConditions"
 
     TestDataSet:
       type: object
@@ -579,7 +586,7 @@ components:
         schema:
           type: object
         generatorConfig:
-          $ref: '#/components/schemas/GeneratorConfig'
+          $ref: "#/components/schemas/GeneratorConfig"
         sampleSize:
           type: number
         refreshStrategy:
@@ -614,7 +621,7 @@ components:
           type: string
           enum: [summary, detailed, coverage, performance]
         metrics:
-          $ref: '#/components/schemas/ReportMetrics'
+          $ref: "#/components/schemas/ReportMetrics"
         trends:
           type: object
         recommendations:
@@ -795,7 +802,7 @@ components:
         unit:
           type: string
         threshold:
-          $ref: '#/components/schemas/PerformanceThreshold'
+          $ref: "#/components/schemas/PerformanceThreshold"
         environment:
           type: string
 
@@ -811,7 +818,7 @@ components:
         schema:
           type: object
         generatorConfig:
-          $ref: '#/components/schemas/GeneratorConfig'
+          $ref: "#/components/schemas/GeneratorConfig"
         sampleSize:
           type: number
           default: 100

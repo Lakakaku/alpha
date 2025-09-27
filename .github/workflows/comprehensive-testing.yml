@@ -2,15 +2,15 @@ name: Comprehensive Testing Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
   schedule:
     # Run tests daily at 2 AM UTC
-    - cron: '0 2 * * *'
+    - cron: "0 2 * * *"
 
 env:
-  NODE_VERSION: '18'
+  NODE_VERSION: "18"
   SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
   SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
   SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -29,7 +29,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -57,7 +57,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -88,7 +88,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -142,7 +142,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -194,7 +194,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -256,7 +256,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -337,7 +337,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -402,7 +402,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -422,7 +422,15 @@ jobs:
   report:
     name: Test Report
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, unit-tests, contract-tests, integration-tests, e2e-tests, security-scan]
+    needs:
+      [
+        lint-and-typecheck,
+        unit-tests,
+        contract-tests,
+        integration-tests,
+        e2e-tests,
+        security-scan,
+      ]
     if: always()
     steps:
       - name: Checkout code
@@ -476,7 +484,15 @@ jobs:
   deployment-gate:
     name: Deployment Gate
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, unit-tests, contract-tests, integration-tests, e2e-tests, security-scan]
+    needs:
+      [
+        lint-and-typecheck,
+        unit-tests,
+        contract-tests,
+        integration-tests,
+        e2e-tests,
+        security-scan,
+      ]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     steps:
       - name: Check all tests passed

@@ -10,7 +10,7 @@ info:
 servers:
   - url: https://api.vocilia.com/v1
     description: Production server
-  - url: https://api-staging.vocilia.com/v1  
+  - url: https://api-staging.vocilia.com/v1
     description: Staging server
 
 paths:
@@ -51,22 +51,22 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/QRVerificationRequest'
+              $ref: "#/components/schemas/QRVerificationRequest"
       responses:
-        '200':
+        "200":
           description: Verification session created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/QRVerificationResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/StoreNotFound'
-        '429':
-          $ref: '#/components/responses/RateLimit'
-        '500':
-          $ref: '#/components/responses/InternalError'
+                $ref: "#/components/schemas/QRVerificationResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/StoreNotFound"
+        "429":
+          $ref: "#/components/responses/RateLimit"
+        "500":
+          $ref: "#/components/responses/InternalError"
 
   /verification/submit:
     post:
@@ -82,22 +82,22 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CustomerVerificationRequest'
+              $ref: "#/components/schemas/CustomerVerificationRequest"
       responses:
-        '200':
+        "200":
           description: Verification submitted successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CustomerVerificationResponse'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '429':
-          $ref: '#/components/responses/RateLimit'
-        '500':
-          $ref: '#/components/responses/InternalError'
+                $ref: "#/components/schemas/CustomerVerificationResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimit"
+        "500":
+          $ref: "#/components/responses/InternalError"
 
   /verification/session/{sessionToken}:
     get:
@@ -117,18 +117,18 @@ paths:
             maxLength: 64
             example: "abc123def456ghi789jkl012mno345pqr678stu901vwx234yz"
       responses:
-        '200':
+        "200":
           description: Session details retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SessionDetailsResponse'
-        '404':
-          $ref: '#/components/responses/SessionNotFound'
-        '410':
-          $ref: '#/components/responses/SessionExpired'
-        '500':
-          $ref: '#/components/responses/InternalError'
+                $ref: "#/components/schemas/SessionDetailsResponse"
+        "404":
+          $ref: "#/components/responses/SessionNotFound"
+        "410":
+          $ref: "#/components/responses/SessionExpired"
+        "500":
+          $ref: "#/components/responses/InternalError"
 
 components:
   securitySchemes:
@@ -171,7 +171,7 @@ components:
           description: Secure session token for form submission
           example: "abc123def456ghi789jkl012mno345pqr678stu901vwx234yz"
         store_info:
-          $ref: '#/components/schemas/StoreInfo'
+          $ref: "#/components/schemas/StoreInfo"
         fraud_warning:
           type: boolean
           description: Indicates if fraud detection flagged this request
@@ -187,7 +187,7 @@ components:
         transaction_time:
           type: string
           format: time
-          pattern: '^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$'
+          pattern: "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"
           description: Transaction time in HH:MM format (24-hour)
           example: "14:32"
         transaction_amount:
@@ -220,7 +220,7 @@ components:
           description: Unique verification record ID
           example: "110e8400-e29b-41d4-a716-446655440000"
         validation_results:
-          $ref: '#/components/schemas/ValidationResults'
+          $ref: "#/components/schemas/ValidationResults"
         next_steps:
           type: string
           description: Information about what happens next
@@ -239,7 +239,7 @@ components:
           format: uuid
           example: "220e8400-e29b-41d4-a716-446655440000"
         store_info:
-          $ref: '#/components/schemas/StoreInfo'
+          $ref: "#/components/schemas/StoreInfo"
         status:
           type: string
           enum: [pending, completed, expired, failed]
@@ -292,11 +292,11 @@ components:
         - overall_valid
       properties:
         time_validation:
-          $ref: '#/components/schemas/TimeValidation'
+          $ref: "#/components/schemas/TimeValidation"
         amount_validation:
-          $ref: '#/components/schemas/AmountValidation'
+          $ref: "#/components/schemas/AmountValidation"
         phone_validation:
-          $ref: '#/components/schemas/PhoneValidation'
+          $ref: "#/components/schemas/PhoneValidation"
         overall_valid:
           type: boolean
           description: True if all validations pass
@@ -389,7 +389,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
           example:
             success: false
             error: "INVALID_PARAMETERS"
@@ -400,7 +400,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
           example:
             success: false
             error: "VALIDATION_FAILED"
@@ -414,7 +414,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
           example:
             success: false
             error: "STORE_NOT_FOUND"
@@ -425,7 +425,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
           example:
             success: false
             error: "SESSION_NOT_FOUND"
@@ -436,7 +436,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
           example:
             success: false
             error: "SESSION_EXPIRED"
@@ -447,7 +447,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
           example:
             success: false
             error: "UNAUTHORIZED"
@@ -458,7 +458,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
           example:
             success: false
             error: "RATE_LIMIT_EXCEEDED"
@@ -469,7 +469,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
           example:
             success: false
             error: "INTERNAL_ERROR"

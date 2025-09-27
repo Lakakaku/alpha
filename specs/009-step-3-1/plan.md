@@ -1,5 +1,5 @@
 ---
-description: "Implementation plan template for feature development"
+description: 'Implementation plan template for feature development'
 scripts:
   sh: scripts/bash/update-agent-context.sh __AGENT__
   ps: scripts/powershell/update-agent-context.ps1 -AgentType __AGENT__
@@ -7,10 +7,12 @@ scripts:
 
 # Implementation Plan: QR Code Landing & Verification System
 
-**Branch**: `009-step-3-1` | **Date**: 2025-09-22 | **Spec**: [spec.md](./spec.md)
-**Input**: Feature specification from `/specs/009-step-3-1/spec.md`
+**Branch**: `009-step-3-1` | **Date**: 2025-09-22 | **Spec**:
+[spec.md](./spec.md) **Input**: Feature specification from
+`/specs/009-step-3-1/spec.md`
 
 ## Execution Flow (/plan command scope)
+
 ```
 1. Load feature spec from Input path
    → If not found: ERROR "No feature spec at {path}"
@@ -32,48 +34,66 @@ scripts:
 9. STOP - Ready for /tasks command
 ```
 
-**IMPORTANT**: The /plan command STOPS at step 7. Phases 2-4 are executed by other commands:
+**IMPORTANT**: The /plan command STOPS at step 7. Phases 2-4 are executed by
+other commands:
+
 - Phase 2: /tasks command creates tasks.md
 - Phase 3-4: Implementation execution (manual or via tools)
 
 ## Summary
-Mobile-optimized customer landing page for QR code verification system with transaction validation (±2 min time, ±2 SEK amount) and Swedish phone number input. Built as customer-facing frontend with backend API for verification processing.
+
+Mobile-optimized customer landing page for QR code verification system with
+transaction validation (±2 min time, ±2 SEK amount) and Swedish phone number
+input. Built as customer-facing frontend with backend API for verification
+processing.
 
 ## Technical Context
+
 **Language/Version**: TypeScript 5.5.4, Node.js 18+  
-**Primary Dependencies**: Next.js 14, React 18, Express.js, Supabase client, Tailwind CSS  
+**Primary Dependencies**: Next.js 14, React 18, Express.js, Supabase client,
+Tailwind CSS  
 **Storage**: Supabase PostgreSQL with Row Level Security (RLS)  
 **Testing**: Jest with ts-jest, contract testing for API endpoints  
-**Target Platform**: Mobile web browsers, deployed to Vercel (frontend) + Railway (backend)
-**Project Type**: web - existing monorepo with apps/customer (Next.js) + apps/backend (Express API)  
-**Performance Goals**: <2s page load, <500ms API response, mobile-first responsive design  
-**Constraints**: Mobile-optimized UI, Swedish phone validation, real-time form validation  
-**Scale/Scope**: Single landing page + verification form, 3 API endpoints, Swedish market focus
+**Target Platform**: Mobile web browsers, deployed to Vercel (frontend) +
+Railway (backend) **Project Type**: web - existing monorepo with apps/customer
+(Next.js) + apps/backend (Express API)  
+**Performance Goals**: <2s page load, <500ms API response, mobile-first
+responsive design  
+**Constraints**: Mobile-optimized UI, Swedish phone validation, real-time form
+validation  
+**Scale/Scope**: Single landing page + verification form, 3 API endpoints,
+Swedish market focus
 
 ## Constitution Check
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 **Production from Day One**: ✅ PASS
+
 - No mock data or prototypes - using real Supabase database
 - Real transaction validation with actual tolerances (±2 min, ±2 SEK)
 - Production-ready phone number validation for Swish integration
 
-**Security & Privacy First**: ✅ PASS  
+**Security & Privacy First**: ✅ PASS
+
 - RLS policies required for all database operations
 - Phone numbers secured, not shared with businesses during verification
 - Proper input validation and sanitization
 
 **TypeScript Strict Mode**: ✅ PASS
+
 - All code must pass TypeScript 5.5.4 strict compilation
 - No `any` types except documented external APIs
 - Type safety from database to frontend
 
 **Real Data Only**: ✅ PASS
+
 - Using actual Supabase PostgreSQL with RLS
 - Real transaction data processing
 - No local databases or mock implementations
 
 **Monorepo Architecture**: ✅ PASS
+
 - Leveraging existing apps/customer (Next.js) + apps/backend (Express)
 - Frontend to Vercel, backend to Railway deployment
 - Shared packages for types and utilities
@@ -81,6 +101,7 @@ Mobile-optimized customer landing page for QR code verification system with tran
 ## Project Structure
 
 ### Documentation (this feature)
+
 ```
 specs/[###-feature]/
 ├── plan.md              # This file (/plan command output)
@@ -92,6 +113,7 @@ specs/[###-feature]/
 ```
 
 ### Source Code (repository root)
+
 ```
 # Option 1: Single project (DEFAULT)
 src/
@@ -128,15 +150,18 @@ ios/ or android/
 └── [platform-specific structure]
 ```
 
-**Structure Decision**: Option 2 (Web application) - Using existing apps/customer (Next.js frontend) + apps/backend (Express API)
+**Structure Decision**: Option 2 (Web application) - Using existing
+apps/customer (Next.js frontend) + apps/backend (Express API)
 
 ## Phase 0: Outline & Research
+
 1. **Extract unknowns from Technical Context** above:
    - For each NEEDS CLARIFICATION → research task
    - For each dependency → best practices task
    - For each integration → patterns task
 
 2. **Generate and dispatch research agents**:
+
    ```
    For each unknown in Technical Context:
      Task: "Research {unknown} for {feature context}"
@@ -152,7 +177,8 @@ ios/ or android/
 **Output**: research.md with all NEEDS CLARIFICATION resolved
 
 ## Phase 1: Design & Contracts
-*Prerequisites: research.md complete*
+
+_Prerequisites: research.md complete_
 
 1. **Extract entities from feature spec** → `data-model.md`:
    - Entity name, fields, relationships
@@ -181,20 +207,28 @@ ios/ or android/
    - Keep under 150 lines for token efficiency
    - Output to repository root
 
-**Output**: data-model.md, /contracts/*, failing tests, quickstart.md, agent-specific file
+**Output**: data-model.md, /contracts/\*, failing tests, quickstart.md,
+agent-specific file
 
 ## Phase 2: Task Planning Approach
-*This section describes what the /tasks command will do - DO NOT execute during /plan*
+
+_This section describes what the /tasks command will do - DO NOT execute during
+/plan_
 
 **Task Generation Strategy**:
+
 - Load `.specify/templates/tasks-template.md` as base
 - Generate tasks from Phase 1 design docs (contracts, data model, quickstart)
-- Database tasks: Create migrations for verification_sessions, customer_verifications, fraud_detection_logs tables
-- API contract tasks: Implement 3 endpoints (/qr/verify, /verification/submit, /verification/session) [P]
-- Frontend tasks: QR landing page, verification form, error handling components [P]
+- Database tasks: Create migrations for verification_sessions,
+  customer_verifications, fraud_detection_logs tables
+- API contract tasks: Implement 3 endpoints (/qr/verify, /verification/submit,
+  /verification/session) [P]
+- Frontend tasks: QR landing page, verification form, error handling components
+  [P]
 - Integration tasks: End-to-end user story validation from quickstart.md
 
 **Ordering Strategy**:
+
 - Database first: Migrations and RLS policies before API implementation
 - TDD order: Contract tests before endpoint implementation
 - Frontend after API: Components depend on working backend endpoints
@@ -202,36 +236,45 @@ ios/ or android/
 - Integration tests last: Validate complete user flows
 
 **Specific Task Categories**:
+
 1. **Database Setup** (3-4 tasks): Table migrations, RLS policies, indexes
-2. **Backend API** (8-10 tasks): Contract tests, endpoint implementation, validation logic
-3. **Frontend Components** (6-8 tasks): Landing page, form components, error handling
+2. **Backend API** (8-10 tasks): Contract tests, endpoint implementation,
+   validation logic
+3. **Frontend Components** (6-8 tasks): Landing page, form components, error
+   handling
 4. **Integration** (4-5 tasks): User story validation, performance testing
-5. **Security & Validation** (3-4 tasks): Input sanitization, rate limiting, fraud detection
+5. **Security & Validation** (3-4 tasks): Input sanitization, rate limiting,
+   fraud detection
 
 **Estimated Output**: 24-31 numbered, ordered tasks in tasks.md
 
 **IMPORTANT**: This phase is executed by the /tasks command, NOT by /plan
 
 ## Phase 3+: Future Implementation
-*These phases are beyond the scope of the /plan command*
+
+_These phases are beyond the scope of the /plan command_
 
 **Phase 3**: Task execution (/tasks command creates tasks.md)  
-**Phase 4**: Implementation (execute tasks.md following constitutional principles)  
-**Phase 5**: Validation (run tests, execute quickstart.md, performance validation)
+**Phase 4**: Implementation (execute tasks.md following constitutional
+principles)  
+**Phase 5**: Validation (run tests, execute quickstart.md, performance
+validation)
 
 ## Complexity Tracking
-*Fill ONLY if Constitution Check has violations that must be justified*
 
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+_Fill ONLY if Constitution Check has violations that must be justified_
 
+| Violation                  | Why Needed         | Simpler Alternative Rejected Because |
+| -------------------------- | ------------------ | ------------------------------------ |
+| [e.g., 4th project]        | [current need]     | [why 3 projects insufficient]        |
+| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient]  |
 
 ## Progress Tracking
-*This checklist is updated during execution flow*
+
+_This checklist is updated during execution flow_
 
 **Phase Status**:
+
 - [x] Phase 0: Research complete (/plan command)
 - [x] Phase 1: Design complete (/plan command)
 - [x] Phase 2: Task planning complete (/plan command - describe approach only)
@@ -240,17 +283,21 @@ ios/ or android/
 - [ ] Phase 5: Validation passed
 
 **Gate Status**:
+
 - [x] Initial Constitution Check: PASS
 - [x] Post-Design Constitution Check: PASS
 - [x] All NEEDS CLARIFICATION resolved
 - [x] Complexity deviations documented
 
 **Deliverables Created**:
+
 - [x] research.md - QR handling, Swedish phone validation, mobile UX patterns
-- [x] data-model.md - Database schema with RLS policies for verification entities
+- [x] data-model.md - Database schema with RLS policies for verification
+      entities
 - [x] contracts/qr-verification.openapi.yaml - API specification for 3 endpoints
 - [x] quickstart.md - User story validation tests and performance criteria
 - [x] CLAUDE.md - Updated agent context with feature technology stack
 
 ---
-*Based on Constitution v2.1.1 - See `/memory/constitution.md`*
+
+_Based on Constitution v2.1.1 - See `/memory/constitution.md`_

@@ -6,9 +6,12 @@
 ## Core Entities
 
 ### **VerificationSession**
-Primary entity tracking complete customer verification flow from QR scan to form submission.
+
+Primary entity tracking complete customer verification flow from QR scan to form
+submission.
 
 **Fields**:
+
 - `id`: UUID (Primary Key)
 - `store_id`: UUID (Foreign Key → Store entity)
 - `qr_version`: Integer (QR code version scanned)
@@ -21,6 +24,7 @@ Primary entity tracking complete customer verification flow from QR scan to form
 - `updated_at`: Timestamp
 
 **Validation Rules**:
+
 - `store_id` must exist in Store table
 - `qr_version` must be between 1 and 9999999
 - `session_token` must be cryptographically secure (32+ characters)
@@ -28,14 +32,17 @@ Primary entity tracking complete customer verification flow from QR scan to form
 - Sessions expire after 30 minutes of inactivity
 
 **Relationships**:
+
 - Belongs to one Store
 - Has one CustomerVerification (optional)
 - Has many FraudDetectionLogs
 
 ### **CustomerVerification**
+
 Stores validated customer transaction details for verification process.
 
 **Fields**:
+
 - `id`: UUID (Primary Key)
 - `session_id`: UUID (Foreign Key → VerificationSession)
 - `transaction_time`: Time (customer-provided transaction time)
@@ -51,6 +58,7 @@ Stores validated customer transaction details for verification process.
 - `verified_at`: Timestamp (when business verification completes)
 
 **Validation Rules**:
+
 - `transaction_time` format: HH:MM (24-hour)
 - `transaction_amount` must be positive, max 99999.99 SEK
 - `phone_number_e164` must match Swedish mobile pattern: `+467[02369]\d{7}`
@@ -59,30 +67,37 @@ Stores validated customer transaction details for verification process.
 - `phone_validation_status = valid` when Swedish mobile format validated
 
 **Relationships**:
+
 - Belongs to one VerificationSession
 - Used by WeeklyVerificationProcess (business validation)
 
 ### **Store** (Existing Entity - Extended)
+
 Extended store entity with QR code verification context.
 
 **Additional Fields for QR Verification**:
+
 - `current_qr_version`: Integer (latest QR code version)
 - `qr_generation_date`: Timestamp (when current QR was generated)
 - `verification_enabled`: Boolean (can accept new verifications)
 - `fraud_detection_threshold`: Integer (suspicious activity limit)
 
 **Validation Rules**:
+
 - `current_qr_version` increments on QR regeneration
 - `verification_enabled = false` disables new verification sessions
 - `fraud_detection_threshold` default: 10 attempts per hour per IP
 
 ### **FraudDetectionLog** (New Supporting Entity)
+
 Tracks suspicious activity and fraud prevention metrics.
 
 **Fields**:
+
 - `id`: UUID (Primary Key)
 - `session_id`: UUID (Foreign Key → VerificationSession)
-- `detection_type`: Enum (`rate_limit`, `invalid_qr`, `suspicious_pattern`, `duplicate_attempt`)
+- `detection_type`: Enum (`rate_limit`, `invalid_qr`, `suspicious_pattern`,
+  `duplicate_attempt`)
 - `risk_score`: Integer (1-100, higher = more suspicious)
 - `ip_address`: String
 - `user_agent`: String
@@ -91,6 +106,7 @@ Tracks suspicious activity and fraud prevention metrics.
 - `detected_at`: Timestamp
 
 **Validation Rules**:
+
 - `risk_score` range: 1-100
 - `detection_details` stores structured fraud indicators
 - `action_taken = block` prevents form submission
@@ -98,6 +114,7 @@ Tracks suspicious activity and fraud prevention metrics.
 ## State Transitions
 
 ### **VerificationSession Status Flow**
+
 ```
 pending → completed (successful form submission)
 pending → failed (validation errors, fraud detection)
@@ -105,10 +122,11 @@ pending → expired (30-minute timeout)
 ```
 
 ### **Validation Status Flow**
+
 ```
 CustomerVerification creation:
 1. time_validation_status = validate_time_tolerance(transaction_time)
-2. amount_validation_status = validate_amount_tolerance(transaction_amount)  
+2. amount_validation_status = validate_amount_tolerance(transaction_amount)
 3. phone_validation_status = validate_swedish_phone(phone_number)
 4. Overall success = all statuses = 'valid'
 ```
@@ -116,6 +134,7 @@ CustomerVerification creation:
 ## Database Schema (Supabase PostgreSQL)
 
 ### **verification_sessions Table**
+
 ```sql
 CREATE TABLE verification_sessions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -123,7 +142,7 @@ CREATE TABLE verification_sessions (
     qr_version INTEGER NOT NULL CHECK (qr_version >= 1 AND qr_version <= 9999999),
     scan_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     session_token VARCHAR(64) NOT NULL UNIQUE,
-    status VARCHAR(20) NOT NULL DEFAULT 'pending' 
+    status VARCHAR(20) NOT NULL DEFAULT 'pending'
         CHECK (status IN ('pending', 'completed', 'expired', 'failed')),
     ip_address INET,
     user_agent TEXT,
@@ -139,6 +158,7 @@ CREATE INDEX idx_verification_sessions_scan_timestamp ON verification_sessions(s
 ```
 
 ### **customer_verifications Table**
+
 ```sql
 CREATE TABLE customer_verifications (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -147,11 +167,11 @@ CREATE TABLE customer_verifications (
     transaction_amount DECIMAL(10,2) NOT NULL CHECK (transaction_amount > 0),
     phone_number_e164 VARCHAR(15) NOT NULL CHECK (phone_number_e164 ~ '^\\+467[02369]\\d{7}$'),
     phone_number_national VARCHAR(20) NOT NULL,
-    time_validation_status VARCHAR(20) NOT NULL 
+    time_validation_status VARCHAR(20) NOT NULL
         CHECK (time_validation_status IN ('valid', 'out_of_tolerance', 'invalid')),
-    amount_validation_status VARCHAR(20) NOT NULL 
+    amount_validation_status VARCHAR(20) NOT NULL
         CHECK (amount_validation_status IN ('valid', 'out_of_tolerance', 'invalid')),
-    phone_validation_status VARCHAR(20) NOT NULL 
+    phone_validation_status VARCHAR(20) NOT NULL
         CHECK (phone_validation_status IN ('valid', 'invalid_format', 'not_swedish')),
     tolerance_check_time_diff INTEGER, -- minutes difference
     tolerance_check_amount_diff DECIMAL(10,2), -- SEK difference
@@ -166,11 +186,12 @@ CREATE INDEX idx_customer_verifications_phone_e164 ON customer_verifications(pho
 ```
 
 ### **fraud_detection_logs Table**
+
 ```sql
 CREATE TABLE fraud_detection_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     session_id UUID REFERENCES verification_sessions(id) ON DELETE CASCADE,
-    detection_type VARCHAR(30) NOT NULL 
+    detection_type VARCHAR(30) NOT NULL
         CHECK (detection_type IN ('rate_limit', 'invalid_qr', 'suspicious_pattern', 'duplicate_attempt')),
     risk_score INTEGER NOT NULL CHECK (risk_score >= 1 AND risk_score <= 100),
     ip_address INET,
@@ -191,6 +212,7 @@ CREATE INDEX idx_fraud_detection_logs_detected_at ON fraud_detection_logs(detect
 ## Row Level Security (RLS) Policies
 
 ### **verification_sessions RLS**
+
 ```sql
 -- Enable RLS
 ALTER TABLE verification_sessions ENABLE ROW LEVEL SECURITY;
@@ -209,6 +231,7 @@ CREATE POLICY "Backend service full access" ON verification_sessions
 ```
 
 ### **customer_verifications RLS**
+
 ```sql
 -- Enable RLS
 ALTER TABLE customer_verifications ENABLE ROW LEVEL SECURITY;
@@ -217,7 +240,7 @@ ALTER TABLE customer_verifications ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can access own verification data" ON customer_verifications
     FOR ALL USING (
         session_id IN (
-            SELECT id FROM verification_sessions 
+            SELECT id FROM verification_sessions
             WHERE session_token = current_setting('request.headers')::json->>'session-token'
         )
     );

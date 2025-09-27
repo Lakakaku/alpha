@@ -3,12 +3,7 @@
   "build": {
     "builder": "NIXPACKS",
     "buildCommand": "pnpm install --frozen-lockfile && pnpm --filter @vocilia/backend build",
-    "watchPatterns": [
-      "apps/backend/**/*",
-      "packages/**/*",
-      "package.json",
-      "pnpm-lock.yaml"
-    ]
+    "watchPatterns": ["apps/backend/**/*", "packages/**/*", "package.json", "pnpm-lock.yaml"]
   },
   "deploy": {
     "numReplicas": 1,
@@ -56,9 +51,7 @@
       ]
     }
   },
-  "regions": [
-    "europe-west1"
-  ],
+  "regions": ["europe-west1"],
   "runtime": {
     "type": "nodejs",
     "version": "18",

@@ -156,7 +156,7 @@ components:
           nullable: true
         color:
           type: string
-          pattern: '^#[0-9A-Fa-f]{6}$'
+          pattern: "^#[0-9A-Fa-f]{6}$"
           nullable: true
         icon:
           type: string
@@ -191,7 +191,14 @@ components:
           format: uuid
         trigger_type:
           type: string
-          enum: [purchase_amount, time_based, customer_visit, product_category, combination]
+          enum:
+            [
+              purchase_amount,
+              time_based,
+              customer_visit,
+              product_category,
+              combination,
+            ]
         trigger_config:
           type: object
           description: Flexible trigger configuration JSON
@@ -418,7 +425,7 @@ paths:
             enum: [asc, desc]
             default: desc
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
@@ -428,7 +435,7 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/CustomQuestion'
+                      $ref: "#/components/schemas/CustomQuestion"
                   pagination:
                     type: object
                     properties:
@@ -440,12 +447,12 @@ paths:
                         type: integer
                       pages:
                         type: integer
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
     post:
       summary: Create new question
@@ -455,26 +462,26 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateQuestionRequest'
+              $ref: "#/components/schemas/CreateQuestionRequest"
       responses:
-        '201':
+        "201":
           description: Question created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CustomQuestion'
-        '400':
+                $ref: "#/components/schemas/CustomQuestion"
+        "400":
           description: Invalid request data
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '401':
+                $ref: "#/components/schemas/Error"
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /questions/{id}:
     parameters:
@@ -489,18 +496,18 @@ paths:
       summary: Get question by ID
       description: Retrieve specific question details
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CustomQuestion'
-        '404':
+                $ref: "#/components/schemas/CustomQuestion"
+        "404":
           description: Question not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
     put:
       summary: Update question
@@ -510,39 +517,39 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateQuestionRequest'
+              $ref: "#/components/schemas/UpdateQuestionRequest"
       responses:
-        '200':
+        "200":
           description: Question updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CustomQuestion'
-        '400':
+                $ref: "#/components/schemas/CustomQuestion"
+        "400":
           description: Invalid request data
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '404':
+                $ref: "#/components/schemas/Error"
+        "404":
           description: Question not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
     delete:
       summary: Delete question
       description: Soft delete question (sets status to archived)
       responses:
-        '204':
+        "204":
           description: Question deleted successfully
-        '404':
+        "404":
           description: Question not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /questions/{id}/preview:
     parameters:
@@ -557,18 +564,18 @@ paths:
       summary: Generate question preview
       description: Generate preview of how question will appear to customers
       responses:
-        '200':
+        "200":
           description: Preview generated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/QuestionPreview'
-        '404':
+                $ref: "#/components/schemas/QuestionPreview"
+        "404":
           description: Question not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /questions/{id}/activate:
     parameters:
@@ -583,18 +590,18 @@ paths:
       summary: Activate question
       description: Set question status to active and enable presentation
       responses:
-        '200':
+        "200":
           description: Question activated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CustomQuestion'
-        '400':
+                $ref: "#/components/schemas/CustomQuestion"
+        "400":
           description: Cannot activate question (missing requirements)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /questions/{id}/deactivate:
     parameters:
@@ -609,26 +616,26 @@ paths:
       summary: Deactivate question
       description: Set question status to inactive and stop presentation
       responses:
-        '200':
+        "200":
           description: Question deactivated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CustomQuestion'
+                $ref: "#/components/schemas/CustomQuestion"
 
   /questions/categories:
     get:
       summary: List question categories
       description: Retrieve categories for question organization
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/QuestionCategory'
+                  $ref: "#/components/schemas/QuestionCategory"
 
     post:
       summary: Create question category
@@ -649,17 +656,17 @@ paths:
                   type: string
                 color:
                   type: string
-                  pattern: '^#[0-9A-Fa-f]{6}$'
+                  pattern: "^#[0-9A-Fa-f]{6}$"
                 icon:
                   type: string
                   maxLength: 50
       responses:
-        '201':
+        "201":
           description: Category created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/QuestionCategory'
+                $ref: "#/components/schemas/QuestionCategory"
 
   /questions/{id}/triggers:
     parameters:
@@ -674,14 +681,14 @@ paths:
       summary: List question triggers
       description: Get all triggers for a specific question
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/QuestionTrigger'
+                  $ref: "#/components/schemas/QuestionTrigger"
 
     post:
       summary: Create question trigger
@@ -698,7 +705,14 @@ paths:
               properties:
                 trigger_type:
                   type: string
-                  enum: [purchase_amount, time_based, customer_visit, product_category, combination]
+                  enum:
+                    [
+                      purchase_amount,
+                      time_based,
+                      customer_visit,
+                      product_category,
+                      combination,
+                    ]
                 trigger_config:
                   type: object
                 operator:
@@ -706,9 +720,9 @@ paths:
                   enum: [and, or]
                   default: and
       responses:
-        '201':
+        "201":
           description: Trigger created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/QuestionTrigger'
+                $ref: "#/components/schemas/QuestionTrigger"

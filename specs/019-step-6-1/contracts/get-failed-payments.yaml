@@ -42,7 +42,7 @@ paths:
             default: 0
           description: Pagination offset
       responses:
-        '200':
+        "200":
           description: Failed payments retrieved successfully
           content:
             application/json:
@@ -109,7 +109,14 @@ paths:
                           example: null
                         resolutionStatus:
                           type: string
-                          enum: [pending, retrying, manual_review, resolved, cancelled]
+                          enum:
+                            [
+                              pending,
+                              retrying,
+                              manual_review,
+                              resolved,
+                              cancelled,
+                            ]
                           example: "manual_review"
                         adminNotes:
                           type: string
@@ -147,7 +154,7 @@ paths:
                   offset:
                     type: integer
                     example: 0
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
@@ -163,7 +170,7 @@ paths:
                   error:
                     type: string
                     example: "Admin authentication required"
-        '500':
+        "500":
           description: Internal server error
           content:
             application/json:

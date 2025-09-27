@@ -38,7 +38,7 @@ paths:
                   assessments:
                     type: array
                     items:
-                      $ref: '#/components/schemas/PrivacyAssessment'
+                      $ref: "#/components/schemas/PrivacyAssessment"
 
     post:
       summary: Create privacy assessment
@@ -61,7 +61,13 @@ paths:
                   type: array
                   items:
                     type: string
-                    enum: [phone_number, transaction_data, feedback_content, session_data]
+                    enum:
+                      [
+                        phone_number,
+                        transaction_data,
+                        feedback_content,
+                        session_data,
+                      ]
               required: [component_name, data_flow_path, personal_data_types]
       responses:
         201:
@@ -69,7 +75,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PrivacyAssessment'
+                $ref: "#/components/schemas/PrivacyAssessment"
 
   /api/privacy/assessments/{assessmentId}/anonymization:
     post:
@@ -161,7 +167,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GDPRRequest'
+                $ref: "#/components/schemas/GDPRRequest"
 
   /api/gdpr/deletion-requests/{requestId}:
     get:
@@ -181,7 +187,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GDPRRequest'
+                $ref: "#/components/schemas/GDPRRequest"
 
   /api/gdpr/deletion-requests/{requestId}/verify:
     post:
@@ -285,7 +291,13 @@ paths:
               properties:
                 workflow_type:
                   type: string
-                  enum: [qr_verification, feedback_collection, business_verification, payment_processing]
+                  enum:
+                    [
+                      qr_verification,
+                      feedback_collection,
+                      business_verification,
+                      payment_processing,
+                    ]
                 audit_scope:
                   type: array
                   items:
@@ -327,7 +339,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DataProtectionAudit'
+                $ref: "#/components/schemas/DataProtectionAudit"
 
 components:
   securitySchemes:
@@ -423,7 +435,13 @@ components:
           format: uuid
         workflow_type:
           type: string
-          enum: [qr_verification, feedback_collection, business_verification, payment_processing]
+          enum:
+            [
+              qr_verification,
+              feedback_collection,
+              business_verification,
+              payment_processing,
+            ]
         customer_data_types:
           type: array
           items:

@@ -14,20 +14,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/OfflineSubmission'
+              $ref: "#/components/schemas/OfflineSubmission"
       responses:
-        '200':
+        "200":
           description: Offline submission queued successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OfflineSubmissionResponse'
-        '400':
+                $ref: "#/components/schemas/OfflineSubmissionResponse"
+        "400":
           description: Invalid submission data
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /api/offline/sync:
     post:
@@ -38,14 +38,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SyncRequest'
+              $ref: "#/components/schemas/SyncRequest"
       responses:
-        '200':
+        "200":
           description: Sync completed
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SyncResponse'
+                $ref: "#/components/schemas/SyncResponse"
 
   /api/offline/status:
     get:
@@ -58,12 +58,12 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Offline sync status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OfflineSyncStatus'
+                $ref: "#/components/schemas/OfflineSyncStatus"
 
   /api/offline/retry/{submissionId}:
     post:
@@ -77,12 +77,12 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Retry initiated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RetryResponse'
+                $ref: "#/components/schemas/RetryResponse"
 
 components:
   schemas:
@@ -182,7 +182,7 @@ components:
         sync_results:
           type: array
           items:
-            $ref: '#/components/schemas/SyncResult'
+            $ref: "#/components/schemas/SyncResult"
         summary:
           type: object
           properties:

@@ -27,7 +27,15 @@ paths:
           in: query
           schema:
             type: string
-            enum: [authentication, authorization, privacy, gdpr, vulnerability, fraud]
+            enum:
+              [
+                authentication,
+                authorization,
+                privacy,
+                gdpr,
+                vulnerability,
+                fraud,
+              ]
         - name: status
           in: query
           schema:
@@ -44,13 +52,13 @@ paths:
                   test_suites:
                     type: array
                     items:
-                      $ref: '#/components/schemas/SecurityTestSuite'
+                      $ref: "#/components/schemas/SecurityTestSuite"
                   total_count:
                     type: integer
         401:
-          $ref: '#/components/responses/Unauthorized'
+          $ref: "#/components/responses/Unauthorized"
         403:
-          $ref: '#/components/responses/Forbidden'
+          $ref: "#/components/responses/Forbidden"
 
   /api/security/test-suites/{suiteId}/execute:
     post:
@@ -104,9 +112,9 @@ paths:
                     type: string
                     enum: [queued, running]
         400:
-          $ref: '#/components/responses/BadRequest'
+          $ref: "#/components/responses/BadRequest"
         401:
-          $ref: '#/components/responses/Unauthorized'
+          $ref: "#/components/responses/Unauthorized"
 
   /api/security/executions/{executionId}:
     get:
@@ -126,9 +134,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TestExecution'
+                $ref: "#/components/schemas/TestExecution"
         404:
-          $ref: '#/components/responses/NotFound'
+          $ref: "#/components/responses/NotFound"
 
   /api/security/vulnerabilities:
     get:
@@ -161,11 +169,11 @@ paths:
                   vulnerabilities:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Vulnerability'
+                      $ref: "#/components/schemas/Vulnerability"
                   pagination:
-                    $ref: '#/components/schemas/Pagination'
+                    $ref: "#/components/schemas/Pagination"
         401:
-          $ref: '#/components/responses/Unauthorized'
+          $ref: "#/components/responses/Unauthorized"
 
   /api/security/vulnerabilities/{vulnerabilityId}/remediate:
     post:
@@ -201,11 +209,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Vulnerability'
+                $ref: "#/components/schemas/Vulnerability"
         400:
-          $ref: '#/components/responses/BadRequest'
+          $ref: "#/components/responses/BadRequest"
         404:
-          $ref: '#/components/responses/NotFound'
+          $ref: "#/components/responses/NotFound"
 
 components:
   securitySchemes:
@@ -227,7 +235,8 @@ components:
           type: string
         category:
           type: string
-          enum: [authentication, authorization, privacy, gdpr, vulnerability, fraud]
+          enum:
+            [authentication, authorization, privacy, gdpr, vulnerability, fraud]
         test_count:
           type: integer
         estimated_duration:
@@ -264,7 +273,7 @@ components:
         test_results:
           type: array
           items:
-            $ref: '#/components/schemas/TestResult'
+            $ref: "#/components/schemas/TestResult"
         summary:
           type: object
           properties:

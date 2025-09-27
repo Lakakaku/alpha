@@ -1,13 +1,14 @@
 # Notifications API Contract
 
-**Version**: 1.0.0
-**Base Path**: `/api/notifications`
-**Authentication**: Required (JWT token in Authorization header)
+**Version**: 1.0.0 **Base Path**: `/api/notifications` **Authentication**:
+Required (JWT token in Authorization header)
 
 ## POST /api/notifications/send
+
 Send individual notification to customer or business
 
 **Request Body**:
+
 ```json
 {
   "recipient_type": "customer" | "business",
@@ -25,6 +26,7 @@ Send individual notification to customer or business
 ```
 
 **Response (201 Created)**:
+
 ```json
 {
   "id": "uuid",
@@ -35,6 +37,7 @@ Send individual notification to customer or business
 ```
 
 **Response (400 Bad Request)**:
+
 ```json
 {
   "error": "validation_error",
@@ -48,12 +51,15 @@ Send individual notification to customer or business
 ```
 
 ## GET /api/notifications/{id}
+
 Get notification status and delivery details
 
 **Path Parameters**:
+
 - `id`: Notification UUID
 
 **Response (200 OK)**:
+
 ```json
 {
   "id": "uuid",
@@ -69,9 +75,11 @@ Get notification status and delivery details
 ```
 
 ## GET /api/notifications
+
 List notifications with filtering and pagination
 
 **Query Parameters**:
+
 - `recipient_type`: Filter by customer/business
 - `recipient_id`: Filter by specific user
 - `status`: Filter by notification status
@@ -80,6 +88,7 @@ List notifications with filtering and pagination
 - `offset`: Pagination offset
 
 **Response (200 OK)**:
+
 ```json
 {
   "notifications": [
@@ -98,12 +107,15 @@ List notifications with filtering and pagination
 ```
 
 ## POST /api/notifications/{id}/retry
+
 Manually retry failed notification (Admin only)
 
 **Path Parameters**:
+
 - `id`: Notification UUID
 
 **Response (200 OK)**:
+
 ```json
 {
   "id": "uuid",
@@ -114,6 +126,7 @@ Manually retry failed notification (Admin only)
 ```
 
 **Response (409 Conflict)**:
+
 ```json
 {
   "error": "retry_limit_exceeded",
@@ -122,12 +135,15 @@ Manually retry failed notification (Admin only)
 ```
 
 ## DELETE /api/notifications/{id}
+
 Cancel pending notification (Admin only)
 
 **Path Parameters**:
+
 - `id`: Notification UUID
 
 **Response (200 OK)**:
+
 ```json
 {
   "id": "uuid",
@@ -137,6 +153,7 @@ Cancel pending notification (Admin only)
 ```
 
 **Response (409 Conflict)**:
+
 ```json
 {
   "error": "cannot_cancel",
@@ -145,9 +162,11 @@ Cancel pending notification (Admin only)
 ```
 
 ## POST /api/notifications/batch
+
 Send batch notifications (Admin only, for weekly summaries)
 
 **Request Body**:
+
 ```json
 {
   "notification_type": "weekly_summary",
@@ -168,6 +187,7 @@ Send batch notifications (Admin only, for weekly summaries)
 ```
 
 **Response (202 Accepted)**:
+
 ```json
 {
   "batch_id": "uuid",
@@ -178,9 +198,11 @@ Send batch notifications (Admin only, for weekly summaries)
 ```
 
 ## GET /api/notifications/batch/{batch_id}
+
 Get batch processing status (Admin only)
 
 **Response (200 OK)**:
+
 ```json
 {
   "batch_id": "uuid",
@@ -196,9 +218,11 @@ Get batch processing status (Admin only)
 ```
 
 ## Webhook: POST /api/notifications/webhooks/delivery-status
+
 SMS delivery status updates from provider (Twilio)
 
 **Request Body** (from Twilio):
+
 ```json
 {
   "MessageSid": "twilio-message-id",
@@ -210,6 +234,7 @@ SMS delivery status updates from provider (Twilio)
 ```
 
 **Response (200 OK)**:
+
 ```json
 {
   "status": "processed"
@@ -219,6 +244,7 @@ SMS delivery status updates from provider (Twilio)
 ## Error Responses
 
 **401 Unauthorized**:
+
 ```json
 {
   "error": "unauthorized",
@@ -227,6 +253,7 @@ SMS delivery status updates from provider (Twilio)
 ```
 
 **403 Forbidden**:
+
 ```json
 {
   "error": "forbidden",
@@ -235,6 +262,7 @@ SMS delivery status updates from provider (Twilio)
 ```
 
 **404 Not Found**:
+
 ```json
 {
   "error": "not_found",
@@ -243,6 +271,7 @@ SMS delivery status updates from provider (Twilio)
 ```
 
 **429 Too Many Requests**:
+
 ```json
 {
   "error": "rate_limit_exceeded",
@@ -252,6 +281,7 @@ SMS delivery status updates from provider (Twilio)
 ```
 
 **500 Internal Server Error**:
+
 ```json
 {
   "error": "internal_error",

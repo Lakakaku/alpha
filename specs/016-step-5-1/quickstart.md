@@ -7,6 +7,7 @@
 ## Test Environment Setup
 
 ### Prerequisites
+
 - Railway backend deployment with OpenAI API access
 - Supabase database with existing verification tables
 - 46elks Swedish phone service configured
@@ -14,6 +15,7 @@
 - Test Swedish phone numbers for validation
 
 ### Environment Variables
+
 ```bash
 # OpenAI Integration
 OPENAI_API_KEY=sk-test-...
@@ -38,9 +40,11 @@ BUSINESS_ANALYSIS_ENABLED=true
 ## Integration Test Scenarios
 
 ### Scenario 1: Successful AI Call Completion
-*Based on Acceptance Scenario 1-3 from specification*
+
+_Based on Acceptance Scenario 1-3 from specification_
 
 #### Test Setup
+
 ```bash
 # Create test customer verification record
 POST /api/verification/create
@@ -53,14 +57,17 @@ POST /api/verification/create
 ```
 
 #### Test Steps
-1. **Verify Call Initiation** *(FR-001, FR-026)*
+
+1. **Verify Call Initiation** _(FR-001, FR-026)_
+
    ```bash
    # Should trigger immediately after verification
    GET /ai/calls/status?verification_id={verification_id}
    # Expected: status="pending", retry_count=0
    ```
 
-2. **Simulate Call Connection** *(FR-002, FR-003)*
+2. **Simulate Call Connection** _(FR-002, FR-003)_
+
    ```bash
    # Mock OpenAI Realtime API response
    POST /ai/calls/{call_session_id}/simulate-connection
@@ -71,7 +78,8 @@ POST /api/verification/create
    }
    ```
 
-3. **Submit Conversation Transcript** *(FR-006)*
+3. **Submit Conversation Transcript** _(FR-006)_
+
    ```bash
    POST /ai/calls/{call_session_id}/transcript
    {
@@ -84,7 +92,7 @@ POST /api/verification/create
          "message_type": "question"
        },
        {
-         "speaker": "customer", 
+         "speaker": "customer",
          "content": "Butiken var ren och personalen var mycket hjälpsam vid köttdisken.",
          "timestamp_ms": 5000,
          "message_order": 2,
@@ -96,7 +104,8 @@ POST /api/verification/create
    }
    ```
 
-4. **Verify Analysis Processing** *(FR-009, FR-010)*
+4. **Verify Analysis Processing** _(FR-009, FR-010)_
+
    ```bash
    POST /ai/analysis/process
    {
@@ -104,21 +113,24 @@ POST /api/verification/create
      "transcript_id": "{transcript_id}"
    }
    # Expected: 202 with analysis_id
-   
+
    GET /ai/analysis/{analysis_id}/results
    # Expected: reward_percentage between 2.00-15.00
    ```
 
 #### Expected Results
+
 - Call session status: `completed`
 - Quality assessment generated with scores 0.00-1.00
 - Reward percentage: 8-12% range (detailed, legitimate feedback)
 - No fraud flags: `is_fraudulent=false`
 
 ### Scenario 2: Fraud Detection and Call Failure
-*Based on Edge Cases from specification*
+
+_Based on Edge Cases from specification_
 
 #### Test Setup - Business Hours Violation
+
 ```bash
 # Create verification outside business hours
 POST /api/verification/create
@@ -131,7 +143,9 @@ POST /api/verification/create
 ```
 
 #### Test Steps
-1. **Verify Immediate Fraud Detection** *(FR-011, FR-016)*
+
+1. **Verify Immediate Fraud Detection** _(FR-011, FR-016)_
+
    ```bash
    POST /ai/analysis/fraud-check
    {
@@ -145,31 +159,35 @@ POST /api/verification/create
    }
    ```
 
-2. **Test Call Retry Logic** *(FR-001 - max 3 attempts)*
+2. **Test Call Retry Logic** _(FR-001 - max 3 attempts)_
+
    ```bash
    # First retry attempt
    POST /ai/calls/retry/{customer_verification_id}
    # Expected: retry_number=1
-   
-   # Second retry attempt  
+
+   # Second retry attempt
    POST /ai/calls/retry/{customer_verification_id}
    # Expected: retry_number=2
-   
+
    # Third attempt should fail
    POST /ai/calls/retry/{customer_verification_id}
    # Expected: 409 "Maximum retries exceeded"
    ```
 
 #### Expected Results
-- Fraud detection: `is_fraudulent=true` 
+
+- Fraud detection: `is_fraudulent=true`
 - Fraud reasons: `["business_hours_violation"]`
 - Call status: `failed` after 3 attempts
 - No reward calculation performed
 
 ### Scenario 3: Swedish Language Validation
-*Based on FR-002, FR-008*
+
+_Based on FR-002, FR-008_
 
 #### Test Setup - Non-Swedish Response
+
 ```bash
 # Simulate call with English responses
 POST /ai/calls/{call_session_id}/transcript
@@ -195,15 +213,18 @@ POST /ai/calls/{call_session_id}/transcript
 ```
 
 #### Expected Results
+
 - Call terminated early due to language barrier
 - Status: `abandoned` with reason `language_barrier`
 - No quality analysis performed
 - Duration below 60-second threshold
 
 ### Scenario 4: Weekly Business Analysis Generation
-*Based on FR-017, FR-018, FR-019*
+
+_Based on FR-017, FR-018, FR-019_
 
 #### Test Setup - Week with Multiple Feedback Sessions
+
 ```bash
 # Generate test data for full week analysis
 for day in range(7):
@@ -212,7 +233,9 @@ for day in range(7):
 ```
 
 #### Test Steps
-1. **Generate Weekly Report** *(FR-017)*
+
+1. **Generate Weekly Report** _(FR-017)_
+
    ```bash
    POST /ai/business-analysis/weekly-reports
    {
@@ -222,21 +245,22 @@ for day in range(7):
    }
    ```
 
-2. **Verify Report Content** *(FR-018, FR-019)*
+2. **Verify Report Content** _(FR-018, FR-019)_
+
    ```bash
    GET /ai/business-analysis/weekly-reports/test-store-uuid/2025-09-22
    # Expected sections:
    # - positive_trends: array of improvements
-   # - negative_issues: array of problems  
+   # - negative_issues: array of problems
    # - new_issues: issues not in previous week
    # - department_insights: area-specific analysis
    ```
 
-3. **Test Natural Language Search** *(FR-023)*
+3. **Test Natural Language Search** _(FR-023)_
    ```bash
    POST /ai/business-analysis/search
    {
-     "store_id": "test-store-uuid", 
+     "store_id": "test-store-uuid",
      "query": "meat section opinions",
      "time_range": {
        "start_date": "2025-09-22",
@@ -246,24 +270,29 @@ for day in range(7):
    ```
 
 #### Expected Results
+
 - Weekly report generated with all required sections
 - Trend analysis comparing to previous weeks
 - Search returns relevant meat department feedback
 - Actionable recommendations provided
 
 ### Scenario 5: Data Retention and Cleanup
-*Based on clarification: 90-day retention policy*
+
+_Based on clarification: 90-day retention policy_
 
 #### Test Setup - Expired Data
+
 ```bash
 # Create call session with past expiration date
-UPDATE feedback_call_sessions 
+UPDATE feedback_call_sessions
 SET expires_at = '2025-06-25T00:00:00Z'  # 90 days ago
 WHERE id = 'test-expired-session-uuid';
 ```
 
 #### Test Steps
-1. **Automatic Cleanup Trigger** *(FR-015)*
+
+1. **Automatic Cleanup Trigger** _(FR-015)_
+
    ```bash
    DELETE /ai/analysis/cleanup?quality_threshold=0.02
    # Should remove expired low-quality feedback
@@ -276,6 +305,7 @@ WHERE id = 'test-expired-session-uuid';
    ```
 
 #### Expected Results
+
 - Expired conversation transcripts deleted
 - Quality assessments anonymized but preserved for analytics
 - Business reports retained permanently
@@ -285,6 +315,7 @@ WHERE id = 'test-expired-session-uuid';
 ### Load Testing Scenarios
 
 #### Concurrent Call Handling
+
 ```bash
 # Test unlimited concurrent calls per store (clarification requirement)
 for i in range(50):
@@ -293,10 +324,11 @@ for i in range(50):
 ```
 
 #### API Response Times
+
 ```bash
 # Test <500ms requirement for API endpoints
 time curl -X POST /ai/calls/initiate
-time curl -X GET /ai/calls/{id}/status  
+time curl -X GET /ai/calls/{id}/status
 time curl -X POST /ai/analysis/process
 # All should complete within 500ms
 ```
@@ -304,6 +336,7 @@ time curl -X POST /ai/analysis/process
 ## Security Validation
 
 ### Authentication Testing
+
 ```bash
 # Test without valid JWT token
 curl -X POST /ai/calls/initiate
@@ -314,7 +347,8 @@ curl -H "Authorization: Bearer expired_token" -X POST /ai/calls/initiate
 # Expected: 401 Unauthorized
 ```
 
-### Data Privacy Testing  
+### Data Privacy Testing
+
 ```bash
 # Verify phone number encryption
 GET /ai/calls/{session_id}/transcript
@@ -328,11 +362,12 @@ GET /ai/calls/{session_id}/transcript  # As business user
 ## Monitoring and Observability
 
 ### Health Check Endpoints
+
 ```bash
 GET /health/ai-services
 # Expected: All AI services operational
 
-GET /health/openai-connectivity  
+GET /health/openai-connectivity
 # Expected: OpenAI API reachable and responsive
 
 GET /health/phone-service
@@ -340,6 +375,7 @@ GET /health/phone-service
 ```
 
 ### Metrics Validation
+
 ```bash
 GET /metrics/ai-calls/success-rate
 # Expected: >95% success rate for valid calls
@@ -351,6 +387,7 @@ GET /metrics/ai-analysis/processing-time
 ## Rollback Scenarios
 
 ### Feature Flag Disable
+
 ```bash
 # Disable AI calls in production
 PUT /admin/feature-flags
@@ -364,6 +401,7 @@ POST /ai/calls/initiate
 ```
 
 ### Database Migration Rollback
+
 ```bash
 # Test backwards compatibility
 # Ensure existing verification flow continues without AI tables
@@ -371,4 +409,6 @@ POST /ai/calls/initiate
 
 ---
 
-**Phase 1 Quickstart Complete**: All critical user journeys validated with comprehensive test scenarios covering functionality, performance, security, and failure cases.
+**Phase 1 Quickstart Complete**: All critical user journeys validated with
+comprehensive test scenarios covering functionality, performance, security, and
+failure cases.

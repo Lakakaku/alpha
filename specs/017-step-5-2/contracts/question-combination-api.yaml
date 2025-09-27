@@ -30,18 +30,18 @@ paths:
             format: uuid
           description: Business context identifier
       responses:
-        '200':
+        "200":
           description: List of combination rules
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/QuestionCombinationRule'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+                  $ref: "#/components/schemas/QuestionCombinationRule"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
     post:
       summary: Create new question combination rule
@@ -51,18 +51,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateQuestionCombinationRule'
+              $ref: "#/components/schemas/CreateQuestionCombinationRule"
       responses:
-        '201':
+        "201":
           description: Rule created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/QuestionCombinationRule'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+                $ref: "#/components/schemas/QuestionCombinationRule"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /questions/combinations/rules/{ruleId}:
     get:
@@ -76,14 +76,14 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Combination rule details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/QuestionCombinationRuleDetails'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/QuestionCombinationRuleDetails"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
     put:
       summary: Update combination rule
@@ -100,18 +100,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateQuestionCombinationRule'
+              $ref: "#/components/schemas/UpdateQuestionCombinationRule"
       responses:
-        '200':
+        "200":
           description: Rule updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/QuestionCombinationRule'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/QuestionCombinationRule"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
     delete:
       summary: Deactivate combination rule
@@ -124,10 +124,10 @@ paths:
             type: string
             format: uuid
       responses:
-        '204':
+        "204":
           description: Rule deactivated successfully
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /questions/triggers:
     get:
@@ -151,14 +151,14 @@ paths:
             type: boolean
             default: true
       responses:
-        '200':
+        "200":
           description: List of dynamic triggers
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DynamicTrigger'
+                  $ref: "#/components/schemas/DynamicTrigger"
 
     post:
       summary: Create new dynamic trigger
@@ -168,16 +168,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateDynamicTrigger'
+              $ref: "#/components/schemas/CreateDynamicTrigger"
       responses:
-        '201':
+        "201":
           description: Trigger created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DynamicTrigger'
-        '400':
-          $ref: '#/components/responses/BadRequest'
+                $ref: "#/components/schemas/DynamicTrigger"
+        "400":
+          $ref: "#/components/responses/BadRequest"
 
   /questions/triggers/{triggerId}:
     get:
@@ -191,12 +191,12 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Dynamic trigger details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DynamicTriggerDetails'
+                $ref: "#/components/schemas/DynamicTriggerDetails"
 
     put:
       summary: Update dynamic trigger
@@ -213,14 +213,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateDynamicTrigger'
+              $ref: "#/components/schemas/UpdateDynamicTrigger"
       responses:
-        '200':
+        "200":
           description: Trigger updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DynamicTrigger'
+                $ref: "#/components/schemas/DynamicTrigger"
 
     delete:
       summary: Deactivate dynamic trigger
@@ -233,7 +233,7 @@ paths:
             type: string
             format: uuid
       responses:
-        '204':
+        "204":
           description: Trigger deactivated successfully
 
   /questions/combinations/evaluate:
@@ -246,17 +246,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/QuestionEvaluationRequest'
+              $ref: "#/components/schemas/QuestionEvaluationRequest"
       responses:
-        '200':
+        "200":
           description: Optimized question combination
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/QuestionCombination'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '422':
+                $ref: "#/components/schemas/QuestionCombination"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
           description: No questions could be combined within constraints
           content:
             application/json:
@@ -267,7 +267,7 @@ paths:
                     type: string
                     example: "No questions available within time constraints"
                   constraints:
-                    $ref: '#/components/schemas/TimeConstraints'
+                    $ref: "#/components/schemas/TimeConstraints"
 
   /questions/harmonizers/{ruleId}:
     get:
@@ -281,14 +281,14 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: List of frequency harmonizers
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/FrequencyHarmonizer'
+                  $ref: "#/components/schemas/FrequencyHarmonizer"
 
     post:
       summary: Configure frequency harmonizer
@@ -305,14 +305,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateFrequencyHarmonizer'
+              $ref: "#/components/schemas/CreateFrequencyHarmonizer"
       responses:
-        '201':
+        "201":
           description: Harmonizer configured successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FrequencyHarmonizer'
+                $ref: "#/components/schemas/FrequencyHarmonizer"
 
   /admin/triggers/effectiveness:
     get:
@@ -337,12 +337,12 @@ paths:
             type: string
             format: date
       responses:
-        '200':
+        "200":
           description: Trigger effectiveness data
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TriggerEffectivenessReport'
+                $ref: "#/components/schemas/TriggerEffectivenessReport"
 
 components:
   securitySchemes:
@@ -461,17 +461,17 @@ components:
 
     QuestionCombinationRuleDetails:
       allOf:
-        - $ref: '#/components/schemas/QuestionCombinationRule'
+        - $ref: "#/components/schemas/QuestionCombinationRule"
         - type: object
           properties:
             question_groups:
               type: array
               items:
-                $ref: '#/components/schemas/QuestionGroup'
+                $ref: "#/components/schemas/QuestionGroup"
             active_triggers:
               type: array
               items:
-                $ref: '#/components/schemas/DynamicTrigger'
+                $ref: "#/components/schemas/DynamicTrigger"
 
     DynamicTrigger:
       type: object
@@ -573,17 +573,17 @@ components:
 
     DynamicTriggerDetails:
       allOf:
-        - $ref: '#/components/schemas/DynamicTrigger'
+        - $ref: "#/components/schemas/DynamicTrigger"
         - type: object
           properties:
             conditions:
               type: array
               items:
-                $ref: '#/components/schemas/TriggerCondition'
+                $ref: "#/components/schemas/TriggerCondition"
             recent_activations:
               type: array
               items:
-                $ref: '#/components/schemas/TriggerActivationSummary'
+                $ref: "#/components/schemas/TriggerActivationSummary"
 
     QuestionGroup:
       type: object
@@ -612,7 +612,7 @@ components:
         questions:
           type: array
           items:
-            $ref: '#/components/schemas/QuestionReference'
+            $ref: "#/components/schemas/QuestionReference"
 
     QuestionReference:
       type: object
@@ -680,7 +680,7 @@ components:
               items:
                 type: string
         time_constraints:
-          $ref: '#/components/schemas/TimeConstraints'
+          $ref: "#/components/schemas/TimeConstraints"
       required:
         - business_context_id
         - customer_data
@@ -713,7 +713,7 @@ components:
         selected_questions:
           type: array
           items:
-            $ref: '#/components/schemas/SelectedQuestion'
+            $ref: "#/components/schemas/SelectedQuestion"
         total_estimated_duration:
           type: integer
           description: Total estimated call duration in seconds

@@ -62,18 +62,39 @@ secure against malicious attacks and data breaches.
 ## Clarifications
 
 ### Session 2025-09-24
-- Q: For customers with disabilities who provide unusual but legitimate feedback (e.g., speech impediments, cognitive differences), how should the fraud detection system handle their responses? → A: Treat identical to standard fraud detection without special handling
-- Q: When business owners attempt to manipulate their own fraud detection settings (e.g., lowering thresholds to accept more fraudulent feedback for higher rewards), what should the system do? → A: Prevent any business owner changes to fraud detection settings
-- Q: How should the system differentiate between legitimate family members providing separate feedback versus coordinated fraud attempts from the same household? → A: Require phone number verification to prevent household coordination
-- Q: When intrusion detection identifies suspicious activity, what response time is required for administrator alerts? → A: <2s
-- Q: For the automated security monitoring thresholds mentioned in FR-012, what constitutes "suspicious activities" that trigger real-time alerts? → A: Multiple failed logins, unusual data access patterns, privilege escalation attempts
+
+- Q: For customers with disabilities who provide unusual but legitimate feedback
+  (e.g., speech impediments, cognitive differences), how should the fraud
+  detection system handle their responses? → A: Treat identical to standard
+  fraud detection without special handling
+- Q: When business owners attempt to manipulate their own fraud detection
+  settings (e.g., lowering thresholds to accept more fraudulent feedback for
+  higher rewards), what should the system do? → A: Prevent any business owner
+  changes to fraud detection settings
+- Q: How should the system differentiate between legitimate family members
+  providing separate feedback versus coordinated fraud attempts from the same
+  household? → A: Require phone number verification to prevent household
+  coordination
+- Q: When intrusion detection identifies suspicious activity, what response time
+  is required for administrator alerts? → A: <2s
+- Q: For the automated security monitoring thresholds mentioned in FR-012, what
+  constitutes "suspicious activities" that trigger real-time alerts? → A:
+  Multiple failed logins, unusual data access patterns, privilege escalation
+  attempts
 
 ### Edge Cases
 
-- What happens when legitimate feedback coincidentally contains red flag keywords? System allows feedback to pass through normal processing
-- How does the system handle customers with disabilities who provide unusual but legitimate feedback? System applies standard fraud detection without special accommodations
-- What occurs when a business owner attempts to manipulate their own fraud detection settings? System prevents all business owner modifications to fraud detection parameters
-- How does the system differentiate between legitimate family members providing feedback vs. coordinated fraud? System requires unique phone number verification for each feedback submission
+- What happens when legitimate feedback coincidentally contains red flag
+  keywords? System allows feedback to pass through normal processing
+- How does the system handle customers with disabilities who provide unusual but
+  legitimate feedback? System applies standard fraud detection without special
+  accommodations
+- What occurs when a business owner attempts to manipulate their own fraud
+  detection settings? System prevents all business owner modifications to fraud
+  detection parameters
+- How does the system differentiate between legitimate family members providing
+  feedback vs. coordinated fraud? System requires unique phone number
+  verification for each feedback submission
 
 ## Requirements
 
@@ -88,7 +109,8 @@ secure against malicious attacks and data breaches.
   threats, nonsensical responses, and contextually impossible suggestions
 - **FR-003**: System MUST track behavioral patterns including call frequency per
   phone number, time patterns, geographical inconsistencies, and feedback
-  similarity across customers, requiring unique phone number verification to prevent household coordination fraud
+  similarity across customers, requiring unique phone number verification to
+  prevent household coordination fraud
 - **FR-004**: System MUST generate automated fraud scores combining context
   analysis (40%), keyword detection (20%), behavioral patterns (30%), and
   transaction verification (10%)
@@ -111,8 +133,10 @@ secure against malicious attacks and data breaches.
 - **FR-011**: System MUST provide role-based access control with strict
   separation between customer, business, and admin access levels
 - **FR-012**: System MUST implement automated security monitoring with real-time
-  alerts for suspicious activities including multiple failed logins, unusual data access patterns, and privilege escalation attempts
-- **FR-013**: System MUST prevent business owners from modifying fraud detection settings, maintaining admin-only control over detection parameters
+  alerts for suspicious activities including multiple failed logins, unusual
+  data access patterns, and privilege escalation attempts
+- **FR-013**: System MUST prevent business owners from modifying fraud detection
+  settings, maintaining admin-only control over detection parameters
 
 ### Key Entities
 

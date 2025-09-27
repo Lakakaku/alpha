@@ -50,7 +50,7 @@ paths:
             minimum: 0
             default: 0
       responses:
-        '200':
+        "200":
           description: List of conversations
           content:
             application/json:
@@ -60,15 +60,15 @@ paths:
                   conversations:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Conversation'
+                      $ref: "#/components/schemas/Conversation"
                   total:
                     type: integer
                   has_more:
                     type: boolean
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
     post:
       summary: Create new AI conversation
@@ -92,16 +92,16 @@ paths:
                   description: Any existing context to include
               required: []
       responses:
-        '201':
+        "201":
           description: Conversation created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Conversation'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+                $ref: "#/components/schemas/Conversation"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /ai-assistant/conversations/{conversationId}:
     get:
@@ -129,23 +129,23 @@ paths:
             maximum: 200
             default: 50
       responses:
-        '200':
+        "200":
           description: Conversation details
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/Conversation'
+                  - $ref: "#/components/schemas/Conversation"
                   - type: object
                     properties:
                       messages:
                         type: array
                         items:
-                          $ref: '#/components/schemas/ConversationMessage'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+                          $ref: "#/components/schemas/ConversationMessage"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
     patch:
       summary: Update conversation
@@ -171,16 +171,16 @@ paths:
                   type: string
                   maxLength: 200
       responses:
-        '200':
+        "200":
           description: Conversation updated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Conversation'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/Conversation"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   # Chat Interface
   /ai-assistant/conversations/{conversationId}/messages:
@@ -222,7 +222,7 @@ paths:
               required:
                 - content
       responses:
-        '200':
+        "200":
           description: AI response
           content:
             application/json:
@@ -230,25 +230,25 @@ paths:
                 type: object
                 properties:
                   user_message:
-                    $ref: '#/components/schemas/ConversationMessage'
+                    $ref: "#/components/schemas/ConversationMessage"
                   ai_response:
-                    $ref: '#/components/schemas/ConversationMessage'
+                    $ref: "#/components/schemas/ConversationMessage"
                   context_updates:
                     type: array
                     items:
-                      $ref: '#/components/schemas/ContextEntry'
+                      $ref: "#/components/schemas/ContextEntry"
                   suggestions:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Suggestion'
+                      $ref: "#/components/schemas/Suggestion"
             text/event-stream:
               schema:
                 type: string
                 description: Server-sent events with message chunks (when streaming=true)
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   # Context Management
   /ai-assistant/context/entries:
@@ -267,7 +267,17 @@ paths:
           description: Filter by context category
           schema:
             type: string
-            enum: [store_profile, personnel, layout, inventory, operations, customer_journey, fraud_detection, seasonal_variations]
+            enum:
+              [
+                store_profile,
+                personnel,
+                layout,
+                inventory,
+                operations,
+                customer_journey,
+                fraud_detection,
+                seasonal_variations,
+              ]
         - name: verified_only
           in: query
           description: Only return verified context entries
@@ -275,7 +285,7 @@ paths:
             type: boolean
             default: false
       responses:
-        '200':
+        "200":
           description: Context entries
           content:
             application/json:
@@ -285,12 +295,12 @@ paths:
                   entries:
                     type: array
                     items:
-                      $ref: '#/components/schemas/ContextEntry'
+                      $ref: "#/components/schemas/ContextEntry"
                   categories:
                     type: object
                     description: Entries grouped by category
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
     post:
       summary: Create or update context entry
@@ -307,7 +317,17 @@ paths:
                   format: uuid
                 category:
                   type: string
-                  enum: [store_profile, personnel, layout, inventory, operations, customer_journey, fraud_detection, seasonal_variations]
+                  enum:
+                    [
+                      store_profile,
+                      personnel,
+                      layout,
+                      inventory,
+                      operations,
+                      customer_journey,
+                      fraud_detection,
+                      seasonal_variations,
+                    ]
                 subcategory:
                   type: string
                   maxLength: 100
@@ -330,20 +350,20 @@ paths:
                 - key
                 - value
       responses:
-        '201':
+        "201":
           description: Context entry created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ContextEntry'
-        '200':
+                $ref: "#/components/schemas/ContextEntry"
+        "200":
           description: Context entry updated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ContextEntry'
-        '400':
-          $ref: '#/components/responses/BadRequest'
+                $ref: "#/components/schemas/ContextEntry"
+        "400":
+          $ref: "#/components/responses/BadRequest"
 
   # Suggestions
   /ai-assistant/suggestions:
@@ -362,7 +382,14 @@ paths:
           description: Filter by suggestion type
           schema:
             type: string
-            enum: [context_gap, question_recommendation, fraud_improvement, frequency_optimization, validation_enhancement]
+            enum:
+              [
+                context_gap,
+                question_recommendation,
+                fraud_improvement,
+                frequency_optimization,
+                validation_enhancement,
+              ]
         - name: status
           in: query
           description: Filter by suggestion status
@@ -377,7 +404,7 @@ paths:
             type: string
             enum: [low, medium, high, critical]
       responses:
-        '200':
+        "200":
           description: List of suggestions
           content:
             application/json:
@@ -387,7 +414,7 @@ paths:
                   suggestions:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Suggestion'
+                      $ref: "#/components/schemas/Suggestion"
                   summary:
                     type: object
                     properties:
@@ -397,8 +424,8 @@ paths:
                         type: object
                       by_type:
                         type: object
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /ai-assistant/suggestions/{suggestionId}/accept:
     post:
@@ -427,20 +454,20 @@ paths:
                   maxLength: 500
                   description: Optional notes about acceptance
       responses:
-        '200':
+        "200":
           description: Suggestion accepted
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/Suggestion'
+                  - $ref: "#/components/schemas/Suggestion"
                   - type: object
                     properties:
                       implementation_result:
                         type: object
                         description: Result of immediate implementation if requested
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /ai-assistant/suggestions/{suggestionId}/reject:
     post:
@@ -465,14 +492,14 @@ paths:
                   maxLength: 500
                   description: Reason for rejection
       responses:
-        '200':
+        "200":
           description: Suggestion rejected
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Suggestion'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/Suggestion"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   # Context Validation
   /ai-assistant/validation/score:
@@ -493,14 +520,14 @@ paths:
             type: boolean
             default: false
       responses:
-        '200':
+        "200":
           description: Validation score and results
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidationResult'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+                $ref: "#/components/schemas/ValidationResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
     post:
       summary: Request context validation
@@ -522,7 +549,7 @@ paths:
                   type: object
                   description: Custom validation rules to apply
       responses:
-        '202':
+        "202":
           description: Validation started (async processing)
           content:
             application/json:
@@ -535,8 +562,8 @@ paths:
                   estimated_completion:
                     type: string
                     format: date-time
-        '400':
-          $ref: '#/components/responses/BadRequest'
+        "400":
+          $ref: "#/components/responses/BadRequest"
 
 components:
   securitySchemes:
@@ -644,7 +671,17 @@ components:
           nullable: true
         category:
           type: string
-          enum: [store_profile, personnel, layout, inventory, operations, customer_journey, fraud_detection, seasonal_variations]
+          enum:
+            [
+              store_profile,
+              personnel,
+              layout,
+              inventory,
+              operations,
+              customer_journey,
+              fraud_detection,
+              seasonal_variations,
+            ]
         subcategory:
           type: string
           nullable: true
@@ -698,10 +735,27 @@ components:
           nullable: true
         suggestion_type:
           type: string
-          enum: [context_gap, question_recommendation, fraud_improvement, frequency_optimization, validation_enhancement]
+          enum:
+            [
+              context_gap,
+              question_recommendation,
+              fraud_improvement,
+              frequency_optimization,
+              validation_enhancement,
+            ]
         category:
           type: string
-          enum: [store_profile, personnel, layout, inventory, operations, customer_journey, fraud_detection, seasonal_variations]
+          enum:
+            [
+              store_profile,
+              personnel,
+              layout,
+              inventory,
+              operations,
+              customer_journey,
+              fraud_detection,
+              seasonal_variations,
+            ]
           nullable: true
         title:
           type: string

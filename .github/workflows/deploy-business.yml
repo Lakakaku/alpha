@@ -2,16 +2,16 @@ name: Deploy Business App
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
     paths:
-      - 'apps/business/**'
-      - 'packages/**'
-      - '.github/workflows/deploy-business.yml'
+      - "apps/business/**"
+      - "packages/**"
+      - ".github/workflows/deploy-business.yml"
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths:
-      - 'apps/business/**'
-      - 'packages/**'
+      - "apps/business/**"
+      - "packages/**"
 
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -36,7 +36,7 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.business == 'true' }}
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -44,8 +44,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'pnpm'
+          node-version: "18"
+          cache: "pnpm"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -78,7 +78,7 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.business == 'true' }}
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -86,7 +86,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: "18"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -106,7 +106,7 @@ jobs:
     needs: [changes, test]
     if: ${{ needs.changes.outputs.business == 'true' }}
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:15
@@ -126,8 +126,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'pnpm'
+          node-version: "18"
+          cache: "pnpm"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -169,7 +169,7 @@ jobs:
     if: ${{ needs.changes.outputs.business == 'true' && github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     environment: preview
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -206,24 +206,24 @@ jobs:
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
-            
+
             const existingComment = comments.find(comment => 
               comment.user.login === 'github-actions[bot]' && 
               comment.body.includes('🏢 Business App Preview')
             );
-            
+
             const body = `🏢 **Business App Preview**
-            
+
             📱 Preview URL: ${{ steps.deploy.outputs.preview_url }}
-            
+
             🔗 [View Business Dashboard →](${{ steps.deploy.outputs.preview_url }})
-            
+
             Changes in this PR:
             - Business dashboard features
             - Store management updates
             - Customer feedback analytics
             - Payment and reward systems`;
-            
+
             if (existingComment) {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
@@ -245,7 +245,7 @@ jobs:
     if: ${{ needs.changes.outputs.business == 'true' && github.ref == 'refs/heads/develop' }}
     runs-on: ubuntu-latest
     environment: staging
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -278,7 +278,7 @@ jobs:
     needs: [changes, deploy-staging]
     if: ${{ needs.changes.outputs.business == 'true' && github.ref == 'refs/heads/develop' }}
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -286,7 +286,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: "18"
 
       - name: Install Lighthouse
         run: npm install -g lighthouse
@@ -296,7 +296,7 @@ jobs:
           lighthouse https://business-staging.vocilia.com --only-categories=performance --output=json --output-path=lighthouse-perf.json
           lighthouse https://business-staging.vocilia.com --only-categories=accessibility --output=json --output-path=lighthouse-a11y.json
           lighthouse https://business-staging.vocilia.com --only-categories=best-practices --output=json --output-path=lighthouse-bp.json
-          
+
       - name: Upload performance reports
         uses: actions/upload-artifact@v4
         with:
@@ -307,15 +307,15 @@ jobs:
         run: |
           perf_score=$(node -e "console.log(JSON.parse(require('fs').readFileSync('lighthouse-perf.json')).categories.performance.score * 100)")
           a11y_score=$(node -e "console.log(JSON.parse(require('fs').readFileSync('lighthouse-a11y.json')).categories.accessibility.score * 100)")
-          
+
           echo "Performance Score: $perf_score"
           echo "Accessibility Score: $a11y_score"
-          
+
           if [ "$perf_score" -lt "85" ]; then
             echo "Performance score $perf_score is below threshold (85)"
             exit 1
           fi
-          
+
           if [ "$a11y_score" -lt "90" ]; then
             echo "Accessibility score $a11y_score is below threshold (90)"
             exit 1
@@ -326,7 +326,7 @@ jobs:
     if: ${{ needs.changes.outputs.business == 'true' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     environment: production
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -356,16 +356,16 @@ jobs:
       - name: Post-deployment validation
         run: |
           sleep 60
-          
+
           # Health check
           curl -f https://business.vocilia.com/api/health || exit 1
-          
+
           # Authentication flow
           curl -f https://business.vocilia.com/api/auth/status || exit 1
-          
+
           # Dashboard accessibility
           curl -f https://business.vocilia.com || exit 1
-          
+
           # Store management endpoints
           curl -f https://business.vocilia.com/api/stores || exit 1
 
@@ -373,7 +373,7 @@ jobs:
         run: |
           npm install -g lighthouse
           lighthouse https://business.vocilia.com --only-categories=performance --output=json --output-path=lighthouse-prod.json
-          
+
           # Check production performance score
           score=$(node -e "console.log(JSON.parse(require('fs').readFileSync('lighthouse-prod.json')).categories.performance.score * 100)")
           if [ "$score" -lt "90" ]; then
@@ -406,7 +406,7 @@ jobs:
     if: ${{ failure() && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     environment: production
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

@@ -2,16 +2,16 @@ name: Deploy Admin App
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
     paths:
-      - 'apps/admin/**'
-      - 'packages/**'
-      - '.github/workflows/deploy-admin.yml'
+      - "apps/admin/**"
+      - "packages/**"
+      - ".github/workflows/deploy-admin.yml"
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths:
-      - 'apps/admin/**'
-      - 'packages/**'
+      - "apps/admin/**"
+      - "packages/**"
 
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -36,7 +36,7 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.admin == 'true' }}
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -44,8 +44,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'pnpm'
+          node-version: "18"
+          cache: "pnpm"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -78,7 +78,7 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.admin == 'true' }}
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -86,7 +86,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: "18"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -106,7 +106,7 @@ jobs:
     needs: [changes, test]
     if: ${{ needs.changes.outputs.admin == 'true' }}
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:15
@@ -126,8 +126,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'pnpm'
+          node-version: "18"
+          cache: "pnpm"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -150,7 +150,7 @@ jobs:
     if: ${{ needs.changes.outputs.admin == 'true' && github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     environment: preview
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -187,23 +187,23 @@ jobs:
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
-            
+
             const existingComment = comments.find(comment => 
               comment.user.login === 'github-actions[bot]' && 
               comment.body.includes('🏗️ Admin App Preview')
             );
-            
+
             const body = `🏗️ **Admin App Preview**
-            
+
             📱 Preview URL: ${{ steps.deploy.outputs.preview_url }}
-            
+
             🔗 [View Admin Dashboard →](${{ steps.deploy.outputs.preview_url }})
-            
+
             Changes in this PR:
             - Admin dashboard components
             - Authentication and security updates
             - Monitoring and analytics features`;
-            
+
             if (existingComment) {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
@@ -225,7 +225,7 @@ jobs:
     if: ${{ needs.changes.outputs.admin == 'true' && github.ref == 'refs/heads/develop' }}
     runs-on: ubuntu-latest
     environment: staging
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -258,7 +258,7 @@ jobs:
     needs: [changes, deploy-staging]
     if: ${{ needs.changes.outputs.admin == 'true' && github.ref == 'refs/heads/develop' }}
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -266,7 +266,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: "18"
 
       - name: Install accessibility tools
         run: |
@@ -277,7 +277,7 @@ jobs:
         run: |
           axe https://admin-staging.vocilia.com --exit
           lighthouse https://admin-staging.vocilia.com --only-categories=accessibility --output=json --output-path=lighthouse-a11y.json
-          
+
       - name: Upload accessibility report
         uses: actions/upload-artifact@v4
         with:
@@ -285,11 +285,12 @@ jobs:
           path: lighthouse-a11y.json
 
   deploy-production:
-    needs: [changes, test, security-scan, integration-tests, accessibility-audit]
+    needs:
+      [changes, test, security-scan, integration-tests, accessibility-audit]
     if: ${{ needs.changes.outputs.admin == 'true' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     environment: production
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -319,13 +320,13 @@ jobs:
       - name: Post-deployment validation
         run: |
           sleep 60
-          
+
           # Health check
           curl -f https://admin.vocilia.com/api/health || exit 1
-          
+
           # Authentication check
           curl -f https://admin.vocilia.com/api/auth/status || exit 1
-          
+
           # Dashboard accessibility
           curl -f https://admin.vocilia.com || exit 1
 
@@ -333,7 +334,7 @@ jobs:
         run: |
           npm install -g lighthouse
           lighthouse https://admin.vocilia.com --only-categories=performance --output=json --output-path=lighthouse-perf.json
-          
+
           # Check performance score
           score=$(node -e "console.log(JSON.parse(require('fs').readFileSync('lighthouse-perf.json')).categories.performance.score * 100)")
           if [ "$score" -lt "90" ]; then
@@ -366,7 +367,7 @@ jobs:
     if: ${{ failure() && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     environment: production
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

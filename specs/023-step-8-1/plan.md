@@ -1,9 +1,11 @@
 # Implementation Plan: Production Deployment
 
-**Branch**: `023-step-8-1` | **Date**: 2025-09-27 | **Spec**: [spec.md](./spec.md)
-**Input**: Feature specification from `/specs/023-step-8-1/spec.md`
+**Branch**: `023-step-8-1` | **Date**: 2025-09-27 | **Spec**:
+[spec.md](./spec.md) **Input**: Feature specification from
+`/specs/023-step-8-1/spec.md`
 
 ## Execution Flow (/plan command scope)
+
 ```
 1. Load feature spec from Input path
    → Feature spec loaded successfully
@@ -23,45 +25,59 @@
 ```
 
 ## Summary
-Deploy the complete Vocilia customer feedback reward system to production environments with Railway (backend), Vercel (frontends), and Supabase (database). Includes staging environments, custom domains, SSL certificates, monitoring, and backup strategies for medium-volume traffic (1,000-10,000 customers/month) with 99.5% uptime target.
+
+Deploy the complete Vocilia customer feedback reward system to production
+environments with Railway (backend), Vercel (frontends), and Supabase
+(database). Includes staging environments, custom domains, SSL certificates,
+monitoring, and backup strategies for medium-volume traffic (1,000-10,000
+customers/month) with 99.5% uptime target.
 
 ## Technical Context
-**Language/Version**: TypeScript with Node.js 18+ (existing)
-**Primary Dependencies**: Next.js 14, Supabase client, Railway CLI, Vercel CLI (existing)
-**Storage**: Supabase PostgreSQL with RLS policies (existing)
-**Testing**: Jest with TypeScript support (existing)
-**Target Platform**: Railway (backend), Vercel (frontends), Supabase (database)
-**Project Type**: web - monorepo with three apps (customer, business, admin) + shared packages
-**Performance Goals**: <2s page loads, 99.5% uptime, 100-500 concurrent users
-**Constraints**: Medium volume (1K-10K customers/month), 15-minute rollback capability, daily backups
-**Deployment Resilience**: Manual verification checklist for env vars, connection pooling with automatic retry, rollback to previous deployment artifacts
-**Scale/Scope**: Three applications, separate domains, staging + production environments
+
+**Language/Version**: TypeScript with Node.js 18+ (existing) **Primary
+Dependencies**: Next.js 14, Supabase client, Railway CLI, Vercel CLI (existing)
+**Storage**: Supabase PostgreSQL with RLS policies (existing) **Testing**: Jest
+with TypeScript support (existing) **Target Platform**: Railway (backend),
+Vercel (frontends), Supabase (database) **Project Type**: web - monorepo with
+three apps (customer, business, admin) + shared packages **Performance Goals**:
+<2s page loads, 99.5% uptime, 100-500 concurrent users **Constraints**: Medium
+volume (1K-10K customers/month), 15-minute rollback capability, daily backups
+**Deployment Resilience**: Manual verification checklist for env vars,
+connection pooling with automatic retry, rollback to previous deployment
+artifacts **Scale/Scope**: Three applications, separate domains, staging +
+production environments
 
 ## Constitution Check
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 ### Production from Day One ✅
+
 - All deployment configurations will be production-ready from initial setup
 - Real environment variables, actual SSL certificates, live monitoring
 - No mock deployment scripts or placeholder configurations
 
 ### Security & Privacy First ✅
+
 - SSL certificates mandatory for all domains
 - Environment variable encryption and secure storage
 - Database connection pooling with RLS policies maintained
 - Backup encryption and access controls
 
 ### TypeScript Strict Mode ✅
+
 - All deployment configuration files in TypeScript where applicable
 - Vercel configuration and Railway settings properly typed
 - Environment variable validation with strict typing
 
 ### Real Data Only ✅
+
 - Integration with existing Supabase production database
 - Real environment variables and service credentials
 - Actual domain DNS configuration and SSL certificates
 
 ### Monorepo Architecture ✅
+
 - Maintains existing monorepo structure
 - Deploys all three apps (customer, business, admin) to respective platforms
 - Preserves shared packages and dependencies
@@ -69,6 +85,7 @@ Deploy the complete Vocilia customer feedback reward system to production enviro
 ## Project Structure
 
 ### Documentation (this feature)
+
 ```
 specs/023-step-8-1/
 ├── plan.md              # This file (/plan command output)
@@ -80,7 +97,9 @@ specs/023-step-8-1/
 ```
 
 ### Source Code (repository root)
+
 Existing monorepo structure maintained:
+
 ```
 apps/
 ├── backend/             # Railway deployment
@@ -99,7 +118,8 @@ deployment/              # NEW: Deployment configurations
 └── scripts/             # Deployment automation scripts
 ```
 
-**Structure Decision**: Web application (existing monorepo) - extends current structure with deployment configurations
+**Structure Decision**: Web application (existing monorepo) - extends current
+structure with deployment configurations
 
 ## Phase 0: Outline & Research
 
@@ -132,7 +152,8 @@ Research needed for production deployment setup:
 **Output**: research.md with deployment platform decisions and configurations
 
 ## Phase 1: Design & Contracts
-*Prerequisites: research.md complete*
+
+_Prerequisites: research.md complete_
 
 1. **Deployment configuration data model**:
    - Environment variable schemas
@@ -163,12 +184,16 @@ Research needed for production deployment setup:
    - Document environment variable management
    - Include rollback and monitoring procedures
 
-**Output**: data-model.md, /contracts/*, failing tests, quickstart.md, CLAUDE.md
+**Output**: data-model.md, /contracts/\*, failing tests, quickstart.md,
+CLAUDE.md
 
 ## Phase 2: Task Planning Approach
-*This section describes what the /tasks command will do - DO NOT execute during /plan*
+
+_This section describes what the /tasks command will do - DO NOT execute during
+/plan_
 
 **Task Generation Strategy**:
+
 - Environment setup tasks for Railway and Vercel
 - Domain and SSL configuration tasks
 - Database production setup and backup configuration
@@ -177,6 +202,7 @@ Research needed for production deployment setup:
 - Testing and validation tasks
 
 **Ordering Strategy**:
+
 - Infrastructure setup before application deployment
 - Staging environment before production
 - Monitoring setup before live deployment
@@ -185,12 +211,16 @@ Research needed for production deployment setup:
 **Estimated Output**: 20-25 numbered, ordered deployment tasks in tasks.md
 
 ## Complexity Tracking
-*No constitutional violations identified - all requirements align with established principles*
+
+_No constitutional violations identified - all requirements align with
+established principles_
 
 ## Progress Tracking
-*This checklist is updated during execution flow*
+
+_This checklist is updated during execution flow_
 
 **Phase Status**:
+
 - [x] Phase 0: Research complete (/plan command)
 - [x] Phase 1: Design complete (/plan command)
 - [x] Phase 2: Task planning complete (/plan command - describe approach only)
@@ -199,10 +229,12 @@ Research needed for production deployment setup:
 - [ ] Phase 5: Validation passed
 
 **Gate Status**:
+
 - [x] Initial Constitution Check: PASS
 - [x] Post-Design Constitution Check: PASS
 - [x] All NEEDS CLARIFICATION resolved
 - [x] Complexity deviations documented (none required)
 
 ---
-*Based on Constitution v1.0.0 - See `.specify/memory/constitution.md`*
+
+_Based on Constitution v1.0.0 - See `.specify/memory/constitution.md`_

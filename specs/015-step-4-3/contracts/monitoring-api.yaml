@@ -56,7 +56,7 @@ paths:
             enum: [minute, hour, day]
             default: minute
       responses:
-        '200':
+        "200":
           description: Metrics retrieved successfully
           content:
             application/json:
@@ -66,12 +66,12 @@ paths:
                   metrics:
                     type: array
                     items:
-                      $ref: '#/components/schemas/SystemMetric'
+                      $ref: "#/components/schemas/SystemMetric"
                   summary:
-                    $ref: '#/components/schemas/MetricsSummary'
-        '403':
+                    $ref: "#/components/schemas/MetricsSummary"
+        "403":
           description: Insufficient permissions
-        '422':
+        "422":
           description: Invalid query parameters
 
   /monitoring/errors:
@@ -121,7 +121,7 @@ paths:
             minimum: 0
             default: 0
       responses:
-        '200':
+        "200":
           description: Error logs retrieved successfully
           content:
             application/json:
@@ -131,9 +131,9 @@ paths:
                   errors:
                     type: array
                     items:
-                      $ref: '#/components/schemas/ErrorLog'
+                      $ref: "#/components/schemas/ErrorLog"
                   pagination:
-                    $ref: '#/components/schemas/PaginationInfo'
+                    $ref: "#/components/schemas/PaginationInfo"
 
     patch:
       summary: Update error resolution status
@@ -159,11 +159,11 @@ paths:
                 - error_id
                 - resolution_status
       responses:
-        '200':
+        "200":
           description: Error status updated successfully
-        '404':
+        "404":
           description: Error log not found
-        '403':
+        "403":
           description: Insufficient permissions
 
   /monitoring/usage:
@@ -193,7 +193,7 @@ paths:
             type: string
             format: date
       responses:
-        '200':
+        "200":
           description: Usage analytics retrieved successfully
           content:
             application/json:
@@ -203,7 +203,7 @@ paths:
                   analytics:
                     type: array
                     items:
-                      $ref: '#/components/schemas/UsageAnalytics'
+                      $ref: "#/components/schemas/UsageAnalytics"
 
   /monitoring/alerts/rules:
     get:
@@ -214,7 +214,7 @@ paths:
       security:
         - AdminAuth: []
       responses:
-        '200':
+        "200":
           description: Alert rules retrieved successfully
           content:
             application/json:
@@ -224,7 +224,7 @@ paths:
                   rules:
                     type: array
                     items:
-                      $ref: '#/components/schemas/AlertRule'
+                      $ref: "#/components/schemas/AlertRule"
 
     post:
       summary: Create alert rule
@@ -238,15 +238,15 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateAlertRuleRequest'
+              $ref: "#/components/schemas/CreateAlertRuleRequest"
       responses:
-        '201':
+        "201":
           description: Alert rule created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AlertRule'
-        '422':
+                $ref: "#/components/schemas/AlertRule"
+        "422":
           description: Invalid alert rule configuration
 
   /monitoring/alerts/rules/{rule_id}:
@@ -270,13 +270,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateAlertRuleRequest'
+              $ref: "#/components/schemas/UpdateAlertRuleRequest"
       responses:
-        '200':
+        "200":
           description: Alert rule updated successfully
-        '404':
+        "404":
           description: Alert rule not found
-        '403':
+        "403":
           description: Insufficient permissions
 
     delete:
@@ -295,9 +295,9 @@ paths:
             type: string
             format: uuid
       responses:
-        '204':
+        "204":
           description: Alert rule deleted successfully
-        '404':
+        "404":
           description: Alert rule not found
 
   # Business Intelligence Endpoints
@@ -329,7 +329,7 @@ paths:
             type: string
             format: date
       responses:
-        '200':
+        "200":
           description: Fraud reports retrieved successfully
           content:
             application/json:
@@ -339,7 +339,7 @@ paths:
                   reports:
                     type: array
                     items:
-                      $ref: '#/components/schemas/FraudDetectionReport'
+                      $ref: "#/components/schemas/FraudDetectionReport"
 
   /monitoring/revenue-analytics:
     get:
@@ -381,7 +381,7 @@ paths:
             enum: [day, week, month]
             default: day
       responses:
-        '200':
+        "200":
           description: Revenue analytics retrieved successfully
           content:
             application/json:
@@ -391,9 +391,9 @@ paths:
                   analytics:
                     type: array
                     items:
-                      $ref: '#/components/schemas/RevenueAnalytics'
+                      $ref: "#/components/schemas/RevenueAnalytics"
                   summary:
-                    $ref: '#/components/schemas/RevenueSummary'
+                    $ref: "#/components/schemas/RevenueSummary"
 
   /monitoring/business-performance:
     get:
@@ -423,7 +423,7 @@ paths:
             enum: [week, month, quarter]
             default: month
       responses:
-        '200':
+        "200":
           description: Business performance metrics retrieved successfully
           content:
             application/json:
@@ -433,7 +433,7 @@ paths:
                   metrics:
                     type: array
                     items:
-                      $ref: '#/components/schemas/BusinessPerformanceMetrics'
+                      $ref: "#/components/schemas/BusinessPerformanceMetrics"
 
   # Data Export Endpoints
   /monitoring/export:
@@ -449,9 +449,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ExportRequest'
+              $ref: "#/components/schemas/ExportRequest"
       responses:
-        '200':
+        "200":
           description: Export generated successfully
           content:
             application/json:
@@ -466,7 +466,7 @@ paths:
                     format: date-time
                   file_size:
                     type: integer
-        '202':
+        "202":
           description: Export queued for processing
           content:
             application/json:
@@ -488,13 +488,13 @@ paths:
       tags:
         - Health Check
       responses:
-        '200':
+        "200":
           description: System is healthy
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthStatus'
-        '503':
+                $ref: "#/components/schemas/HealthStatus"
+        "503":
           description: System is unhealthy
 
 components:
@@ -612,7 +612,7 @@ components:
           type: number
         comparison_operator:
           type: string
-          enum: ['>', '<', '>=', '<=', '=']
+          enum: [">", "<", ">=", "<=", "="]
         notification_channels:
           type: array
           items:
@@ -647,7 +647,7 @@ components:
           type: number
         comparison_operator:
           type: string
-          enum: ['>', '<', '>=', '<=', '=']
+          enum: [">", "<", ">=", "<=", "="]
         notification_channels:
           type: array
           items:
@@ -672,7 +672,7 @@ components:
           type: number
         comparison_operator:
           type: string
-          enum: ['>', '<', '>=', '<=', '=']
+          enum: [">", "<", ">=", "<=", "="]
         notification_channels:
           type: array
           items:
@@ -796,7 +796,13 @@ components:
       properties:
         data_type:
           type: string
-          enum: [system_metrics, fraud_reports, revenue_analytics, business_performance]
+          enum:
+            [
+              system_metrics,
+              fraud_reports,
+              revenue_analytics,
+              business_performance,
+            ]
         format:
           type: string
           enum: [csv, pdf, json]

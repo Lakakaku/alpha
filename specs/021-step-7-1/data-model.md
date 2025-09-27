@@ -1,18 +1,21 @@
 # Data Model: Comprehensive Testing System
 
-**Date**: 2025-09-26
-**Feature**: Step 7.1 Comprehensive Testing Infrastructure
+**Date**: 2025-09-26 **Feature**: Step 7.1 Comprehensive Testing Infrastructure
 
 ## Test Configuration Entities
 
 ### TestSuite
+
 Represents a collection of related tests for a specific system component.
 
 **Fields**:
+
 - `id`: string - Unique identifier for the test suite
-- `name`: string - Human-readable name (e.g., "QR Code Generation", "Payment Processing")
+- `name`: string - Human-readable name (e.g., "QR Code Generation", "Payment
+  Processing")
 - `type`: 'unit' | 'integration' | 'e2e' | 'performance' - Test suite category
-- `component`: string - System component being tested (e.g., "customer-app", "backend-api", "admin-dashboard")
+- `component`: string - System component being tested (e.g., "customer-app",
+  "backend-api", "admin-dashboard")
 - `priority`: 'critical' | 'high' | 'medium' | 'low' - Risk-based priority level
 - `coverageTarget`: number - Coverage percentage target (0-100)
 - `enabled`: boolean - Whether suite is active in CI/CD
@@ -20,21 +23,26 @@ Represents a collection of related tests for a specific system component.
 - `updatedAt`: timestamp
 
 **Relationships**:
+
 - Has many TestCase entities
 - Belongs to SystemComponent
 
 ### TestCase
+
 Individual test validating specific functionality or behavior.
 
 **Fields**:
+
 - `id`: string - Unique identifier for the test case
 - `suiteId`: string - Foreign key to TestSuite
 - `name`: string - Descriptive test name
 - `description`: string - Test purpose and expected behavior
-- `type`: 'contract' | 'unit' | 'integration' | 'e2e' | 'performance' - Specific test type
+- `type`: 'contract' | 'unit' | 'integration' | 'e2e' | 'performance' - Specific
+  test type
 - `filePath`: string - Path to test file in repository
 - `testFunction`: string - Name of test function/method
-- `tags`: string[] - Labels for test categorization (e.g., ['auth', 'mobile', 'critical'])
+- `tags`: string[] - Labels for test categorization (e.g., ['auth', 'mobile',
+  'critical'])
 - `timeout`: number - Test timeout in milliseconds
 - `retries`: number - Number of retry attempts on failure
 - `enabled`: boolean - Whether test is active
@@ -42,15 +50,19 @@ Individual test validating specific functionality or behavior.
 - `updatedAt`: timestamp
 
 **Relationships**:
+
 - Belongs to TestSuite
 - Has many TestResult entities
 
 ### TestEnvironment
+
 Configuration for isolated test execution environments.
 
 **Fields**:
+
 - `id`: string - Unique identifier
-- `name`: string - Environment name (e.g., "unit-tests", "e2e-chrome", "load-testing")
+- `name`: string - Environment name (e.g., "unit-tests", "e2e-chrome",
+  "load-testing")
 - `type`: 'local' | 'branch' | 'preview' | 'staging' - Environment category
 - `config`: object - Environment-specific configuration
   - `databaseUrl`: string - Test database connection
@@ -70,20 +82,25 @@ Configuration for isolated test execution environments.
 - `updatedAt`: timestamp
 
 **Relationships**:
+
 - Has many TestResult entities
 
 ## Test Execution Entities
 
 ### TestRun
+
 A complete execution of tests across multiple suites.
 
 **Fields**:
+
 - `id`: string - Unique identifier
-- `triggerType`: 'commit' | 'pull-request' | 'scheduled' | 'manual' - What triggered the run
+- `triggerType`: 'commit' | 'pull-request' | 'scheduled' | 'manual' - What
+  triggered the run
 - `triggerReference`: string - Git commit SHA, PR number, or user ID
 - `branch`: string - Git branch name
 - `environmentId`: string - Foreign key to TestEnvironment
-- `status`: 'pending' | 'running' | 'passed' | 'failed' | 'cancelled' - Overall run status
+- `status`: 'pending' | 'running' | 'passed' | 'failed' | 'cancelled' - Overall
+  run status
 - `startedAt`: timestamp - When execution began
 - `completedAt`: timestamp - When execution finished
 - `duration`: number - Total execution time in milliseconds
@@ -99,13 +116,16 @@ A complete execution of tests across multiple suites.
 - `createdAt`: timestamp
 
 **Relationships**:
+
 - Belongs to TestEnvironment
 - Has many TestResult entities
 
 ### TestResult
+
 Individual test execution result within a test run.
 
 **Fields**:
+
 - `id`: string - Unique identifier
 - `testRunId`: string - Foreign key to TestRun
 - `testCaseId`: string - Foreign key to TestCase
@@ -125,18 +145,23 @@ Individual test execution result within a test run.
 - `createdAt`: timestamp
 
 **Relationships**:
+
 - Belongs to TestRun
 - Belongs to TestCase
 
 ## Test Data Entities
 
 ### TestDataSet
+
 Synthetic data collections for testing scenarios.
 
 **Fields**:
+
 - `id`: string - Unique identifier
-- `name`: string - Dataset name (e.g., "swedish-customers", "store-profiles", "feedback-samples")
-- `category`: 'users' | 'stores' | 'transactions' | 'feedback' | 'admin' - Data category
+- `name`: string - Dataset name (e.g., "swedish-customers", "store-profiles",
+  "feedback-samples")
+- `category`: 'users' | 'stores' | 'transactions' | 'feedback' | 'admin' - Data
+  category
 - `schema`: object - Data structure definition
 - `generatorConfig`: object - Faker.js configuration
   - `locale`: string - Locale for data generation (e.g., "sv-SE")
@@ -151,13 +176,16 @@ Synthetic data collections for testing scenarios.
 - `updatedAt`: timestamp
 
 **Relationships**:
+
 - Used by TestCase entities
 - Has many TestDataRecord entities
 
 ### TestDataRecord
+
 Individual synthetic data record within a dataset.
 
 **Fields**:
+
 - `id`: string - Unique identifier
 - `dataSetId`: string - Foreign key to TestDataSet
 - `data`: object - The actual test data record
@@ -166,18 +194,23 @@ Individual synthetic data record within a dataset.
 - `lastUsed`: timestamp - When record was last used in tests
 
 **Relationships**:
+
 - Belongs to TestDataSet
 
 ## Performance Testing Entities
 
 ### PerformanceBenchmark
+
 Expected performance targets for different system operations.
 
 **Fields**:
+
 - `id`: string - Unique identifier
-- `operation`: string - Operation being measured (e.g., "qr-scan", "ai-call", "payment-process")
+- `operation`: string - Operation being measured (e.g., "qr-scan", "ai-call",
+  "payment-process")
 - `component`: string - System component (e.g., "customer-app", "backend-api")
-- `metric`: 'response-time' | 'page-load' | 'throughput' | 'error-rate' - Performance metric type
+- `metric`: 'response-time' | 'page-load' | 'throughput' | 'error-rate' -
+  Performance metric type
 - `target`: number - Target value
 - `unit`: string - Metric unit (e.g., "ms", "requests/sec", "percent")
 - `threshold`: object - Alert thresholds
@@ -189,12 +222,15 @@ Expected performance targets for different system operations.
 - `updatedAt`: timestamp
 
 **Relationships**:
+
 - Referenced by PerformanceResult entities
 
 ### PerformanceResult
+
 Actual performance measurements from test execution.
 
 **Fields**:
+
 - `id`: string - Unique identifier
 - `testRunId`: string - Foreign key to TestRun
 - `benchmarkId`: string - Foreign key to PerformanceBenchmark
@@ -214,18 +250,22 @@ Actual performance measurements from test execution.
 - `measuredAt`: timestamp
 
 **Relationships**:
+
 - Belongs to TestRun
 - Belongs to PerformanceBenchmark
 
 ## Test Reporting Entities
 
 ### TestReport
+
 Aggregated test results and metrics for reporting.
 
 **Fields**:
+
 - `id`: string - Unique identifier
 - `testRunId`: string - Foreign key to TestRun
-- `reportType`: 'summary' | 'detailed' | 'coverage' | 'performance' - Report category
+- `reportType`: 'summary' | 'detailed' | 'coverage' | 'performance' - Report
+  category
 - `period`: object - Time period covered
   - `startDate`: timestamp
   - `endDate`: timestamp
@@ -241,6 +281,7 @@ Aggregated test results and metrics for reporting.
 - `generatedAt`: timestamp
 
 **Relationships**:
+
 - Belongs to TestRun
 
 ## Entity Relationships Summary
@@ -258,24 +299,31 @@ TestSuite ──┬─→ TestCase ──┬─→ TestResult ─→ TestRun ─
 ## State Transitions
 
 ### TestRun Status Flow
+
 ```
 pending → running → (passed | failed | cancelled)
 ```
 
 ### TestResult Status Flow
+
 ```
 (created) → (passed | failed | skipped | timeout | error)
 ```
 
 ### Performance Result Status Flow
+
 ```
 (measured) → (pass | warning | fail)
 ```
 
 ## Validation Rules
 
-1. **Test Coverage**: Each TestSuite must define a coverage target between 0-100%
-2. **Performance Thresholds**: All PerformanceBenchmark entities must have valid warning < critical thresholds
+1. **Test Coverage**: Each TestSuite must define a coverage target between
+   0-100%
+2. **Performance Thresholds**: All PerformanceBenchmark entities must have valid
+   warning < critical thresholds
 3. **Test Data Integrity**: TestDataRecord checksum must match generated data
-4. **Environment Consistency**: TestEnvironment config must be valid for the specified type
-5. **Execution Constraints**: TestCase timeout must be positive and reasonable (< 30 minutes)
+4. **Environment Consistency**: TestEnvironment config must be valid for the
+   specified type
+5. **Execution Constraints**: TestCase timeout must be positive and reasonable
+   (< 30 minutes)

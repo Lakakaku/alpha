@@ -1,13 +1,14 @@
 # Data Model: AI Assistant Interface (Context Builder)
 
-**Date**: 2025-09-21
-**Feature**: AI Assistant Interface for business context building
-**Database**: Supabase PostgreSQL with Row Level Security
+**Date**: 2025-09-21 **Feature**: AI Assistant Interface for business context
+building **Database**: Supabase PostgreSQL with Row Level Security
 
 ## Core Entities
 
 ### ai_conversations
-Primary entity for tracking chat sessions between business managers and AI assistant.
+
+Primary entity for tracking chat sessions between business managers and AI
+assistant.
 
 ```sql
 CREATE TABLE ai_conversations (
@@ -26,18 +27,21 @@ CREATE TYPE conversation_status AS ENUM ('active', 'paused', 'completed', 'archi
 ```
 
 **Validation Rules**:
+
 - business_id must exist and be verified
 - completeness_score between 0-100
 - store_id must belong to business if specified
 - title auto-generated from conversation content
 
 **State Transitions**:
+
 - active → paused (manual pause)
 - active → completed (validation passed)
 - completed → active (reopened for updates)
 - any → archived (cleanup)
 
 ### ai_conversation_messages
+
 Event-sourced message history for complete conversation replay.
 
 ```sql
@@ -60,11 +64,13 @@ ON ai_conversation_messages(conversation_id, sequence_number);
 ```
 
 **Validation Rules**:
+
 - sequence_number must be unique per conversation
 - content structure varies by message_type
 - metadata contains typing indicators, API response times, etc.
 
 ### business_context_entries
+
 Structured storage for extracted business information from conversations.
 
 ```sql
@@ -96,12 +102,14 @@ ON business_context_entries(business_id, COALESCE(store_id, '00000000-0000-0000-
 ```
 
 **Validation Rules**:
+
 - key must be unique per business/store/category combination
 - confidence_score between 0.0-1.0
 - value structure defined by category/subcategory
 - store_id must belong to business if specified
 
 ### ai_suggestions
+
 AI-generated recommendations for context improvements and question optimization.
 
 ```sql
@@ -132,11 +140,13 @@ CREATE TYPE suggestion_status AS ENUM ('pending', 'accepted', 'rejected', 'imple
 ```
 
 **Validation Rules**:
+
 - title and description required for user display
 - action_data contains implementation details as JSON
 - status transitions: pending → (accepted|rejected) → implemented
 
 ### context_validation_results
+
 Scoring and validation results for business context completeness.
 
 ```sql
@@ -156,6 +166,7 @@ CREATE TABLE context_validation_results (
 ```
 
 **Validation Rules**:
+
 - overall_score calculated from weighted category_scores
 - missing_requirements array of {category, field, importance} objects
 - improvement_suggestions array of actionable recommendation objects
@@ -164,6 +175,7 @@ CREATE TABLE context_validation_results (
 ## Relationships
 
 ### Primary Relationships
+
 - ai_conversations → businesses (many-to-one)
 - ai_conversations → stores (many-to-one, optional)
 - ai_conversation_messages → ai_conversations (many-to-one)
@@ -175,6 +187,7 @@ CREATE TABLE context_validation_results (
 - context_validation_results → ai_conversations (many-to-one, optional)
 
 ### Cross-Feature Integration
+
 - Extends existing businesses and stores tables
 - Links to existing business authentication system
 - Integrates with existing context management (from feature 006-step-2-4)
@@ -182,6 +195,7 @@ CREATE TABLE context_validation_results (
 ## Row Level Security (RLS) Policies
 
 ### ai_conversations
+
 ```sql
 -- Business managers can only access their own business conversations
 CREATE POLICY ai_conversations_business_access ON ai_conversations
@@ -196,6 +210,7 @@ CREATE POLICY ai_conversations_business_access ON ai_conversations
 ```
 
 ### ai_conversation_messages
+
 ```sql
 -- Access through conversation ownership
 CREATE POLICY ai_conversation_messages_access ON ai_conversation_messages
@@ -213,6 +228,7 @@ CREATE POLICY ai_conversation_messages_access ON ai_conversation_messages
 ```
 
 ### business_context_entries
+
 ```sql
 -- Business managers can manage context for their businesses
 CREATE POLICY business_context_entries_access ON business_context_entries
@@ -227,6 +243,7 @@ CREATE POLICY business_context_entries_access ON business_context_entries
 ```
 
 ### ai_suggestions
+
 ```sql
 -- Suggestions visible to business with context permissions
 CREATE POLICY ai_suggestions_access ON ai_suggestions
@@ -241,6 +258,7 @@ CREATE POLICY ai_suggestions_access ON ai_suggestions
 ```
 
 ### context_validation_results
+
 ```sql
 -- Validation results accessible to business managers
 CREATE POLICY context_validation_results_access ON context_validation_results
@@ -257,16 +275,19 @@ CREATE POLICY context_validation_results_access ON context_validation_results
 ## Data Consistency Rules
 
 ### Conversation Integrity
+
 - Messages must maintain sequential ordering within conversation
 - Conversation completeness_score auto-updates on context changes
 - Store-specific conversations require store ownership validation
 
 ### Context Entry Consistency
+
 - Duplicate key prevention within business/store/category scope
 - Confidence score updates when AI re-evaluates information
 - Verification status tracked for manual confirmations
 
 ### Validation Synchronization
+
 - Validation results invalidate when context entries change
 - Background re-scoring triggers on significant context updates
 - Category scores aggregate to overall completeness score
@@ -274,6 +295,7 @@ CREATE POLICY context_validation_results_access ON context_validation_results
 ## Performance Considerations
 
 ### Indexing Strategy
+
 ```sql
 -- Conversation lookup by business
 CREATE INDEX ai_conversations_business_active
@@ -293,6 +315,7 @@ ON ai_suggestions(business_id, status, priority, created_at DESC);
 ```
 
 ### Query Optimization
+
 - Conversation messages paginated (50 messages per request)
 - Context entries loaded by category to reduce payload
 - Suggestions filtered by status and priority
@@ -301,18 +324,21 @@ ON ai_suggestions(business_id, status, priority, created_at DESC);
 ## Migration Strategy
 
 ### Phase 1: Core Tables
+
 1. Create enum types
 2. Create ai_conversations table with RLS
 3. Create ai_conversation_messages with event sourcing
 4. Create indexes for conversation queries
 
 ### Phase 2: Context Storage
+
 1. Create business_context_entries with categories
 2. Create ai_suggestions with recommendation types
 3. Create context_validation_results for scoring
 4. Establish foreign key relationships
 
 ### Phase 3: Data Population
+
 1. Migrate existing context data (if any)
 2. Create default validation rules
 3. Set up background scoring jobs
@@ -321,12 +347,14 @@ ON ai_suggestions(business_id, status, priority, created_at DESC);
 ## Testing Data Requirements
 
 ### Contract Test Data
+
 - Sample conversations with various message types
 - Context entries covering all categories
 - Suggestions with different priorities and statuses
 - Validation results with realistic scores
 
 ### Integration Test Scenarios
+
 - Multi-session conversation continuity
 - Concurrent context updates by multiple users
 - RLS policy enforcement across all entities

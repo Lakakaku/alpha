@@ -2,7 +2,11 @@
 
 ## Overview
 
-The Question Logic API provides endpoints for managing advanced question combination rules and dynamic trigger systems in Vocilia Alpha. This system intelligently combines and triggers relevant questions for customer feedback calls based on purchase behavior, timing, and business rules within 1-2 minute call duration constraints.
+The Question Logic API provides endpoints for managing advanced question
+combination rules and dynamic trigger systems in Vocilia Alpha. This system
+intelligently combines and triggers relevant questions for customer feedback
+calls based on purchase behavior, timing, and business rules within 1-2 minute
+call duration constraints.
 
 ## Base URL
 
@@ -24,9 +28,11 @@ Authorization: Bearer <your_access_token>
 Get question combination rules for a business.
 
 **Parameters:**
+
 - `business_context_id` (required, UUID): Business context identifier
 
 **Response (200):**
+
 ```json
 [
   {
@@ -50,6 +56,7 @@ Get question combination rules for a business.
 Create a new question combination rule.
 
 **Request Body:**
+
 ```json
 {
   "business_context_id": "uuid",
@@ -69,6 +76,7 @@ Create a new question combination rule.
 Update an existing question combination rule.
 
 **Parameters:**
+
 - `rule_id` (required, UUID): Rule identifier
 
 **Request Body:** Same as POST request.
@@ -80,6 +88,7 @@ Update an existing question combination rule.
 Delete a question combination rule.
 
 **Parameters:**
+
 - `rule_id` (required, UUID): Rule identifier
 
 **Response (204):** No content.
@@ -91,11 +100,14 @@ Delete a question combination rule.
 Get dynamic triggers for a business.
 
 **Parameters:**
+
 - `business_context_id` (required, UUID): Business context identifier
-- `trigger_type` (optional): Filter by trigger type (`purchase_based`, `time_based`, `amount_based`)
+- `trigger_type` (optional): Filter by trigger type (`purchase_based`,
+  `time_based`, `amount_based`)
 - `is_active` (optional, boolean): Filter by active status
 
 **Response (200):**
+
 ```json
 [
   {
@@ -123,6 +135,7 @@ Get dynamic triggers for a business.
 Create a new dynamic trigger.
 
 **Request Body:**
+
 ```json
 {
   "business_context_id": "uuid",
@@ -144,6 +157,7 @@ Create a new dynamic trigger.
 Update an existing dynamic trigger.
 
 **Parameters:**
+
 - `trigger_id` (required, UUID): Trigger identifier
 
 **Request Body:** Same as POST request.
@@ -155,6 +169,7 @@ Update an existing dynamic trigger.
 Delete a dynamic trigger.
 
 **Parameters:**
+
 - `trigger_id` (required, UUID): Trigger identifier
 
 **Response (204):** No content.
@@ -166,9 +181,11 @@ Delete a dynamic trigger.
 Get question groups for a combination rule.
 
 **Parameters:**
+
 - `rule_id` (required, UUID): Combination rule identifier
 
 **Response (200):**
+
 ```json
 [
   {
@@ -189,6 +206,7 @@ Get question groups for a combination rule.
 Create a new question group.
 
 **Request Body:**
+
 ```json
 {
   "rule_id": "uuid",
@@ -208,6 +226,7 @@ Create a new question group.
 Evaluate and select optimal questions for a customer.
 
 **Request Body:**
+
 ```json
 {
   "business_context_id": "uuid",
@@ -222,6 +241,7 @@ Evaluate and select optimal questions for a customer.
 ```
 
 **Response (200):**
+
 ```json
 {
   "selected_questions": [
@@ -247,10 +267,12 @@ Evaluate and select optimal questions for a customer.
 Get priority weights for questions.
 
 **Parameters:**
+
 - `business_context_id` (required, UUID): Business context identifier
 - `question_id` (optional, UUID): Filter by specific question
 
 **Response (200):**
+
 ```json
 [
   {
@@ -271,9 +293,11 @@ Get priority weights for questions.
 Update question priority weight.
 
 **Parameters:**
+
 - `priority_id` (required, UUID): Priority weight identifier
 
 **Request Body:**
+
 ```json
 {
   "priority_level": 5,
@@ -290,9 +314,11 @@ Update question priority weight.
 Get frequency harmonizers for resolving question conflicts.
 
 **Parameters:**
+
 - `rule_id` (required, UUID): Combination rule identifier
 
 **Response (200):**
+
 ```json
 [
   {
@@ -315,6 +341,7 @@ Get frequency harmonizers for resolving question conflicts.
 Create a new frequency harmonizer.
 
 **Request Body:**
+
 ```json
 {
   "rule_id": "uuid",
@@ -334,12 +361,14 @@ Create a new frequency harmonizer.
 Get trigger activation analytics.
 
 **Parameters:**
+
 - `business_context_id` (required, UUID): Business context identifier
 - `start_date` (optional): Filter from date (ISO 8601)
 - `end_date` (optional): Filter to date (ISO 8601)
 - `trigger_id` (optional, UUID): Filter by specific trigger
 
 **Response (200):**
+
 ```json
 {
   "total_activations": 1250,
@@ -363,10 +392,12 @@ Get trigger activation analytics.
 Get question logic performance metrics.
 
 **Parameters:**
+
 - `business_context_id` (optional, UUID): Filter by business
 - `timeframe` (optional): `hour`, `day`, `week`, `month` (default: `day`)
 
 **Response (200):**
+
 ```json
 {
   "average_evaluation_time_ms": 45,
@@ -386,6 +417,7 @@ Get question logic performance metrics.
 ## Error Responses
 
 ### 400 Bad Request
+
 ```json
 {
   "error": "validation_error",
@@ -400,6 +432,7 @@ Get question logic performance metrics.
 ```
 
 ### 401 Unauthorized
+
 ```json
 {
   "error": "unauthorized",
@@ -408,6 +441,7 @@ Get question logic performance metrics.
 ```
 
 ### 403 Forbidden
+
 ```json
 {
   "error": "forbidden",
@@ -416,6 +450,7 @@ Get question logic performance metrics.
 ```
 
 ### 404 Not Found
+
 ```json
 {
   "error": "not_found",
@@ -424,6 +459,7 @@ Get question logic performance metrics.
 ```
 
 ### 429 Too Many Requests
+
 ```json
 {
   "error": "rate_limit_exceeded",
@@ -433,6 +469,7 @@ Get question logic performance metrics.
 ```
 
 ### 500 Internal Server Error
+
 ```json
 {
   "error": "internal_error",
@@ -450,6 +487,7 @@ Get question logic performance metrics.
 ## Data Types Reference
 
 ### Priority Levels
+
 - `1`: Optional
 - `2`: Low
 - `3`: Medium
@@ -457,17 +495,20 @@ Get question logic performance metrics.
 - `5`: Critical
 
 ### Trigger Types
+
 - `purchase_based`: Triggered by specific purchase categories or items
 - `time_based`: Triggered by purchase timing (hour, day of week)
 - `amount_based`: Triggered by transaction amount thresholds
 
 ### Resolution Strategies
+
 - `combine`: Ask both questions in same call when possible
 - `priority`: Always prioritize one question over the other
 - `alternate`: Alternate between questions over time
 - `custom`: Use custom frequency interval
 
 ### Optimization Algorithms
+
 - `greedy`: Prioritize highest value questions first
 - `time_balanced`: Balance high priority with time utilization
 - `dynamic_programming`: Optimal solution for complex scenarios
@@ -475,14 +516,20 @@ Get question logic performance metrics.
 
 ## Best Practices
 
-1. **Cache Management**: Question evaluation results are cached for 1 hour. Use the `cache_hit` flag to monitor cache effectiveness.
+1. **Cache Management**: Question evaluation results are cached for 1 hour. Use
+   the `cache_hit` flag to monitor cache effectiveness.
 
-2. **Performance**: Keep trigger configurations simple for sub-500ms evaluation times.
+2. **Performance**: Keep trigger configurations simple for sub-500ms evaluation
+   times.
 
-3. **Priority Management**: Use the 5-level priority system consistently across your question set.
+3. **Priority Management**: Use the 5-level priority system consistently across
+   your question set.
 
-4. **Frequency Conflicts**: Configure harmonizers proactively for questions with different frequency settings.
+4. **Frequency Conflicts**: Configure harmonizers proactively for questions with
+   different frequency settings.
 
-5. **Monitoring**: Regularly check analytics endpoints for trigger effectiveness and system performance.
+5. **Monitoring**: Regularly check analytics endpoints for trigger effectiveness
+   and system performance.
 
-6. **Testing**: Use staging environment for testing new trigger configurations before production deployment.
+6. **Testing**: Use staging environment for testing new trigger configurations
+   before production deployment.

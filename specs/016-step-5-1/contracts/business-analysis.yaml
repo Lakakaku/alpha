@@ -50,9 +50,16 @@ paths:
                   type: array
                   items:
                     type: string
-                    enum: [customer_service, product_quality, store_environment, pricing, accessibility]
+                    enum:
+                      [
+                        customer_service,
+                        product_quality,
+                        store_environment,
+                        pricing,
+                        accessibility,
+                      ]
       responses:
-        '202':
+        "202":
           description: Weekly analysis generation started
           content:
             application/json:
@@ -68,18 +75,18 @@ paths:
                   status:
                     type: string
                     enum: [queued, processing]
-        '400':
+        "400":
           description: Invalid analysis request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '409':
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
           description: Analysis already exists for this week
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /ai/business-analysis/weekly-reports/{store_id}:
     get:
@@ -111,7 +118,7 @@ paths:
             default: false
           description: Return only report summaries, not full details
       responses:
-        '200':
+        "200":
           description: Weekly reports retrieved
           content:
             application/json:
@@ -121,9 +128,9 @@ paths:
                   reports:
                     type: array
                     items:
-                      $ref: '#/components/schemas/WeeklyAnalysisReport'
+                      $ref: "#/components/schemas/WeeklyAnalysisReport"
                   pagination:
-                    $ref: '#/components/schemas/PaginationInfo'
+                    $ref: "#/components/schemas/PaginationInfo"
 
   /ai/business-analysis/weekly-reports/{store_id}/{analysis_week}:
     get:
@@ -148,18 +155,18 @@ paths:
             format: date
           description: Monday of the analysis week (YYYY-MM-DD)
       responses:
-        '200':
+        "200":
           description: Weekly report retrieved
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WeeklyAnalysisReport'
-        '404':
+                $ref: "#/components/schemas/WeeklyAnalysisReport"
+        "404":
           description: Report not found for specified week
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /ai/business-analysis/search:
     post:
@@ -199,7 +206,13 @@ paths:
                   type: array
                   items:
                     type: string
-                    enum: [feedback_summaries, weekly_reports, actionable_items, trends]
+                    enum:
+                      [
+                        feedback_summaries,
+                        weekly_reports,
+                        actionable_items,
+                        trends,
+                      ]
                   default: [feedback_summaries, weekly_reports]
                 max_results:
                   type: integer
@@ -207,7 +220,7 @@ paths:
                   maximum: 100
                   default: 20
       responses:
-        '200':
+        "200":
           description: Search results returned
           content:
             application/json:
@@ -217,7 +230,7 @@ paths:
                   results:
                     type: array
                     items:
-                      $ref: '#/components/schemas/SearchResult'
+                      $ref: "#/components/schemas/SearchResult"
                   total_matches:
                     type: integer
                   search_metadata:
@@ -257,7 +270,13 @@ paths:
             type: array
             items:
               type: string
-              enum: [positive_trends, negative_trends, emerging_issues, improvement_opportunities]
+              enum:
+                [
+                  positive_trends,
+                  negative_trends,
+                  emerging_issues,
+                  improvement_opportunities,
+                ]
             default: [positive_trends, negative_trends, emerging_issues]
         - name: include_predictions
           in: query
@@ -265,7 +284,7 @@ paths:
             type: boolean
             default: true
       responses:
-        '200':
+        "200":
           description: Trend analysis retrieved
           content:
             application/json:
@@ -273,11 +292,11 @@ paths:
                 type: object
                 properties:
                   trend_analysis:
-                    $ref: '#/components/schemas/TrendAnalysis'
+                    $ref: "#/components/schemas/TrendAnalysis"
                   predictive_insights:
                     type: array
                     items:
-                      $ref: '#/components/schemas/PredictiveInsight'
+                      $ref: "#/components/schemas/PredictiveInsight"
                   analysis_period:
                     type: object
                     properties:
@@ -319,7 +338,8 @@ paths:
             type: array
             items:
               type: string
-              enum: [product, service, environment, staff, pricing, accessibility]
+              enum:
+                [product, service, environment, staff, pricing, accessibility]
         - name: implementation_complexity
           in: query
           schema:
@@ -335,7 +355,7 @@ paths:
             maximum: 50
             default: 20
       responses:
-        '200':
+        "200":
           description: Recommendations retrieved
           content:
             application/json:
@@ -345,7 +365,7 @@ paths:
                   recommendations:
                     type: array
                     items:
-                      $ref: '#/components/schemas/BusinessRecommendation'
+                      $ref: "#/components/schemas/BusinessRecommendation"
                   summary_stats:
                     type: object
                     properties:
@@ -391,30 +411,30 @@ components:
         positive_trends:
           type: array
           items:
-            $ref: '#/components/schemas/TrendItem'
+            $ref: "#/components/schemas/TrendItem"
         negative_issues:
           type: array
           items:
-            $ref: '#/components/schemas/IssueItem'
+            $ref: "#/components/schemas/IssueItem"
         new_issues:
           type: array
           items:
-            $ref: '#/components/schemas/IssueItem'
+            $ref: "#/components/schemas/IssueItem"
           description: Issues not present in previous week
         department_insights:
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/DepartmentInsight'
+            $ref: "#/components/schemas/DepartmentInsight"
         historical_comparison:
-          $ref: '#/components/schemas/HistoricalComparison'
+          $ref: "#/components/schemas/HistoricalComparison"
         predictive_insights:
           type: array
           items:
-            $ref: '#/components/schemas/PredictiveInsight'
+            $ref: "#/components/schemas/PredictiveInsight"
         actionable_recommendations:
           type: array
           items:
-            $ref: '#/components/schemas/BusinessRecommendation'
+            $ref: "#/components/schemas/BusinessRecommendation"
         report_metadata:
           type: object
           properties:
@@ -439,7 +459,14 @@ components:
       properties:
         category:
           type: string
-          enum: [customer_service, product_quality, store_environment, pricing, accessibility]
+          enum:
+            [
+              customer_service,
+              product_quality,
+              store_environment,
+              pricing,
+              accessibility,
+            ]
         description:
           type: string
           maxLength: 300
@@ -469,7 +496,14 @@ components:
       properties:
         category:
           type: string
-          enum: [customer_service, product_quality, store_environment, pricing, accessibility]
+          enum:
+            [
+              customer_service,
+              product_quality,
+              store_environment,
+              pricing,
+              accessibility,
+            ]
         description:
           type: string
           maxLength: 300
@@ -518,19 +552,19 @@ components:
         specific_recommendations:
           type: array
           items:
-            $ref: '#/components/schemas/BusinessRecommendation'
+            $ref: "#/components/schemas/BusinessRecommendation"
 
     HistoricalComparison:
       type: object
       properties:
         previous_week:
-          $ref: '#/components/schemas/WeekComparisonMetrics'
+          $ref: "#/components/schemas/WeekComparisonMetrics"
         four_week_average:
-          $ref: '#/components/schemas/WeekComparisonMetrics'
+          $ref: "#/components/schemas/WeekComparisonMetrics"
         twelve_week_average:
-          $ref: '#/components/schemas/WeekComparisonMetrics'
+          $ref: "#/components/schemas/WeekComparisonMetrics"
         year_over_year:
-          $ref: '#/components/schemas/WeekComparisonMetrics'
+          $ref: "#/components/schemas/WeekComparisonMetrics"
 
     WeekComparisonMetrics:
       type: object
@@ -587,19 +621,19 @@ components:
         positive_trends:
           type: array
           items:
-            $ref: '#/components/schemas/TrendItem'
+            $ref: "#/components/schemas/TrendItem"
         negative_trends:
           type: array
           items:
-            $ref: '#/components/schemas/TrendItem'
+            $ref: "#/components/schemas/TrendItem"
         emerging_issues:
           type: array
           items:
-            $ref: '#/components/schemas/IssueItem'
+            $ref: "#/components/schemas/IssueItem"
         improvement_opportunities:
           type: array
           items:
-            $ref: '#/components/schemas/BusinessRecommendation'
+            $ref: "#/components/schemas/BusinessRecommendation"
 
     BusinessRecommendation:
       type: object

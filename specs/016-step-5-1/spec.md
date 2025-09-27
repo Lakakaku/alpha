@@ -60,11 +60,20 @@ Backend)
 ## Clarifications
 
 ### Session 2025-09-23
-- Q: What is the minimum conversation duration threshold for considering a call "successful" enough to analyze for rewards? → A: Must reach full 1-2 minute target duration
-- Q: How should the system handle concurrent calls when multiple customers from the same store verify simultaneously? → A: Allow unlimited concurrent calls per store
-- Q: What is the maximum number of retry attempts for failed call connections before marking a customer as "unreachable"? → A: 2 retry attempts (3 total attempts)
-- Q: How long should completed call transcripts and quality assessments be retained in the system before deletion? → A: 90 days after call completion
-- Q: What quality score threshold should trigger automatic flagging for manual review before reward processing? → A: No manual review - full automation
+
+- Q: What is the minimum conversation duration threshold for considering a call
+  "successful" enough to analyze for rewards? → A: Must reach full 1-2 minute
+  target duration
+- Q: How should the system handle concurrent calls when multiple customers from
+  the same store verify simultaneously? → A: Allow unlimited concurrent calls
+  per store
+- Q: What is the maximum number of retry attempts for failed call connections
+  before marking a customer as "unreachable"? → A: 2 retry attempts (3 total
+  attempts)
+- Q: How long should completed call transcripts and quality assessments be
+  retained in the system before deletion? → A: 90 days after call completion
+- Q: What quality score threshold should trigger automatic flagging for manual
+  review before reward processing? → A: No manual review - full automation
 
 ## User Scenarios & Testing _(mandatory)_
 
@@ -119,14 +128,18 @@ improvement opportunities.
 
 #### Feedback Collection AI
 
-- **FR-001**: System MUST initiate automated phone calls to verified customers using AI voice technology with unlimited concurrent calls per store and maximum 3 total attempts (2 retries) for failed connections
+- **FR-001**: System MUST initiate automated phone calls to verified customers
+  using AI voice technology with unlimited concurrent calls per store and
+  maximum 3 total attempts (2 retries) for failed connections
 - **FR-002**: AI MUST conduct conversations exclusively in Swedish language
-- **FR-003**: AI MUST limit conversation duration to 1-2 minutes per call and MUST complete the full target duration for successful analysis
+- **FR-003**: AI MUST limit conversation duration to 1-2 minutes per call and
+  MUST complete the full target duration for successful analysis
 - **FR-004**: AI MUST ask questions dynamically based on each business's
   configured context window and question settings
 - **FR-005**: AI MUST adapt conversation flow based on customer responses and
   maintain natural dialogue
-- **FR-006**: System MUST record and transcribe all conversation content for analysis and retain data for 90 days after call completion
+- **FR-006**: System MUST record and transcribe all conversation content for
+  analysis and retain data for 90 days after call completion
 - **FR-007**: System MUST log call quality metrics including connection status,
   audio clarity, and completion rates
 - **FR-008**: AI MUST handle : specific protocols for non-responsive customers,
@@ -137,7 +150,8 @@ improvement opportunities.
 
 - **FR-009**: System MUST analyze all completed feedback calls for content
   quality and legitimacy
-- **FR-010**: System MUST assign quality scores on a 2-15% scale corresponding to cashback reward amounts with full automation and no manual review required
+- **FR-010**: System MUST assign quality scores on a 2-15% scale corresponding
+  to cashback reward amounts with full automation and no manual review required
 - **FR-011**: System MUST detect fraudulent feedback including nonsensical
   responses (e.g., "store should buy flying elephants")
 - **FR-012**: System MUST evaluate feedback depth by measuring specificity and
@@ -174,7 +188,8 @@ improvement opportunities.
 
 - **FR-025**: AI systems MUST integrate with existing customer verification
   workflow
-- **FR-026**: Call initiation MUST trigger immediately after verification completion
+- **FR-026**: Call initiation MUST trigger immediately after verification
+  completion
 - **FR-027**: Analysis results MUST feed into existing weekly verification and
   payment cycle
 - **FR-028**: Business analysis MUST be accessible through existing business

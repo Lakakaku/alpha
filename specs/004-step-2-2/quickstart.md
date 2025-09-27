@@ -6,11 +6,14 @@
 
 ## Overview
 
-This quickstart guide provides step-by-step instructions to validate the QR Code Management System implementation. Follow these workflows to ensure all functionality works correctly in the production environment.
+This quickstart guide provides step-by-step instructions to validate the QR Code
+Management System implementation. Follow these workflows to ensure all
+functionality works correctly in the production environment.
 
 ## Prerequisites
 
 ### Environment Setup
+
 ```bash
 # Ensure you're on the correct branch
 git checkout 004-step-2-2
@@ -29,12 +32,14 @@ npx supabase db push
 ```
 
 ### Test Data Requirements
+
 - ✅ Approved business account with multiple stores
 - ✅ Valid Supabase authentication token
 - ✅ Stores with manage_qr and view_analytics permissions
 - ✅ Test customer session for scan tracking
 
 ### API Access
+
 - **Frontend**: http://localhost:3000 (Business Dashboard)
 - **Backend**: http://localhost:3001 (API Services)
 - **Database**: Supabase project "alpha"
@@ -42,31 +47,35 @@ npx supabase db push
 ## Workflow 1: Basic QR Code Management
 
 ### Step 1: View Store QR Code
+
 **Goal**: Verify QR code generation and display functionality
 
 1. **Login to Business Dashboard**
+
    ```
    URL: http://localhost:3000/login
    Credentials: Use approved business account
    ```
 
 2. **Navigate to QR Management**
+
    ```
    Path: Dashboard → QR Codes → Select Store
    Expected: QR code image displayed with store information
    ```
 
 3. **Verify QR Code Information**
+
    ```
    Check: QR code URL format
    Expected: https://customer.vocilia.se/entry/store/{store_id}
-   
+
    Check: QR status
    Expected: "Active" for verified stores
-   
+
    Check: Version number
    Expected: Integer starting from 1
-   
+
    Check: Generation timestamp
    Expected: Recent date/time
    ```
@@ -78,18 +87,22 @@ npx supabase db push
    Expected: Correct store context loaded
    ```
 
-**Success Criteria**: ✅ QR code displays correctly, ✅ Scan leads to correct store
+**Success Criteria**: ✅ QR code displays correctly, ✅ Scan leads to correct
+store
 
 ### Step 2: Download Printable QR Code
+
 **Goal**: Validate PDF generation and customization
 
 1. **Access Download Options**
+
    ```
    Location: QR Management → Store → Download/Print
    Options: A4, Letter, Business Card, Label Sheet
    ```
 
 2. **Download Default Template**
+
    ```
    Action: Click "Download PDF" (A4 format)
    Expected: PDF file downloads automatically
@@ -97,6 +110,7 @@ npx supabase db push
    ```
 
 3. **Verify PDF Content**
+
    ```
    Check: QR code image (center, readable)
    Check: Store name and address
@@ -113,14 +127,17 @@ npx supabase db push
    Expected: Custom colors and text applied
    ```
 
-**Success Criteria**: ✅ PDF downloads correctly, ✅ Content is printable quality, ✅ Customization works
+**Success Criteria**: ✅ PDF downloads correctly, ✅ Content is printable
+quality, ✅ Customization works
 
 ## Workflow 2: QR Code Regeneration
 
 ### Step 3: Regenerate Single QR Code
+
 **Goal**: Test QR code versioning and transition periods
 
 1. **Initiate Regeneration**
+
    ```
    Location: QR Management → Store → Actions → Regenerate
    Reason: "Testing new QR code"
@@ -128,6 +145,7 @@ npx supabase db push
    ```
 
 2. **Verify New QR Code**
+
    ```
    Check: Version number incremented
    Check: Status shows "Pending Regeneration"
@@ -136,6 +154,7 @@ npx supabase db push
    ```
 
 3. **Test Both QR Codes Work**
+
    ```
    Test: Scan original QR code → Should work
    Test: Scan new QR code → Should work
@@ -149,18 +168,22 @@ npx supabase db push
    Expected: Timestamp, reason, user recorded
    ```
 
-**Success Criteria**: ✅ Version incremented, ✅ Both QRs functional, ✅ History tracked
+**Success Criteria**: ✅ Version incremented, ✅ Both QRs functional, ✅ History
+tracked
 
 ### Step 4: Monitor Transition Period
+
 **Goal**: Verify automatic transition completion
 
 1. **Wait for Transition** (Or simulate time passage)
+
    ```
    Note: In production, wait 24 hours
    For testing: May need to adjust transition period to 1-5 minutes
    ```
 
 2. **Verify Status Update**
+
    ```
    Check: Status changes from "Pending" to "Active"
    Check: Old QR code becomes inactive
@@ -173,14 +196,17 @@ npx supabase db push
    Test: New QR code → Should work normally
    ```
 
-**Success Criteria**: ✅ Automatic transition occurs, ✅ Old QR deactivated, ✅ New QR becomes primary
+**Success Criteria**: ✅ Automatic transition occurs, ✅ Old QR deactivated, ✅
+New QR becomes primary
 
 ## Workflow 3: Analytics and Monitoring
 
 ### Step 5: QR Scan Tracking
+
 **Goal**: Validate analytics data collection
 
 1. **Generate Scan Events**
+
    ```
    Action: Scan QR codes multiple times with different devices
    Vary: User agents (mobile, desktop, tablet)
@@ -189,6 +215,7 @@ npx supabase db push
    ```
 
 2. **Check Real-time Updates**
+
    ```
    Location: QR Management → Analytics → Real-time
    Expected: Scan count updates within 5 minutes
@@ -196,9 +223,10 @@ npx supabase db push
    ```
 
 3. **Verify Analytics Dashboard**
+
    ```
    Location: QR Management → Analytics → Store Dashboard
-   
+
    Check: Total scans (last 24 hours)
    Check: Scan trend chart (hourly breakdown)
    Check: Peak activity times
@@ -213,12 +241,15 @@ npx supabase db push
    Filter: Last month → Should show monthly patterns
    ```
 
-**Success Criteria**: ✅ Scans tracked accurately, ✅ Analytics update timely, ✅ Filters work correctly
+**Success Criteria**: ✅ Scans tracked accurately, ✅ Analytics update timely,
+✅ Filters work correctly
 
 ### Step 6: Analytics Aggregation
+
 **Goal**: Confirm data aggregation accuracy
 
 1. **Check 5-Minute Aggregations**
+
    ```
    API: GET /api/qr/analytics/{storeId}?period=hour
    Expected: Data points every 5 minutes
@@ -226,6 +257,7 @@ npx supabase db push
    ```
 
 2. **Verify Hourly Aggregations**
+
    ```
    API: GET /api/qr/analytics/{storeId}?period=day
    Expected: 24 data points (one per hour)
@@ -239,14 +271,17 @@ npx supabase db push
    Expected: Busiest day highlighted
    ```
 
-**Success Criteria**: ✅ Data aggregated correctly, ✅ No data loss, ✅ Calculations accurate
+**Success Criteria**: ✅ Data aggregated correctly, ✅ No data loss, ✅
+Calculations accurate
 
 ## Workflow 4: Multi-Store Bulk Operations
 
 ### Step 7: Bulk QR Regeneration
+
 **Goal**: Test bulk operations for multi-location businesses
 
 1. **Select Multiple Stores**
+
    ```
    Location: QR Management → Bulk Operations
    Action: Select 3-5 stores from different locations
@@ -254,6 +289,7 @@ npx supabase db push
    ```
 
 2. **Execute Bulk Regeneration**
+
    ```
    Operation: Regenerate All Selected
    Reason: "Security update - bulk test"
@@ -261,6 +297,7 @@ npx supabase db push
    ```
 
 3. **Monitor Bulk Progress**
+
    ```
    Expected: Progress indicator shows completion status
    Expected: Success/failure count per store
@@ -275,12 +312,15 @@ npx supabase db push
    Check: All stores maintain 24-hour transition periods
    ```
 
-**Success Criteria**: ✅ Bulk operation completes, ✅ Progress tracked, ✅ Results accurate
+**Success Criteria**: ✅ Bulk operation completes, ✅ Progress tracked, ✅
+Results accurate
 
 ### Step 8: Permission-Based Access
+
 **Goal**: Validate permission enforcement
 
 1. **Test Limited Permissions**
+
    ```
    Setup: Use account with view_analytics but not manage_qr
    Expected: Can view QR codes and analytics
@@ -288,6 +328,7 @@ npx supabase db push
    ```
 
 2. **Test Store-Specific Permissions**
+
    ```
    Setup: Account with access to only some stores
    Expected: QR management limited to authorized stores
@@ -300,17 +341,20 @@ npx supabase db push
    Verify: RLS policies prevent cross-business data access
    ```
 
-**Success Criteria**: ✅ Permissions enforced, ✅ No unauthorized access, ✅ RLS working
+**Success Criteria**: ✅ Permissions enforced, ✅ No unauthorized access, ✅ RLS
+working
 
 ## Workflow 5: Print Template Customization
 
 ### Step 9: Custom Template Creation
+
 **Goal**: Validate template system functionality
 
 1. **Create Custom Template**
+
    ```
    Location: QR Management → Templates → Create New
-   
+
    Settings:
    - Name: "Holiday Special Template"
    - Size: A4
@@ -322,6 +366,7 @@ npx supabase db push
    ```
 
 2. **Test Template Application**
+
    ```
    Action: Download QR using custom template
    Expected: All customizations applied correctly
@@ -337,14 +382,17 @@ npx supabase db push
    Action: Delete non-default template
    ```
 
-**Success Criteria**: ✅ Templates create correctly, ✅ Customizations apply, ✅ Management works
+**Success Criteria**: ✅ Templates create correctly, ✅ Customizations apply, ✅
+Management works
 
 ## Workflow 6: Error Handling and Edge Cases
 
 ### Step 10: Error Scenarios
+
 **Goal**: Validate robust error handling
 
 1. **Test Invalid Operations**
+
    ```
    Try: Regenerate QR for non-existent store
    Try: Download template with invalid parameters
@@ -353,6 +401,7 @@ npx supabase db push
    ```
 
 2. **Test Network Failures**
+
    ```
    Simulate: Network timeout during PDF generation
    Simulate: Database unavailable during scan tracking
@@ -367,14 +416,17 @@ npx supabase db push
    Expected: Validation errors with helpful messages
    ```
 
-**Success Criteria**: ✅ Errors handled gracefully, ✅ Messages are helpful, ✅ No crashes
+**Success Criteria**: ✅ Errors handled gracefully, ✅ Messages are helpful, ✅
+No crashes
 
 ## Performance Validation
 
 ### Step 11: Performance Benchmarks
+
 **Goal**: Ensure performance meets specifications
 
 1. **QR Generation Speed**
+
    ```
    Test: Single QR regeneration
    Target: <200ms response time
@@ -382,6 +434,7 @@ npx supabase db push
    ```
 
 2. **PDF Download Size**
+
    ```
    Test: Download A4 QR PDF
    Target: <2MB file size
@@ -389,6 +442,7 @@ npx supabase db push
    ```
 
 3. **Analytics Query Speed**
+
    ```
    Test: Load analytics dashboard with 1 month data
    Target: <1 second load time
@@ -402,11 +456,13 @@ npx supabase db push
    Measure: Time from initiation to completion
    ```
 
-**Success Criteria**: ✅ All performance targets met, ✅ No timeouts, ✅ Responsive UX
+**Success Criteria**: ✅ All performance targets met, ✅ No timeouts, ✅
+Responsive UX
 
 ## Production Readiness Checklist
 
 ### Final Validation
+
 - [ ] **QR Code Generation**: Single and bulk operations work
 - [ ] **PDF Downloads**: All formats generate correctly
 - [ ] **Analytics Tracking**: Real-time and aggregated data accurate
@@ -419,6 +475,7 @@ npx supabase db push
 - [ ] **Integration**: Customer QR scanning works end-to-end
 
 ### Environment Check
+
 - [ ] **Development**: All workflows pass on localhost
 - [ ] **Staging**: All workflows pass on staging environment
 - [ ] **Production**: Ready for deployment (contracts validated)
@@ -426,29 +483,32 @@ npx supabase db push
 ## Troubleshooting Common Issues
 
 ### QR Code Not Generating
-**Symptoms**: QR code shows as blank or error
-**Check**: Database migrations applied, store has valid ID
-**Fix**: `npx supabase db push && pnpm restart`
+
+**Symptoms**: QR code shows as blank or error **Check**: Database migrations
+applied, store has valid ID **Fix**: `npx supabase db push && pnpm restart`
 
 ### PDF Download Fails
-**Symptoms**: 500 error on download or corrupted PDF
-**Check**: Canvas and jsPDF libraries installed
-**Fix**: `pnpm install canvas jspdf && restart backend`
+
+**Symptoms**: 500 error on download or corrupted PDF **Check**: Canvas and jsPDF
+libraries installed **Fix**: `pnpm install canvas jspdf && restart backend`
 
 ### Analytics Not Updating
-**Symptoms**: Scan counts not increasing or stale data
-**Check**: Analytics aggregation jobs running
-**Fix**: Check backend cron jobs and database permissions
+
+**Symptoms**: Scan counts not increasing or stale data **Check**: Analytics
+aggregation jobs running **Fix**: Check backend cron jobs and database
+permissions
 
 ### Bulk Operations Timeout
-**Symptoms**: Bulk operations never complete or hang
-**Check**: Database connection limits and query performance
-**Fix**: Review database indexing and connection pooling
+
+**Symptoms**: Bulk operations never complete or hang **Check**: Database
+connection limits and query performance **Fix**: Review database indexing and
+connection pooling
 
 ### Permission Errors
-**Symptoms**: 403 errors or unauthorized access
-**Check**: RLS policies applied and business_stores permissions
-**Fix**: Verify user has correct roles in business_stores table
+
+**Symptoms**: 403 errors or unauthorized access **Check**: RLS policies applied
+and business_stores permissions **Fix**: Verify user has correct roles in
+business_stores table
 
 ---
 

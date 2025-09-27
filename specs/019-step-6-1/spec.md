@@ -45,11 +45,16 @@ reporting"
 
 ### Session 2025-09-25
 
-- Q: How should the quality score (0-100) map to the reward percentage (2-15%)? → A: Threshold-based (Below 50 → no reward, 50-100 → linear 2-15%)
-- Q: What is the maximum number of automatic retry attempts for failed Swish payments? → A: 3 retries (total 4 attempts including initial)
-- Q: What is the minimum payout amount threshold for Swish payments? → A: 5 SEK (hold smaller amounts until threshold met)
-- Q: How should the system handle currency rounding for reward calculations? → A: Round to nearest öre (0.01 SEK) using standard rounding
-- Q: When should the weekly payment batch process run? → A: Sunday midnight 00:00 (end of calendar week)
+- Q: How should the quality score (0-100) map to the reward percentage (2-15%)?
+  → A: Threshold-based (Below 50 → no reward, 50-100 → linear 2-15%)
+- Q: What is the maximum number of automatic retry attempts for failed Swish
+  payments? → A: 3 retries (total 4 attempts including initial)
+- Q: What is the minimum payout amount threshold for Swish payments? → A: 5 SEK
+  (hold smaller amounts until threshold met)
+- Q: How should the system handle currency rounding for reward calculations? →
+  A: Round to nearest öre (0.01 SEK) using standard rounding
+- Q: When should the weekly payment batch process run? → A: Sunday midnight
+  00:00 (end of calendar week)
 
 ---
 
@@ -72,8 +77,8 @@ filtered out through business verification.
    16 + 18 SEK combined)
 
 2. **Given** a customer provided feedback with a quality score of 85/100,
-   **When** the reward calculation runs, **Then** the system awards
-   11.1% cashback (linear mapping: (85-50)/(100-50) × (15%-2%) + 2% = 11.1%)
+   **When** the reward calculation runs, **Then** the system awards 11.1%
+   cashback (linear mapping: (85-50)/(100-50) × (15%-2%) + 2% = 11.1%)
 
 3. **Given** a business verifies 20 feedback transactions and marks 3 as
    fraudulent, **When** the payment processing runs, **Then** only the 17
@@ -128,8 +133,9 @@ filtered out through business verification.
   submission
 - **FR-003**: System MUST use AI analysis (GPT-4o-mini) to detect fraudulent or
   nonsensical feedback
-- **FR-004**: System MUST immediately delete low-grade feedback content (quality score below 50
-  threshold) while preserving quality_score metadata for system analytics and reward calculation tracking
+- **FR-004**: System MUST immediately delete low-grade feedback content (quality
+  score below 50 threshold) while preserving quality_score metadata for system
+  analytics and reward calculation tracking
 - **FR-005**: System MUST summarize high-grade feedback while preserving all
   information for business delivery
 
@@ -137,7 +143,8 @@ filtered out through business verification.
 
 - **FR-006**: System MUST calculate reward percentage between 2-15% based on
   feedback quality score using threshold-based mapping: scores below 50 receive
-  no reward, scores 50-100 map linearly to 2-15% (score 50 → 2%, score 100 → 15%)
+  no reward, scores 50-100 map linearly to 2-15% (score 50 → 2%, score 100 →
+  15%)
 - **FR-007**: System MUST apply the calculated percentage to the verified
   transaction value
 - **FR-008**: System MUST calculate rewards in Swedish Kronor (SEK) with

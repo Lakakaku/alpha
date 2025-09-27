@@ -5,6 +5,7 @@
 ## Test Environment Setup
 
 ### Prerequisites
+
 ```bash
 # Ensure Supabase is running
 supabase status
@@ -17,16 +18,17 @@ cd apps/admin && pnpm dev
 ```
 
 ### Test Data Setup
+
 ```sql
 -- Insert test store with context window
-INSERT INTO stores (id, name, business_id) VALUES 
+INSERT INTO stores (id, name, business_id) VALUES
   ('test-store-001', 'Test Grocery Store', 'test-business-001');
 
-INSERT INTO store_context_windows (store_id, context_data) VALUES 
+INSERT INTO store_context_windows (store_id, context_data) VALUES
   ('test-store-001', '{"sections": ["dairy", "produce", "meat", "bakery"], "products": ["milk", "bread", "apples", "chicken"]}');
 
 -- Insert test red flag keywords
-INSERT INTO red_flag_keywords (keyword, category, severity_level, language_code) VALUES 
+INSERT INTO red_flag_keywords (keyword, category, severity_level, language_code) VALUES
   ('flying elephants', 'impossible', 8, 'en'),
   ('bomb', 'threats', 10, 'en'),
   ('terrorist attack', 'threats', 10, 'en');
@@ -37,6 +39,7 @@ INSERT INTO red_flag_keywords (keyword, category, severity_level, language_code)
 ### Scenario 1: Context-Based Legitimacy Analysis
 
 **Test**: Nonsensical feedback detection
+
 ```bash
 # Submit feedback with impossible content
 curl -X POST http://localhost:3001/api/fraud/analyze \
@@ -51,6 +54,7 @@ curl -X POST http://localhost:3001/api/fraud/analyze \
 ```
 
 **Expected Result**:
+
 ```json
 {
   "fraud_score": {
@@ -78,6 +82,7 @@ curl -X POST http://localhost:3001/api/fraud/analyze \
 ### Scenario 2: Red Flag Keyword Detection
 
 **Test**: Security threat keyword detection
+
 ```bash
 curl -X POST http://localhost:3001/api/fraud/analyze \
   -H "Authorization: Bearer ${TEST_TOKEN}" \
@@ -91,6 +96,7 @@ curl -X POST http://localhost:3001/api/fraud/analyze \
 ```
 
 **Expected Result**:
+
 ```json
 {
   "fraud_score": {
@@ -122,6 +128,7 @@ curl -X POST http://localhost:3001/api/fraud/analyze \
 ### Scenario 3: Behavioral Pattern Detection
 
 **Test**: Multiple calls from same phone within 30 minutes
+
 ```bash
 # First call
 curl -X POST http://localhost:3001/api/fraud/analyze \
@@ -145,6 +152,7 @@ curl -X POST http://localhost:3001/api/fraud/analyze \
 ```
 
 **Expected Result** (second call):
+
 ```json
 {
   "fraud_score": {
@@ -166,6 +174,7 @@ curl -X POST http://localhost:3001/api/fraud/analyze \
 ### Scenario 4: Legitimate Feedback Acceptance
 
 **Test**: Normal, contextually accurate feedback
+
 ```bash
 curl -X POST http://localhost:3001/api/fraud/analyze \
   -H "Authorization: Bearer ${TEST_TOKEN}" \
@@ -178,6 +187,7 @@ curl -X POST http://localhost:3001/api/fraud/analyze \
 ```
 
 **Expected Result**:
+
 ```json
 {
   "fraud_score": {
@@ -200,6 +210,7 @@ curl -X POST http://localhost:3001/api/fraud/analyze \
 ### Scenario 5: RLS Policy Enforcement
 
 **Test**: Unauthorized data access attempt
+
 ```bash
 # Try to access audit logs without admin privileges
 curl -X GET http://localhost:3001/api/security/audit-logs \
@@ -207,6 +218,7 @@ curl -X GET http://localhost:3001/api/security/audit-logs \
 ```
 
 **Expected Result**:
+
 ```json
 {
   "error": "insufficient_permissions",
@@ -216,6 +228,7 @@ curl -X GET http://localhost:3001/api/security/audit-logs \
 ```
 
 **Verification**: Check audit log was created
+
 ```bash
 curl -X GET http://localhost:3001/api/security/audit-logs \
   -H "Authorization: Bearer ${ADMIN_TOKEN}" \
@@ -225,6 +238,7 @@ curl -X GET http://localhost:3001/api/security/audit-logs \
 ### Scenario 6: Audit Logging System
 
 **Test**: Admin action logging
+
 ```bash
 # Perform admin action (add keyword)
 curl -X POST http://localhost:3001/api/fraud/keywords \
@@ -241,6 +255,7 @@ curl -X GET "http://localhost:3001/api/security/audit-logs?event_type=admin_acti
 ```
 
 **Expected Result**:
+
 ```json
 {
   "logs": [
@@ -261,6 +276,7 @@ curl -X GET "http://localhost:3001/api/security/audit-logs?event_type=admin_acti
 ### Scenario 7: Intrusion Detection
 
 **Test**: Brute force detection
+
 ```bash
 # Simulate multiple failed login attempts
 for i in {1..6}; do
@@ -272,6 +288,7 @@ done
 ```
 
 **Expected Result**: After 5 failed attempts
+
 ```bash
 # Check intrusion event created
 curl -X GET http://localhost:3001/api/security/intrusion-events \
@@ -299,14 +316,16 @@ curl -X GET http://localhost:3001/api/security/intrusion-events \
 ### Scenario 8: Data Encryption Verification
 
 **Test**: Verify sensitive data encryption
+
 ```bash
 # Check that phone numbers are encrypted in database
 psql ${DATABASE_URL} -c "SELECT phone_number_hash FROM behavioral_patterns LIMIT 1;"
 ```
 
 **Expected Result**: Hash values, not plaintext phone numbers
+
 ```
-         phone_number_hash          
+         phone_number_hash
 ------------------------------------
  $2b$10$abcdef1234567890...
 ```
@@ -316,6 +335,7 @@ psql ${DATABASE_URL} -c "SELECT phone_number_hash FROM behavioral_patterns LIMIT
 ### Scenario 9: Fraud Detection Performance
 
 **Test**: Response time under load
+
 ```bash
 # Test fraud detection speed
 time curl -X POST http://localhost:3001/api/fraud/analyze \
@@ -333,6 +353,7 @@ time curl -X POST http://localhost:3001/api/fraud/analyze \
 ### Scenario 10: Security Monitoring Performance
 
 **Test**: Real-time alert generation speed
+
 ```bash
 # Trigger security alert and measure response time
 time curl -X POST http://localhost:3001/api/security/intrusion-events \
@@ -359,6 +380,7 @@ psql ${DATABASE_URL} -c "DELETE FROM audit_logs WHERE correlation_id IN (SELECT 
 ## Success Criteria
 
 ### Fraud Detection
+
 - ✅ Contextually impossible feedback scores < 20%
 - ✅ Threat keywords immediately flagged (score = 0)
 - ✅ Behavioral patterns detected within 30 minutes
@@ -366,6 +388,7 @@ psql ${DATABASE_URL} -c "DELETE FROM audit_logs WHERE correlation_id IN (SELECT 
 - ✅ All fraud decisions logged with correlation IDs
 
 ### Security Hardening
+
 - ✅ Unauthorized access blocked by RLS policies
 - ✅ All admin actions logged with full audit trail
 - ✅ Brute force attempts detected and blocked
@@ -373,9 +396,12 @@ psql ${DATABASE_URL} -c "DELETE FROM audit_logs WHERE correlation_id IN (SELECT 
 - ✅ Real-time security alerts generated
 
 ### Performance
+
 - ✅ Fraud detection: < 500ms response time
 - ✅ Security monitoring: < 100ms for alerts
 - ✅ Audit log queries: < 1s with pagination
 - ✅ System maintains performance under normal load
 
-**Manual Testing Note**: Run these scenarios in sequence to validate complete fraud detection and security hardening implementation. Each test should pass independently and collectively demonstrate the system's security posture.
+**Manual Testing Note**: Run these scenarios in sequence to validate complete
+fraud detection and security hardening implementation. Each test should pass
+independently and collectively demonstrate the system's security posture.

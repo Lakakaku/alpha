@@ -50,7 +50,7 @@ paths:
             type: string
             maxLength: 100
       responses:
-        '200':
+        "200":
           description: Stores retrieved successfully
           content:
             application/json:
@@ -66,15 +66,15 @@ paths:
                       stores:
                         type: array
                         items:
-                          $ref: '#/components/schemas/Store'
+                          $ref: "#/components/schemas/Store"
                       pagination:
-                        $ref: '#/components/schemas/Pagination'
-        '401':
+                        $ref: "#/components/schemas/Pagination"
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
     post:
       summary: Create store
@@ -109,7 +109,7 @@ paths:
                 phone_number:
                   type: string
                   pattern: '^(\+46|0)[0-9\s\-]{8,15}$'
-                  example: '+46 8 123 456 78'
+                  example: "+46 8 123 456 78"
                 physical_address:
                   type: string
                   minLength: 10
@@ -117,10 +117,10 @@ paths:
                   example: Centralplan 15, 111 20 Stockholm, Sweden
                 business_registration_number:
                   type: string
-                  pattern: '^[0-9]{6}-[0-9]{4}$'
+                  pattern: "^[0-9]{6}-[0-9]{4}$"
                   example: 556123-4567
       responses:
-        '201':
+        "201":
           description: Store created successfully
           content:
             application/json:
@@ -134,23 +134,23 @@ paths:
                     type: object
                     properties:
                       store:
-                        $ref: '#/components/schemas/Store'
+                        $ref: "#/components/schemas/Store"
                       qr_code:
                         type: string
                         description: Generated QR code data
                         example: vocilia://store/550e8400-e29b-41d4-a716-446655440000
-        '400':
+        "400":
           description: Invalid store data
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '409':
+                $ref: "#/components/schemas/Error"
+        "409":
           description: Store already exists (duplicate email or registration number)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /admin/stores/{storeId}:
     get:
@@ -170,7 +170,7 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Store details retrieved
           content:
             application/json:
@@ -184,17 +184,17 @@ paths:
                     type: object
                     properties:
                       store:
-                        $ref: '#/components/schemas/StoreDetailed'
+                        $ref: "#/components/schemas/StoreDetailed"
                       metrics:
                         type: array
                         items:
-                          $ref: '#/components/schemas/StoreMetric'
-        '404':
+                          $ref: "#/components/schemas/StoreMetric"
+        "404":
           description: Store not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
     put:
       summary: Update store
@@ -236,7 +236,7 @@ paths:
                 monitoring_enabled:
                   type: boolean
       responses:
-        '200':
+        "200":
           description: Store updated successfully
           content:
             application/json:
@@ -250,19 +250,19 @@ paths:
                     type: object
                     properties:
                       store:
-                        $ref: '#/components/schemas/Store'
-        '400':
+                        $ref: "#/components/schemas/Store"
+        "400":
           description: Invalid update data
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '404':
+                $ref: "#/components/schemas/Error"
+        "404":
           description: Store not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /admin/stores/{storeId}/upload:
     post:
@@ -298,13 +298,13 @@ paths:
                 week_start_date:
                   type: string
                   format: date
-                  example: '2025-09-22'
+                  example: "2025-09-22"
                 notes:
                   type: string
                   maxLength: 500
                   example: Regular weekly upload
       responses:
-        '200':
+        "200":
           description: Upload successful
           content:
             application/json:
@@ -326,19 +326,19 @@ paths:
                       week_start_date:
                         type: string
                         format: date
-                        example: '2025-09-22'
-        '400':
+                        example: "2025-09-22"
+        "400":
           description: Invalid file or parameters
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '413':
+                $ref: "#/components/schemas/Error"
+        "413":
           description: File too large
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
 components:
   schemas:
@@ -358,7 +358,7 @@ components:
           example: info@cafestockholm.se
         phone_number:
           type: string
-          example: '+46 8 123 456 78'
+          example: "+46 8 123 456 78"
         physical_address:
           type: string
           example: Centralplan 15, 111 20 Stockholm, Sweden
@@ -401,7 +401,7 @@ components:
 
     StoreDetailed:
       allOf:
-        - $ref: '#/components/schemas/Store'
+        - $ref: "#/components/schemas/Store"
         - type: object
           properties:
             qr_code_data:

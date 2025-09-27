@@ -37,24 +37,24 @@ paths:
             minimum: 1
           description: Specific context version (defaults to latest)
       responses:
-        '200':
+        "200":
           description: Store context retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StoreContextResponse'
-        '404':
+                $ref: "#/components/schemas/StoreContextResponse"
+        "404":
           description: Store not found or no context configured
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
           description: Insufficient permissions to access store context
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
     put:
       summary: Update complete store context
@@ -71,26 +71,26 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/StoreContextUpdate'
+              $ref: "#/components/schemas/StoreContextUpdate"
       responses:
-        '200':
+        "200":
           description: Context updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StoreContextResponse'
-        '400':
+                $ref: "#/components/schemas/StoreContextResponse"
+        "400":
           description: Invalid context data
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidationErrorResponse'
-        '403':
+                $ref: "#/components/schemas/ValidationErrorResponse"
+        "403":
           description: Insufficient permissions to modify context
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /business/stores/{storeId}/context/profile:
     get:
@@ -104,18 +104,18 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Store profile retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StoreProfile'
-        '404':
+                $ref: "#/components/schemas/StoreProfile"
+        "404":
           description: Store profile not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
     post:
       summary: Create or update store profile
@@ -132,26 +132,26 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/StoreProfileUpdate'
+              $ref: "#/components/schemas/StoreProfileUpdate"
       responses:
-        '201':
+        "201":
           description: Store profile created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StoreProfile'
-        '200':
+                $ref: "#/components/schemas/StoreProfile"
+        "200":
           description: Store profile updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StoreProfile'
-        '400':
+                $ref: "#/components/schemas/StoreProfile"
+        "400":
           description: Invalid profile data
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidationErrorResponse'
+                $ref: "#/components/schemas/ValidationErrorResponse"
 
   /business/stores/{storeId}/context/personnel:
     get:
@@ -165,12 +165,12 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Personnel context retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PersonnelContext'
+                $ref: "#/components/schemas/PersonnelContext"
 
     post:
       summary: Create or update personnel context
@@ -187,20 +187,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PersonnelContextUpdate'
+              $ref: "#/components/schemas/PersonnelContextUpdate"
       responses:
-        '201':
+        "201":
           description: Personnel context created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PersonnelContext'
-        '200':
+                $ref: "#/components/schemas/PersonnelContext"
+        "200":
           description: Personnel context updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PersonnelContext'
+                $ref: "#/components/schemas/PersonnelContext"
 
   /business/stores/{storeId}/context/layout:
     get:
@@ -214,12 +214,12 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Layout context retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LayoutContext'
+                $ref: "#/components/schemas/LayoutContext"
 
     post:
       summary: Create or update layout context
@@ -239,18 +239,18 @@ paths:
               type: object
               properties:
                 layoutData:
-                  $ref: '#/components/schemas/LayoutContextUpdate'
+                  $ref: "#/components/schemas/LayoutContextUpdate"
                 layoutImage:
                   type: string
                   format: binary
                   description: Store layout map image
       responses:
-        '201':
+        "201":
           description: Layout context created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LayoutContext'
+                $ref: "#/components/schemas/LayoutContext"
 
   /business/stores/{storeId}/context/inventory:
     get:
@@ -264,12 +264,12 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Inventory context retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InventoryContext'
+                $ref: "#/components/schemas/InventoryContext"
 
     post:
       summary: Create or update inventory context
@@ -286,14 +286,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/InventoryContextUpdate'
+              $ref: "#/components/schemas/InventoryContextUpdate"
       responses:
-        '201':
+        "201":
           description: Inventory context created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InventoryContext'
+                $ref: "#/components/schemas/InventoryContext"
 
   /business/stores/{storeId}/context/completeness:
     get:
@@ -307,12 +307,12 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Completeness score calculated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CompletenessScore'
+                $ref: "#/components/schemas/CompletenessScore"
 
   /business/stores/{storeId}/context/versions:
     get:
@@ -333,7 +333,7 @@ paths:
             maximum: 100
             default: 10
       responses:
-        '200':
+        "200":
           description: Context versions retrieved successfully
           content:
             application/json:
@@ -343,7 +343,7 @@ paths:
                   versions:
                     type: array
                     items:
-                      $ref: '#/components/schemas/ContextVersion'
+                      $ref: "#/components/schemas/ContextVersion"
 
     post:
       summary: Create context version
@@ -371,12 +371,12 @@ paths:
               required:
                 - changeSummary
       responses:
-        '201':
+        "201":
           description: Context version created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ContextVersion'
+                $ref: "#/components/schemas/ContextVersion"
 
   /business/stores/{storeId}/context/export:
     get:
@@ -396,12 +396,12 @@ paths:
             enum: [structured, narrative, compact]
             default: structured
       responses:
-        '200':
+        "200":
           description: Context exported successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AIContextExport'
+                $ref: "#/components/schemas/AIContextExport"
 
 components:
   securitySchemes:
@@ -427,13 +427,13 @@ components:
         version:
           type: integer
         profile:
-          $ref: '#/components/schemas/StoreProfile'
+          $ref: "#/components/schemas/StoreProfile"
         personnel:
-          $ref: '#/components/schemas/PersonnelContext'
+          $ref: "#/components/schemas/PersonnelContext"
         layout:
-          $ref: '#/components/schemas/LayoutContext'
+          $ref: "#/components/schemas/LayoutContext"
         inventory:
-          $ref: '#/components/schemas/InventoryContext'
+          $ref: "#/components/schemas/InventoryContext"
       required:
         - storeId
         - completenessScore
@@ -444,13 +444,13 @@ components:
       type: object
       properties:
         profile:
-          $ref: '#/components/schemas/StoreProfileUpdate'
+          $ref: "#/components/schemas/StoreProfileUpdate"
         personnel:
-          $ref: '#/components/schemas/PersonnelContextUpdate'
+          $ref: "#/components/schemas/PersonnelContextUpdate"
         layout:
-          $ref: '#/components/schemas/LayoutContextUpdate'
+          $ref: "#/components/schemas/LayoutContextUpdate"
         inventory:
-          $ref: '#/components/schemas/InventoryContextUpdate'
+          $ref: "#/components/schemas/InventoryContextUpdate"
         changeSummary:
           type: string
           description: Brief description of changes made
@@ -463,7 +463,17 @@ components:
           format: uuid
         storeType:
           type: string
-          enum: [grocery, electronics, clothing, restaurant, pharmacy, hardware, bookstore, other]
+          enum:
+            [
+              grocery,
+              electronics,
+              clothing,
+              restaurant,
+              pharmacy,
+              hardware,
+              bookstore,
+              other,
+            ]
         storeSubtype:
           type: string
           nullable: true
@@ -477,11 +487,11 @@ components:
           type: string
           enum: [linear, grid, free-form, multi-level]
         address:
-          $ref: '#/components/schemas/StoreAddress'
+          $ref: "#/components/schemas/StoreAddress"
         operatingHours:
           type: array
           items:
-            $ref: '#/components/schemas/OperatingHours'
+            $ref: "#/components/schemas/OperatingHours"
         parkingAvailable:
           type: boolean
         accessibilityFeatures:
@@ -506,7 +516,17 @@ components:
       properties:
         storeType:
           type: string
-          enum: [grocery, electronics, clothing, restaurant, pharmacy, hardware, bookstore, other]
+          enum:
+            [
+              grocery,
+              electronics,
+              clothing,
+              restaurant,
+              pharmacy,
+              hardware,
+              bookstore,
+              other,
+            ]
         storeSubtype:
           type: string
           nullable: true
@@ -520,11 +540,11 @@ components:
           type: string
           enum: [linear, grid, free-form, multi-level]
         address:
-          $ref: '#/components/schemas/StoreAddress'
+          $ref: "#/components/schemas/StoreAddress"
         operatingHours:
           type: array
           items:
-            $ref: '#/components/schemas/OperatingHoursUpdate'
+            $ref: "#/components/schemas/OperatingHoursUpdate"
         parkingAvailable:
           type: boolean
         accessibilityFeatures:
@@ -629,7 +649,7 @@ components:
         customerServicePoints:
           type: array
           items:
-            $ref: '#/components/schemas/ServicePoint'
+            $ref: "#/components/schemas/ServicePoint"
         departmentHeads:
           type: object
           additionalProperties:
@@ -642,7 +662,7 @@ components:
         shifts:
           type: array
           items:
-            $ref: '#/components/schemas/PersonnelShift'
+            $ref: "#/components/schemas/PersonnelShift"
         createdAt:
           type: string
           format: date-time
@@ -668,7 +688,7 @@ components:
         customerServicePoints:
           type: array
           items:
-            $ref: '#/components/schemas/ServicePointUpdate'
+            $ref: "#/components/schemas/ServicePointUpdate"
         departmentHeads:
           type: object
           additionalProperties:
@@ -680,7 +700,7 @@ components:
         shifts:
           type: array
           items:
-            $ref: '#/components/schemas/PersonnelShiftUpdate'
+            $ref: "#/components/schemas/PersonnelShiftUpdate"
       required:
         - totalStaffCount
         - managerName
@@ -813,22 +833,22 @@ components:
         checkoutLocations:
           type: array
           items:
-            $ref: '#/components/schemas/CheckoutLocation'
+            $ref: "#/components/schemas/CheckoutLocation"
         customerFlowPattern:
           type: string
           enum: [clockwise, counterclockwise, grid, free]
         specialAreas:
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/SpecialArea'
+            $ref: "#/components/schemas/SpecialArea"
         departments:
           type: array
           items:
-            $ref: '#/components/schemas/LayoutDepartment'
+            $ref: "#/components/schemas/LayoutDepartment"
         changes:
           type: array
           items:
-            $ref: '#/components/schemas/LayoutChange'
+            $ref: "#/components/schemas/LayoutChange"
         createdAt:
           type: string
           format: date-time
@@ -853,18 +873,18 @@ components:
         checkoutLocations:
           type: array
           items:
-            $ref: '#/components/schemas/CheckoutLocationUpdate'
+            $ref: "#/components/schemas/CheckoutLocationUpdate"
         customerFlowPattern:
           type: string
           enum: [clockwise, counterclockwise, grid, free]
         specialAreas:
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/SpecialAreaUpdate'
+            $ref: "#/components/schemas/SpecialAreaUpdate"
         departments:
           type: array
           items:
-            $ref: '#/components/schemas/LayoutDepartmentUpdate'
+            $ref: "#/components/schemas/LayoutDepartmentUpdate"
       required:
         - entranceCount
         - exitCount
@@ -877,7 +897,7 @@ components:
         id:
           type: string
         position:
-          $ref: '#/components/schemas/Position'
+          $ref: "#/components/schemas/Position"
         counterCount:
           type: integer
           minimum: 1
@@ -895,7 +915,7 @@ components:
         id:
           type: string
         position:
-          $ref: '#/components/schemas/Position'
+          $ref: "#/components/schemas/Position"
         counterCount:
           type: integer
           minimum: 1
@@ -922,7 +942,7 @@ components:
       type: object
       properties:
         position:
-          $ref: '#/components/schemas/Position'
+          $ref: "#/components/schemas/Position"
         size:
           type: string
           enum: [small, medium, large]
@@ -934,7 +954,7 @@ components:
       type: object
       properties:
         position:
-          $ref: '#/components/schemas/Position'
+          $ref: "#/components/schemas/Position"
         size:
           type: string
           enum: [small, medium, large]
@@ -948,7 +968,7 @@ components:
         departmentName:
           type: string
         position:
-          $ref: '#/components/schemas/Position'
+          $ref: "#/components/schemas/Position"
         width:
           type: integer
           minimum: 1
@@ -974,7 +994,7 @@ components:
         departmentName:
           type: string
         position:
-          $ref: '#/components/schemas/Position'
+          $ref: "#/components/schemas/Position"
         width:
           type: integer
           minimum: 1
@@ -1050,11 +1070,11 @@ components:
         categories:
           type: array
           items:
-            $ref: '#/components/schemas/ProductCategory'
+            $ref: "#/components/schemas/ProductCategory"
         services:
           type: array
           items:
-            $ref: '#/components/schemas/SpecialService'
+            $ref: "#/components/schemas/SpecialService"
         createdAt:
           type: string
           format: date-time
@@ -1094,11 +1114,11 @@ components:
         categories:
           type: array
           items:
-            $ref: '#/components/schemas/ProductCategoryUpdate'
+            $ref: "#/components/schemas/ProductCategoryUpdate"
         services:
           type: array
           items:
-            $ref: '#/components/schemas/SpecialServiceUpdate'
+            $ref: "#/components/schemas/SpecialServiceUpdate"
       required:
         - primaryCategories
         - paymentMethods
@@ -1278,9 +1298,9 @@ components:
           enum: [structured, narrative, compact]
         contextData:
           oneOf:
-            - $ref: '#/components/schemas/StructuredContext'
-            - $ref: '#/components/schemas/NarrativeContext'
-            - $ref: '#/components/schemas/CompactContext'
+            - $ref: "#/components/schemas/StructuredContext"
+            - $ref: "#/components/schemas/NarrativeContext"
+            - $ref: "#/components/schemas/CompactContext"
         exportedAt:
           type: string
           format: date-time
@@ -1294,13 +1314,13 @@ components:
       type: object
       properties:
         profile:
-          $ref: '#/components/schemas/StoreProfile'
+          $ref: "#/components/schemas/StoreProfile"
         personnel:
-          $ref: '#/components/schemas/PersonnelContext'
+          $ref: "#/components/schemas/PersonnelContext"
         layout:
-          $ref: '#/components/schemas/LayoutContext'
+          $ref: "#/components/schemas/LayoutContext"
         inventory:
-          $ref: '#/components/schemas/InventoryContext'
+          $ref: "#/components/schemas/InventoryContext"
 
     NarrativeContext:
       type: object

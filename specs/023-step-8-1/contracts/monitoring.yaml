@@ -32,7 +32,7 @@ paths:
             enum: [production, staging]
             default: production
       responses:
-        '200':
+        "200":
           description: Uptime metrics
           content:
             application/json:
@@ -56,7 +56,7 @@ paths:
                   incidents:
                     type: array
                     items:
-                      $ref: '#/components/schemas/UptimeIncident'
+                      $ref: "#/components/schemas/UptimeIncident"
                   current_status:
                     type: string
                     enum: [operational, degraded, outage]
@@ -82,7 +82,7 @@ paths:
             type: string
             enum: [backend, customer, business, admin]
       responses:
-        '200':
+        "200":
           description: Performance metrics
           content:
             application/json:
@@ -94,7 +94,7 @@ paths:
                   metrics:
                     type: array
                     items:
-                      $ref: '#/components/schemas/PerformanceMetric'
+                      $ref: "#/components/schemas/PerformanceMetric"
                   sla_compliance:
                     type: object
                     properties:
@@ -110,7 +110,7 @@ paths:
                   alerts:
                     type: array
                     items:
-                      $ref: '#/components/schemas/PerformanceAlert'
+                      $ref: "#/components/schemas/PerformanceAlert"
 
   /api/admin/monitoring/backups:
     get:
@@ -120,7 +120,7 @@ paths:
       security:
         - adminAuth: []
       responses:
-        '200':
+        "200":
           description: Backup status
           content:
             application/json:
@@ -128,7 +128,7 @@ paths:
                 type: object
                 properties:
                   last_backup:
-                    $ref: '#/components/schemas/BackupInfo'
+                    $ref: "#/components/schemas/BackupInfo"
                   schedule:
                     type: object
                     properties:
@@ -153,7 +153,7 @@ paths:
                   recent_backups:
                     type: array
                     items:
-                      $ref: '#/components/schemas/BackupInfo'
+                      $ref: "#/components/schemas/BackupInfo"
                   health_status:
                     type: string
                     enum: [healthy, warning, critical]
@@ -189,7 +189,7 @@ paths:
                   type: string
               required: [backup_id, target_environment, reason]
       responses:
-        '202':
+        "202":
           description: Restore initiated
           content:
             application/json:
@@ -224,7 +224,7 @@ paths:
             type: string
             enum: [uptime, performance, security, backup]
       responses:
-        '200':
+        "200":
           description: Active alerts
           content:
             application/json:
@@ -234,7 +234,7 @@ paths:
                   alerts:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Alert'
+                      $ref: "#/components/schemas/Alert"
                   summary:
                     type: object
                     properties:
@@ -255,7 +255,7 @@ paths:
       security:
         - adminAuth: []
       responses:
-        '200':
+        "200":
           description: SSL certificate status
           content:
             application/json:
@@ -265,7 +265,7 @@ paths:
                   certificates:
                     type: array
                     items:
-                      $ref: '#/components/schemas/SSLCertificate'
+                      $ref: "#/components/schemas/SSLCertificate"
                   overall_status:
                     type: string
                     enum: [healthy, warning, critical]
@@ -362,7 +362,8 @@ components:
           type: string
         endpoint:
           type: string
-      required: [alert_id, triggered_at, metric, current_value, threshold, severity]
+      required:
+        [alert_id, triggered_at, metric, current_value, threshold, severity]
 
     BackupInfo:
       type: object

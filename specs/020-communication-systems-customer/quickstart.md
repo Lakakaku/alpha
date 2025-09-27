@@ -1,13 +1,14 @@
 # Quickstart: Communication Systems
 
-**Feature**: Communication Systems for Vocilia Alpha
-**Date**: 2025-09-25
+**Feature**: Communication Systems for Vocilia Alpha **Date**: 2025-09-25
 **Purpose**: Integration test scenarios for validating communication workflows
 
 ## Prerequisites
 
 ### Database Setup
+
 1. Apply communication schema migration:
+
    ```sql
    -- Located in supabase/migrations/communication_schema.sql
    -- Creates: communication_notifications, communication_templates,
@@ -24,7 +25,9 @@
    ```
 
 ### Environment Configuration
+
 1. Set SMS provider credentials:
+
    ```bash
    TWILIO_ACCOUNT_SID=your_account_sid
    TWILIO_AUTH_TOKEN=your_auth_token
@@ -39,7 +42,9 @@
 ## Test Scenario 1: Customer Reward Notification
 
 ### Setup
+
 1. Ensure test customer exists:
+
    ```json
    {
      "id": "test-customer-uuid",
@@ -51,7 +56,9 @@
 2. Complete feedback submission that earns reward
 
 ### Expected Flow
+
 1. **Reward Calculation Triggers Notification**:
+
    ```bash
    curl -X POST https://your-app.railway.app/api/notifications/send \
    -H "Authorization: Bearer $ADMIN_JWT" \
@@ -70,14 +77,17 @@
    ```
 
 2. **Verify Notification Created**:
+
    ```bash
    curl -H "Authorization: Bearer $ADMIN_JWT" \
    https://your-app.railway.app/api/notifications/{notification_id}
    ```
+
    Expected: `status: "pending"` → `status: "sent"` → `status: "delivered"`
 
 3. **Check Customer Receives SMS**:
-   - SMS content: "Grattis Test Customer! Du har tjänat 85.50 SEK för din feedback. Betalning inom 7 dagar. /STOP"
+   - SMS content: "Grattis Test Customer! Du har tjänat 85.50 SEK för din
+     feedback. Betalning inom 7 dagar. /STOP"
    - Delivery time: <30 seconds from API call
 
 4. **Verify Retry Logic** (if delivery fails):
@@ -87,6 +97,7 @@
    - Manual intervention required after 3 failures
 
 ### Validation Checklist
+
 - [ ] SMS notification sent within 30 seconds
 - [ ] Content matches template with correct variables
 - [ ] Delivery status updated via webhook
@@ -96,7 +107,9 @@
 ## Test Scenario 2: Business Verification Request
 
 ### Setup
+
 1. Ensure test business exists:
+
    ```json
    {
      "id": "test-business-uuid",
@@ -108,12 +121,14 @@
 2. Generate weekly verification database (admin action)
 
 ### Expected Flow
+
 1. **Weekly Verification Job Triggers**:
    - Cron job runs Sundays 00:00 Europe/Stockholm
    - Creates verification database for business review
    - Triggers business notification
 
 2. **Business Notification Sent**:
+
    ```bash
    curl -X POST https://your-app.railway.app/api/notifications/send \
    -H "Authorization: Bearer $ADMIN_JWT" \
@@ -137,6 +152,7 @@
    - After deadline: Escalation notification
 
 ### Validation Checklist
+
 - [ ] Verification request email sent immediately
 - [ ] Email contains deadline (5 business days)
 - [ ] Reminder notifications sent on schedule
@@ -146,11 +162,14 @@
 ## Test Scenario 3: Support Ticket Creation and Response
 
 ### Setup
+
 1. Authenticated customer or business user
 2. Support agent available for assignment
 
 ### Expected Flow
+
 1. **Customer Creates Support Ticket**:
+
    ```bash
    curl -X POST https://your-app.railway.app/api/support/tickets \
    -H "Authorization: Bearer $CUSTOMER_JWT" \
@@ -170,6 +189,7 @@
    - Priority calculated (payment issues = high priority)
 
 3. **Support Agent Response**:
+
    ```bash
    curl -X POST https://your-app.railway.app/api/support/tickets/{ticket_id}/messages \
    -H "Authorization: Bearer $ADMIN_JWT" \
@@ -184,6 +204,7 @@
    - Ticket status updated to "in_progress"
 
 ### Validation Checklist
+
 - [ ] Support ticket created with correct SLA deadline
 - [ ] High priority assigned for payment category
 - [ ] Ticket assigned to available agent within 5 minutes
@@ -194,11 +215,14 @@
 ## Test Scenario 4: Payment Overdue Escalation
 
 ### Setup
+
 1. Business with overdue payment (simulate by backdating invoice)
 2. Business contact information available
 
 ### Expected Flow
+
 1. **Day 1 After Due Date**:
+
    ```bash
    # Automated job detects overdue payment
    curl -X POST https://your-app.railway.app/api/notifications/send \
@@ -227,6 +251,7 @@
    - Requires manual intervention
 
 ### Validation Checklist
+
 - [ ] Day 1 reminder sent automatically
 - [ ] Day 7 warning includes escalation notice
 - [ ] Day 14 suspension warning sent
@@ -237,11 +262,14 @@
 ## Test Scenario 5: Weekly Summary Batch Processing
 
 ### Setup
+
 1. Multiple customers with rewards earned during week
 2. Various stores and reward amounts
 
 ### Expected Flow
+
 1. **Weekly Batch Job** (Sundays 06:00):
+
    ```bash
    curl -X POST https://your-app.railway.app/api/notifications/batch \
    -H "Authorization: Bearer $SYSTEM_JWT" \
@@ -272,6 +300,7 @@
    ```
 
 ### Validation Checklist
+
 - [ ] Batch processing completes within 10 minutes for 1000+ customers
 - [ ] All SMS notifications sent successfully
 - [ ] Failed notifications automatically retried
@@ -281,6 +310,7 @@
 ## Performance Validation
 
 ### Load Testing Targets
+
 1. **SMS Delivery**: <30 seconds from trigger to delivery
 2. **Support Ticket Assignment**: <5 minutes for high priority
 3. **Batch Processing**: <10 minutes for 10,000 customers
@@ -288,6 +318,7 @@
 5. **Retry Processing**: Immediate, 5min, 30min intervals
 
 ### Monitoring Setup
+
 1. **SMS Delivery Metrics**:
    - Delivery success rate (target: >95%)
    - Average delivery time (target: <30 seconds)
@@ -306,18 +337,21 @@
 ## Troubleshooting Common Issues
 
 ### SMS Delivery Failures
+
 1. Check Twilio webhook configuration
 2. Verify phone number format (+46XXXXXXXXX)
 3. Review rate limiting settings
 4. Check template character limits
 
 ### Support Ticket Assignment Issues
+
 1. Verify admin user availability
 2. Check SLA calculation logic
 3. Review priority escalation rules
 4. Confirm email notification delivery
 
 ### Template Rendering Errors
+
 1. Validate required variables provided
 2. Check Handlebars syntax
 3. Verify character limits for SMS
@@ -325,5 +359,5 @@
 
 ---
 
-**Quickstart Complete**: All critical user journeys validated
-**Next Phase**: Generate implementation tasks from these integration scenarios
+**Quickstart Complete**: All critical user journeys validated **Next Phase**:
+Generate implementation tasks from these integration scenarios

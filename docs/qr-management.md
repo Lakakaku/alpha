@@ -2,7 +2,10 @@
 
 ## Overview
 
-The QR Code Management System provides comprehensive QR code generation, management, and analytics for Vocilia's customer feedback platform. This system enables businesses to create, customize, and track QR codes for their physical stores.
+The QR Code Management System provides comprehensive QR code generation,
+management, and analytics for Vocilia's customer feedback platform. This system
+enables businesses to create, customize, and track QR codes for their physical
+stores.
 
 ## Architecture
 
@@ -36,6 +39,7 @@ The QR Code Management System provides comprehensive QR code generation, managem
 ### Database Schema
 
 #### Enhanced Stores Table
+
 ```sql
 -- QR-related columns added to existing stores table
 ALTER TABLE stores ADD COLUMN qr_version INTEGER DEFAULT 1;
@@ -46,6 +50,7 @@ ALTER TABLE stores ADD COLUMN qr_transition_until TIMESTAMPTZ;
 ```
 
 #### QR Scan Events Table
+
 ```sql
 CREATE TABLE qr_scan_events (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -60,6 +65,7 @@ CREATE TABLE qr_scan_events (
 ```
 
 #### QR Analytics Tables
+
 ```sql
 -- 5-minute aggregation
 CREATE TABLE qr_analytics_5min (
@@ -99,6 +105,7 @@ CREATE TABLE qr_analytics_daily (
 ```
 
 #### QR Code History Table
+
 ```sql
 CREATE TABLE qr_code_history (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -116,6 +123,7 @@ CREATE TABLE qr_code_history (
 ```
 
 #### QR Print Templates Table
+
 ```sql
 CREATE TABLE qr_print_templates (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -140,9 +148,11 @@ CREATE TABLE qr_print_templates (
 ### Store QR Management
 
 #### GET /qr/stores/{storeId}
+
 Get QR code information for a store.
 
 **Response:**
+
 ```json
 {
   "store": {
@@ -174,9 +184,11 @@ Get QR code information for a store.
 ```
 
 #### POST /qr/stores/{storeId}/regenerate
+
 Regenerate QR code with transition period.
 
 **Request:**
+
 ```json
 {
   "reason": "Store layout changed",
@@ -185,6 +197,7 @@ Regenerate QR code with transition period.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -199,14 +212,17 @@ Regenerate QR code with transition period.
 ### QR Downloads
 
 #### GET /qr/stores/{storeId}/download
+
 Download printable PDF with QR code.
 
 **Query Parameters:**
+
 - `template_id` (optional): Custom template ID
 - `page_size` (optional): 'A4', 'letter', 'business_card', 'label_sheet'
 - `format` (optional): 'pdf', 'png', 'svg'
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -220,15 +236,18 @@ Download printable PDF with QR code.
 ### Analytics
 
 #### GET /qr/analytics/{storeId}
+
 Get scan analytics for a store.
 
 **Query Parameters:**
+
 - `period`: 'hour', 'day', 'week', 'month'
 - `start_date` (optional): ISO date string
 - `end_date` (optional): ISO date string
 - `timezone` (optional): Timezone for aggregation
 
 **Response:**
+
 ```json
 {
   "period": "day",
@@ -260,9 +279,11 @@ Get scan analytics for a store.
 ### Bulk Operations
 
 #### POST /qr/bulk/regenerate
+
 Bulk regenerate QR codes for multiple stores.
 
 **Request:**
+
 ```json
 {
   "store_ids": ["uuid1", "uuid2", "uuid3"],
@@ -273,6 +294,7 @@ Bulk regenerate QR codes for multiple stores.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -294,9 +316,11 @@ Bulk regenerate QR codes for multiple stores.
 ### Scan Tracking
 
 #### POST /qr/scan
+
 Track a QR code scan event.
 
 **Request:**
+
 ```json
 {
   "store_id": "uuid",
@@ -315,6 +339,7 @@ Track a QR code scan event.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -327,12 +352,14 @@ Track a QR code scan event.
 ## Performance Specifications
 
 ### QR Generation Performance
+
 - **Target**: <200ms generation time
 - **Implementation**: In-memory caching with 5-minute TTL
 - **Cache Strategy**: Store-version based keys
 - **Monitoring**: Performance logging for requests >200ms
 
 ### PDF Generation Performance
+
 - **Target**: <2MB file size
 - **Implementation**: Image compression and optimization
 - **Techniques**:
@@ -342,6 +369,7 @@ Track a QR code scan event.
   - PDF compression enabled
 
 ### Analytics Performance
+
 - **Real-time**: 5-minute aggregation batches
 - **Historical**: Pre-aggregated hourly and daily tables
 - **Queries**: Indexed time-bucket columns for fast retrieval
@@ -350,7 +378,9 @@ Track a QR code scan event.
 ## Security and Privacy
 
 ### Row Level Security (RLS)
-All QR tables implement RLS policies ensuring businesses can only access their own data:
+
+All QR tables implement RLS policies ensuring businesses can only access their
+own data:
 
 ```sql
 -- Example RLS policy for qr_scan_events
@@ -367,6 +397,7 @@ USING (
 ```
 
 ### Data Protection
+
 - **IP Address Hashing**: IP addresses are hashed for privacy
 - **Session Anonymization**: Session IDs are rotated regularly
 - **Data Retention**: Scan events older than 2 years are archived
@@ -375,18 +406,21 @@ USING (
 ## Error Handling and Logging
 
 ### Error Types
+
 1. **QRValidationError**: Input validation failures
 2. **QRPermissionError**: Access control violations
 3. **QRGenerationError**: QR code creation failures
 4. **QRAnalyticsError**: Analytics processing failures
 
 ### Logging Levels
+
 - **INFO**: Successful operations and metrics
 - **WARN**: Recoverable errors and performance issues
 - **ERROR**: Critical failures requiring attention
 - **DEBUG**: Detailed troubleshooting information
 
 ### Log Format
+
 ```json
 {
   "level": "info",
@@ -407,10 +441,13 @@ USING (
 ## Monitoring and Health Checks
 
 ### Health Check Endpoint
+
 #### GET /qr/health
+
 System-wide health check for all QR services.
 
 **Response:**
+
 ```json
 {
   "status": "healthy",
@@ -450,6 +487,7 @@ System-wide health check for all QR services.
 ```
 
 ### Performance Metrics
+
 - QR generation response times
 - PDF file sizes and generation times
 - Analytics query performance
@@ -459,7 +497,9 @@ System-wide health check for all QR services.
 ## Testing Strategy
 
 ### Contract Tests
+
 Located in `apps/backend/tests/contract/`:
+
 - `qr-store-get.test.ts` - Store QR retrieval
 - `qr-regenerate.test.ts` - QR regeneration
 - `qr-download.test.ts` - PDF downloads
@@ -469,7 +509,9 @@ Located in `apps/backend/tests/contract/`:
 - `qr-templates.test.ts` - Template management
 
 ### Integration Tests
+
 Located in `apps/business/tests/integration/`:
+
 - `qr-regeneration.test.ts` - Complete regeneration workflow
 - `qr-analytics.test.ts` - Analytics tracking
 - `qr-bulk-operations.test.ts` - Bulk operations
@@ -478,7 +520,9 @@ Located in `apps/business/tests/integration/`:
 - `qr-transitions.test.ts` - QR transition periods
 
 ### Unit Tests
+
 Located in `apps/backend/tests/unit/`:
+
 - `qr-generation.test.ts` - QR generation logic
 - `pdf-templates.test.ts` - PDF rendering
 - `analytics-aggregation.test.ts` - Analytics processing
@@ -486,6 +530,7 @@ Located in `apps/backend/tests/unit/`:
 ## Deployment and Configuration
 
 ### Environment Variables
+
 ```bash
 # QR Service Configuration
 CUSTOMER_APP_URL=https://customer.vocilia.com
@@ -504,11 +549,14 @@ EXTERNAL_LOGGER_URL=https://your-logging-service.com
 ```
 
 ### Database Migrations
+
 Migrations are located in `supabase/migrations/`:
+
 - `20250920000001_qr_management.sql` - Core QR tables
 - `20250921000003_qr_rls_policies_update.sql` - RLS policies
 
 ### Deployment Steps
+
 1. Apply database migrations
 2. Deploy backend services with QR endpoints
 3. Deploy frontend components
@@ -522,53 +570,54 @@ Migrations are located in `supabase/migrations/`:
 
 ```typescript
 // apps/business/src/services/qr/qr-client.service.ts
-import { QRClientService } from '@/services/qr/qr-client.service';
+import { QRClientService } from '@/services/qr/qr-client.service'
 
-const qrService = new QRClientService();
+const qrService = new QRClientService()
 
 // Get store QR information
-const storeQR = await qrService.getStoreQR(storeId);
+const storeQR = await qrService.getStoreQR(storeId)
 
 // Regenerate QR code
 const result = await qrService.regenerateQR(storeId, {
   reason: 'Store renovation',
-  transition_hours: 48
-});
+  transition_hours: 48,
+})
 
 // Download QR PDF
 const download = await qrService.downloadQR(storeId, {
   page_size: 'A4',
-  template_id: 'custom-template-id'
-});
+  template_id: 'custom-template-id',
+})
 
 // Get analytics
 const analytics = await qrService.getAnalytics(storeId, {
-  period: 'week'
-});
+  period: 'week',
+})
 ```
 
 ### Backend Service Usage
 
 ```typescript
 // Direct service usage
-import { createQRManagementService } from '@/services/qr/qr-management.service';
+import { createQRManagementService } from '@/services/qr/qr-management.service'
 
 const qrManager = createQRManagementService(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_ANON_KEY!,
   process.env.CUSTOMER_APP_URL
-);
+)
 
 // System health check
-const health = await qrManager.systemHealthCheck();
+const health = await qrManager.systemHealthCheck()
 
 // Get business stores overview
-const stores = await qrManager.getBusinessStores(businessId);
+const stores = await qrManager.getBusinessStores(businessId)
 ```
 
 ## Best Practices
 
 ### Performance Optimization
+
 1. **Cache QR codes** for repeated requests
 2. **Use SVG format** for high-quality printing
 3. **Compress PDF images** to stay under 2MB limit
@@ -576,12 +625,14 @@ const stores = await qrManager.getBusinessStores(businessId);
 5. **Index time-bucket columns** for analytics tables
 
 ### Error Handling
+
 1. **Use specific error types** for different failure modes
 2. **Log all errors** with full context
 3. **Provide graceful degradation** for non-critical features
 4. **Return partial data** when possible instead of complete failure
 
 ### Security
+
 1. **Validate all inputs** before processing
 2. **Check permissions** for every operation
 3. **Use RLS policies** for data isolation
@@ -589,6 +640,7 @@ const stores = await qrManager.getBusinessStores(businessId);
 5. **Rotate session identifiers** regularly
 
 ### Monitoring
+
 1. **Track performance metrics** for all operations
 2. **Set up alerts** for error rates and response times
 3. **Monitor cache hit rates** and memory usage
@@ -629,8 +681,8 @@ curl /api/qr/health
 grep "QR_INFO" /var/log/app.log | tail -20
 
 # Check analytics aggregation
-SELECT * FROM qr_analytics_5min 
-WHERE time_bucket > NOW() - INTERVAL '1 hour' 
+SELECT * FROM qr_analytics_5min
+WHERE time_bucket > NOW() - INTERVAL '1 hour'
 ORDER BY time_bucket DESC LIMIT 10;
 
 # Monitor cache performance
@@ -640,6 +692,7 @@ ORDER BY time_bucket DESC LIMIT 10;
 ## Support and Maintenance
 
 ### Regular Maintenance Tasks
+
 1. **Clean expired cache entries** (automated)
 2. **Archive old scan events** (monthly)
 3. **Update analytics aggregations** (automated)
@@ -647,6 +700,7 @@ ORDER BY time_bucket DESC LIMIT 10;
 5. **Review error logs** (daily)
 
 ### Backup and Recovery
+
 - **Database**: Automated Supabase backups
 - **Generated QR codes**: Regenerable from store data
 - **PDF templates**: Stored in database with backups
@@ -654,6 +708,5 @@ ORDER BY time_bucket DESC LIMIT 10;
 
 ---
 
-*Last Updated: 2025-09-21*
-*Version: 1.0.0*
-*System: QR Code Management (Feature 004-step-2-2)*
+_Last Updated: 2025-09-21_ _Version: 1.0.0_ _System: QR Code Management (Feature
+004-step-2-2)_

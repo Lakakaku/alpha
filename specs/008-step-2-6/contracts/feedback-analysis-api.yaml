@@ -112,18 +112,18 @@ components:
         actionable_insights:
           type: array
           items:
-            $ref: '#/components/schemas/ActionableInsight'
+            $ref: "#/components/schemas/ActionableInsight"
         total_feedback_count:
           type: integer
           minimum: 0
         sentiment_breakdown:
-          $ref: '#/components/schemas/SentimentBreakdown'
+          $ref: "#/components/schemas/SentimentBreakdown"
         department_breakdown:
           type: object
           additionalProperties:
             type: integer
         trend_comparison:
-          $ref: '#/components/schemas/TrendComparison'
+          $ref: "#/components/schemas/TrendComparison"
         generated_at:
           type: string
           format: date-time
@@ -210,7 +210,7 @@ components:
           type: string
           enum: [positive, negative, neutral, mixed, all]
         date_range:
-          $ref: '#/components/schemas/DateRange'
+          $ref: "#/components/schemas/DateRange"
         limit:
           type: integer
           minimum: 1
@@ -233,7 +233,7 @@ components:
         feedback:
           type: array
           items:
-            $ref: '#/components/schemas/FeedbackRecord'
+            $ref: "#/components/schemas/FeedbackRecord"
         total_count:
           type: integer
         execution_time_ms:
@@ -268,24 +268,24 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Current week analysis report
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AnalysisReport'
-        '404':
+                $ref: "#/components/schemas/AnalysisReport"
+        "404":
           description: No analysis available for current week
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '403':
+                $ref: "#/components/schemas/Error"
+        "403":
           description: Access denied to store
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /feedback-analysis/reports/{storeId}/historical:
     get:
@@ -307,14 +307,14 @@ paths:
             maximum: 52
             default: 4
       responses:
-        '200':
+        "200":
           description: Historical analysis reports
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AnalysisReport'
+                  $ref: "#/components/schemas/AnalysisReport"
 
   /feedback-analysis/search/{storeId}:
     post:
@@ -332,20 +332,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SearchQuery'
+              $ref: "#/components/schemas/SearchQuery"
       responses:
-        '200':
+        "200":
           description: Search results with AI-generated summary
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SearchResults'
-        '400':
+                $ref: "#/components/schemas/SearchResults"
+        "400":
           description: Invalid search query
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /feedback-analysis/temporal/{storeId}:
     get:
@@ -367,12 +367,12 @@ paths:
             maximum: 12
             default: 1
       responses:
-        '200':
+        "200":
           description: Temporal comparison data
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TrendComparison'
+                $ref: "#/components/schemas/TrendComparison"
 
   /feedback-analysis/insights/{storeId}:
     get:
@@ -398,14 +398,14 @@ paths:
             type: string
             enum: [new, acknowledged, in_progress, resolved, dismissed]
       responses:
-        '200':
+        "200":
           description: List of actionable insights
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ActionableInsight'
+                  $ref: "#/components/schemas/ActionableInsight"
 
   /feedback-analysis/insights/{insightId}/status:
     patch:
@@ -434,14 +434,14 @@ paths:
                   type: string
                   maxLength: 1000
       responses:
-        '200':
+        "200":
           description: Insight status updated successfully
-        '404':
+        "404":
           description: Insight not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /feedback-analysis/reports/{storeId}/generate:
     post:
@@ -471,7 +471,7 @@ paths:
                   type: boolean
                   default: false
       responses:
-        '202':
+        "202":
           description: Report generation started
           content:
             application/json:
@@ -483,12 +483,12 @@ paths:
                   estimated_completion:
                     type: string
                     format: date-time
-        '409':
+        "409":
           description: Report already exists and force_regenerate is false
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /feedback-analysis/status/{jobId}:
     get:
@@ -501,7 +501,7 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Job status information
           content:
             application/json:

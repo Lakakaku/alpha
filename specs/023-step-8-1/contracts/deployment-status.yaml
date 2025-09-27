@@ -19,7 +19,7 @@ paths:
       security:
         - adminAuth: []
       responses:
-        '200':
+        "200":
           description: Current deployment status
           content:
             application/json:
@@ -29,7 +29,7 @@ paths:
                   environments:
                     type: array
                     items:
-                      $ref: '#/components/schemas/EnvironmentStatus'
+                      $ref: "#/components/schemas/EnvironmentStatus"
                   last_updated:
                     type: string
                     format: date-time
@@ -61,7 +61,7 @@ paths:
             minimum: 1
             maximum: 50
       responses:
-        '200':
+        "200":
           description: Deployment history
           content:
             application/json:
@@ -71,9 +71,9 @@ paths:
                   deployments:
                     type: array
                     items:
-                      $ref: '#/components/schemas/DeploymentRecord'
+                      $ref: "#/components/schemas/DeploymentRecord"
                   pagination:
-                    $ref: '#/components/schemas/Pagination'
+                    $ref: "#/components/schemas/Pagination"
 
   /api/admin/deployment/rollback:
     post:
@@ -103,7 +103,7 @@ paths:
                   description: Reason for rollback
               required: [target_deployment_id, environment, app, reason]
       responses:
-        '202':
+        "202":
           description: Rollback initiated successfully
           content:
             application/json:
@@ -120,12 +120,12 @@ paths:
                     format: date-time
                     description: Expected completion within 15 minutes
                 required: [rollback_id, status]
-        '400':
+        "400":
           description: Invalid rollback request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /api/admin/deployment/rollback/{rollbackId}/status:
     get:
@@ -141,12 +141,12 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Rollback status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RollbackStatus'
+                $ref: "#/components/schemas/RollbackStatus"
 
   /api/admin/deployment/validate:
     post:
@@ -172,12 +172,12 @@ paths:
                   enum: [backend, customer, business, admin]
               required: [deployment_id, environment, app]
       responses:
-        '200':
+        "200":
           description: Validation results
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidationResults'
+                $ref: "#/components/schemas/ValidationResults"
 
 components:
   securitySchemes:
@@ -208,7 +208,7 @@ components:
         apps:
           type: array
           items:
-            $ref: '#/components/schemas/AppStatus'
+            $ref: "#/components/schemas/AppStatus"
         overall_health:
           type: string
           enum: [healthy, degraded, unhealthy]
@@ -282,7 +282,7 @@ components:
           type: boolean
           description: Whether this deployment can be used for rollback
         performance_metrics:
-          $ref: '#/components/schemas/PostDeploymentMetrics'
+          $ref: "#/components/schemas/PostDeploymentMetrics"
       required: [deployment_id, environment, app, commit_sha, status]
 
     RollbackStatus:

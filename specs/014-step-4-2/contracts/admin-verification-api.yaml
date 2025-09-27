@@ -3,7 +3,7 @@ info:
   title: Admin Verification API
   description: API endpoints for admin verification workflow management
   version: 1.0.0
-  
+
 servers:
   - url: http://localhost:3001/api/admin
     description: Development server
@@ -32,9 +32,9 @@ paths:
         - name: status
           in: query
           schema:
-            $ref: '#/components/schemas/VerificationCycleStatus'
+            $ref: "#/components/schemas/VerificationCycleStatus"
       responses:
-        '200':
+        "200":
           description: List of verification cycles
           content:
             application/json:
@@ -44,12 +44,12 @@ paths:
                   cycles:
                     type: array
                     items:
-                      $ref: '#/components/schemas/VerificationCycle'
+                      $ref: "#/components/schemas/VerificationCycle"
                   pagination:
-                    $ref: '#/components/schemas/Pagination'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-    
+                    $ref: "#/components/schemas/Pagination"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
     post:
       summary: Create new verification cycle
       description: Start a new weekly verification cycle
@@ -67,16 +67,16 @@ paths:
               required:
                 - cycle_week
       responses:
-        '201':
+        "201":
           description: Verification cycle created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VerificationCycle'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+                $ref: "#/components/schemas/VerificationCycle"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /verification/cycles/{cycleId}/prepare:
     post:
@@ -90,7 +90,7 @@ paths:
             type: string
             format: uuid
       responses:
-        '202':
+        "202":
           description: Database preparation started
           content:
             application/json:
@@ -101,14 +101,14 @@ paths:
                     type: string
                   job_id:
                     type: string
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
           description: Cycle already prepared
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /verification/cycles/{cycleId}/databases:
     get:
@@ -122,14 +122,14 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: List of verification databases
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/VerificationDatabase'
+                  $ref: "#/components/schemas/VerificationDatabase"
 
   /verification/databases/{databaseId}/download/{format}:
     get:
@@ -149,7 +149,7 @@ paths:
             type: string
             enum: [csv, excel, json]
       responses:
-        '200':
+        "200":
           description: Signed download URL
           content:
             application/json:
@@ -175,7 +175,7 @@ paths:
             type: string
             format: uuid
       responses:
-        '201':
+        "201":
           description: Invoices generated
           content:
             application/json:
@@ -216,12 +216,12 @@ paths:
               required:
                 - status
       responses:
-        '200':
+        "200":
           description: Payment status updated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaymentInvoice'
+                $ref: "#/components/schemas/PaymentInvoice"
 
 components:
   securitySchemes:
@@ -242,7 +242,7 @@ components:
           type: string
           format: date
         status:
-          $ref: '#/components/schemas/VerificationCycleStatus'
+          $ref: "#/components/schemas/VerificationCycleStatus"
         total_stores:
           type: integer
         completed_stores:
@@ -346,18 +346,18 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
-    
+            $ref: "#/components/schemas/Error"
+
     Unauthorized:
       description: Unauthorized
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
-    
+            $ref: "#/components/schemas/Error"
+
     NotFound:
       description: Not found
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"

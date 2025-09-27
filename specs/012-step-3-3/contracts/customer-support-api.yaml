@@ -14,20 +14,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SupportRequest'
+              $ref: "#/components/schemas/SupportRequest"
       responses:
-        '201':
+        "201":
           description: Support request created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SupportRequestResponse'
-        '400':
+                $ref: "#/components/schemas/SupportRequestResponse"
+        "400":
           description: Invalid request data
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /api/support/faq:
     get:
@@ -38,30 +38,31 @@ paths:
           in: query
           schema:
             type: string
-            enum: [verification, call_in_progress, call_completed, reward_pending]
+            enum:
+              [verification, call_in_progress, call_completed, reward_pending]
         - name: search
           in: query
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: FAQ entries
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FAQResponse'
+                $ref: "#/components/schemas/FAQResponse"
 
   /api/support/contact-info:
     get:
       summary: Get support contact information
       description: Get available support channels and contact methods
       responses:
-        '200':
+        "200":
           description: Support contact information
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SupportContactInfo'
+                $ref: "#/components/schemas/SupportContactInfo"
 
   /api/support/diagnostics:
     post:
@@ -72,14 +73,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DiagnosticData'
+              $ref: "#/components/schemas/DiagnosticData"
       responses:
-        '200':
+        "200":
           description: Diagnostics submitted
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DiagnosticResponse'
+                $ref: "#/components/schemas/DiagnosticResponse"
 
 components:
   schemas:
@@ -172,7 +173,7 @@ components:
         entries:
           type: array
           items:
-            $ref: '#/components/schemas/FAQEntry'
+            $ref: "#/components/schemas/FAQEntry"
         total_count:
           type: integer
         context:

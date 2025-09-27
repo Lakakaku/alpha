@@ -1,14 +1,15 @@
 # Templates API Contract
 
-**Version**: 1.0.0
-**Base Path**: `/api/admin/communication/templates`
-**Authentication**: Required (Admin JWT token)
-**Authorization**: Admin users only
+**Version**: 1.0.0 **Base Path**: `/api/admin/communication/templates`
+**Authentication**: Required (Admin JWT token) **Authorization**: Admin users
+only
 
 ## GET /api/admin/communication/templates
+
 List all communication templates
 
 **Query Parameters**:
+
 - `notification_type`: Filter by notification type
 - `channel`: Filter by channel (sms, email)
 - `language`: Filter by language (default: all)
@@ -17,6 +18,7 @@ List all communication templates
 - `offset`: Pagination offset
 
 **Response (200 OK)**:
+
 ```json
 {
   "templates": [
@@ -41,12 +43,15 @@ List all communication templates
 ```
 
 ## GET /api/admin/communication/templates/{id}
+
 Get specific template details
 
 **Path Parameters**:
+
 - `id`: Template UUID
 
 **Response (200 OK)**:
+
 ```json
 {
   "id": "uuid",
@@ -75,9 +80,11 @@ Get specific template details
 ```
 
 ## POST /api/admin/communication/templates
+
 Create new communication template
 
 **Request Body**:
+
 ```json
 {
   "name": "payment_confirmed_sms_sv",
@@ -91,6 +98,7 @@ Create new communication template
 ```
 
 **Response (201 Created)**:
+
 ```json
 {
   "id": "uuid",
@@ -107,6 +115,7 @@ Create new communication template
 ```
 
 **Response (400 Bad Request)**:
+
 ```json
 {
   "error": "validation_error",
@@ -124,21 +133,30 @@ Create new communication template
 ```
 
 ## PUT /api/admin/communication/templates/{id}
+
 Update existing template (creates new version)
 
 **Path Parameters**:
+
 - `id`: Template UUID
 
 **Request Body**:
+
 ```json
 {
   "content_template": "Grattis {{customer_name}}! Du har tjänat {{reward_amount}} SEK ({{feedback_score}}% kvalitet). Betalning {{payment_date}}. /STOP",
-  "required_variables": ["customer_name", "reward_amount", "feedback_score", "payment_date"],
+  "required_variables": [
+    "customer_name",
+    "reward_amount",
+    "feedback_score",
+    "payment_date"
+  ],
   "is_active": true
 }
 ```
 
 **Response (200 OK)**:
+
 ```json
 {
   "id": "uuid",
@@ -150,12 +168,15 @@ Update existing template (creates new version)
 ```
 
 ## POST /api/admin/communication/templates/{id}/preview
+
 Preview template with sample data
 
 **Path Parameters**:
+
 - `id`: Template UUID
 
 **Request Body**:
+
 ```json
 {
   "template_variables": {
@@ -168,6 +189,7 @@ Preview template with sample data
 ```
 
 **Response (200 OK)**:
+
 ```json
 {
   "rendered_content": "Grattis Anna Andersson! Du har tjänat 125.50 SEK (87% kvalitet). Betalning inom 7 dagar. /STOP",
@@ -182,6 +204,7 @@ Preview template with sample data
 ```
 
 **Response (400 Bad Request)**:
+
 ```json
 {
   "error": "template_error",
@@ -197,12 +220,15 @@ Preview template with sample data
 ```
 
 ## GET /api/admin/communication/templates/{id}/versions
+
 Get template version history
 
 **Path Parameters**:
+
 - `id`: Template UUID
 
 **Response (200 OK)**:
+
 ```json
 {
   "template_id": "uuid",
@@ -227,12 +253,15 @@ Get template version history
 ```
 
 ## POST /api/admin/communication/templates/{id}/rollback
+
 Rollback to previous template version
 
 **Path Parameters**:
+
 - `id`: Template UUID
 
 **Request Body**:
+
 ```json
 {
   "target_version": 2,
@@ -241,6 +270,7 @@ Rollback to previous template version
 ```
 
 **Response (200 OK)**:
+
 ```json
 {
   "id": "uuid",
@@ -253,12 +283,15 @@ Rollback to previous template version
 ```
 
 ## DELETE /api/admin/communication/templates/{id}
+
 Deactivate template (soft delete)
 
 **Path Parameters**:
+
 - `id`: Template UUID
 
 **Response (200 OK)**:
+
 ```json
 {
   "id": "uuid",
@@ -269,6 +302,7 @@ Deactivate template (soft delete)
 ```
 
 **Response (409 Conflict)**:
+
 ```json
 {
   "error": "template_in_use",
@@ -278,12 +312,15 @@ Deactivate template (soft delete)
 ```
 
 ## GET /api/admin/communication/templates/variables
+
 Get available template variables by notification type
 
 **Query Parameters**:
+
 - `notification_type`: Required notification type
 
 **Response (200 OK)**:
+
 ```json
 {
   "notification_type": "reward_earned",
@@ -318,9 +355,11 @@ Get available template variables by notification type
 ```
 
 ## POST /api/admin/communication/templates/validate
+
 Validate template syntax and variables
 
 **Request Body**:
+
 ```json
 {
   "content_template": "Hej {{customer_name}}! Du har fått {{invalid_variable}} från {{store_name}}.",
@@ -331,6 +370,7 @@ Validate template syntax and variables
 ```
 
 **Response (200 OK)**:
+
 ```json
 {
   "valid": false,
@@ -355,6 +395,7 @@ Validate template syntax and variables
 ## Error Responses
 
 **401 Unauthorized**:
+
 ```json
 {
   "error": "unauthorized",
@@ -363,6 +404,7 @@ Validate template syntax and variables
 ```
 
 **403 Forbidden**:
+
 ```json
 {
   "error": "forbidden",
@@ -371,6 +413,7 @@ Validate template syntax and variables
 ```
 
 **404 Not Found**:
+
 ```json
 {
   "error": "template_not_found",
@@ -379,6 +422,7 @@ Validate template syntax and variables
 ```
 
 **409 Conflict**:
+
 ```json
 {
   "error": "template_name_exists",

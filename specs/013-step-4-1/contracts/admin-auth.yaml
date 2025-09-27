@@ -3,7 +3,7 @@ info:
   title: Admin Authentication API
   description: Authentication endpoints for admin dashboard
   version: 1.0.0
-  
+
 servers:
   - url: https://alpha-backend.railway.app/api
     description: Production backend
@@ -32,14 +32,14 @@ paths:
                   type: string
                   minLength: 3
                   maxLength: 50
-                  pattern: '^[a-zA-Z0-9_]+$'
+                  pattern: "^[a-zA-Z0-9_]+$"
                   example: admin_user
                 password:
                   type: string
                   minLength: 8
                   example: secure_password
       responses:
-        '200':
+        "200":
           description: Login successful
           content:
             application/json:
@@ -53,25 +53,25 @@ paths:
                     type: object
                     properties:
                       admin:
-                        $ref: '#/components/schemas/Admin'
+                        $ref: "#/components/schemas/Admin"
                       session:
-                        $ref: '#/components/schemas/AdminSession'
+                        $ref: "#/components/schemas/AdminSession"
                       token:
                         type: string
                         description: Supabase Auth JWT token
                         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-        '401':
+        "401":
           description: Invalid credentials
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '429':
+                $ref: "#/components/schemas/Error"
+        "429":
           description: Too many login attempts
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /admin/auth/logout:
     post:
@@ -83,7 +83,7 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: Logout successful
           content:
             application/json:
@@ -96,12 +96,12 @@ paths:
                   message:
                     type: string
                     example: Logged out successfully
-        '401':
+        "401":
           description: Invalid or expired token
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /admin/auth/session:
     get:
@@ -113,7 +113,7 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: Session information retrieved
           content:
             application/json:
@@ -127,15 +127,15 @@ paths:
                     type: object
                     properties:
                       admin:
-                        $ref: '#/components/schemas/Admin'
+                        $ref: "#/components/schemas/Admin"
                       session:
-                        $ref: '#/components/schemas/AdminSession'
-        '401':
+                        $ref: "#/components/schemas/AdminSession"
+        "401":
           description: Invalid or expired session
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
 components:
   schemas:

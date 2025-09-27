@@ -2,16 +2,21 @@
 
 ## Overview
 
-The Weekly Verification Workflow API enables secure management of transaction verification cycles for businesses using the Vocilia feedback system. This API supports weekly database preparation, verification tracking, and payment processing workflows.
+The Weekly Verification Workflow API enables secure management of transaction
+verification cycles for businesses using the Vocilia feedback system. This API
+supports weekly database preparation, verification tracking, and payment
+processing workflows.
 
 ## Base URL
+
 ```
 https://api.vocilia.com/v1
 ```
 
 ## Authentication
 
-All verification endpoints require business authentication via JWT tokens obtained through the standard authentication flow.
+All verification endpoints require business authentication via JWT tokens
+obtained through the standard authentication flow.
 
 ```http
 Authorization: Bearer <jwt_token>
@@ -22,14 +27,18 @@ Authorization: Bearer <jwt_token>
 ### Verification Cycles
 
 #### GET /verification/cycles
+
 Retrieve verification cycles for the authenticated business.
 
 **Query Parameters:**
-- `status` (optional): Filter by cycle status (`pending`, `active`, `verification_pending`, `completed`, `expired`)
+
+- `status` (optional): Filter by cycle status (`pending`, `active`,
+  `verification_pending`, `completed`, `expired`)
 - `limit` (optional): Number of cycles to return (default: 20, max: 100)
 - `offset` (optional): Pagination offset (default: 0)
 
 **Response:**
+
 ```json
 {
   "data": [
@@ -41,7 +50,7 @@ Retrieve verification cycles for the authenticated business.
       "status": "active",
       "total_transactions": 150,
       "verified_count": 0,
-      "estimated_rewards": 750.00,
+      "estimated_rewards": 750.0,
       "created_at": "2025-09-23T08:00:00Z"
     }
   ],
@@ -54,12 +63,15 @@ Retrieve verification cycles for the authenticated business.
 ```
 
 #### GET /verification/cycles/{cycle_id}
+
 Retrieve specific verification cycle details.
 
 **Path Parameters:**
+
 - `cycle_id` (required): Unique cycle identifier
 
 **Response:**
+
 ```json
 {
   "id": "uuid",
@@ -69,7 +81,7 @@ Retrieve specific verification cycle details.
   "status": "active",
   "total_transactions": 150,
   "verified_count": 0,
-  "estimated_rewards": 750.00,
+  "estimated_rewards": 750.0,
   "database_prepared": true,
   "payment_required": false,
   "created_at": "2025-09-23T08:00:00Z",
@@ -80,19 +92,26 @@ Retrieve specific verification cycle details.
 ### Database Export
 
 #### GET /verification/cycles/{cycle_id}/export
+
 Download verification database for a specific cycle.
 
 **Path Parameters:**
+
 - `cycle_id` (required): Unique cycle identifier
 
 **Query Parameters:**
+
 - `format` (optional): Export format (`csv`, `excel`, `json`) (default: `csv`)
 
 **Response:**
-- Content-Type: `application/octet-stream` (CSV/Excel) or `application/json` (JSON)
-- Content-Disposition: `attachment; filename="verification_database_{cycle_id}.{format}"`
+
+- Content-Type: `application/octet-stream` (CSV/Excel) or `application/json`
+  (JSON)
+- Content-Disposition:
+  `attachment; filename="verification_database_{cycle_id}.{format}"`
 
 **CSV Format Example:**
+
 ```csv
 transaction_id,timestamp,amount,pos_reference
 txn_001,2025-09-23T14:30:00Z,50.00,REF123
@@ -100,6 +119,7 @@ txn_002,2025-09-23T15:45:00Z,25.50,REF124
 ```
 
 **JSON Format Example:**
+
 ```json
 {
   "cycle_id": "uuid",
@@ -108,7 +128,7 @@ txn_002,2025-09-23T15:45:00Z,25.50,REF124
     {
       "transaction_id": "txn_001",
       "timestamp": "2025-09-23T14:30:00Z",
-      "amount": 50.00,
+      "amount": 50.0,
       "pos_reference": "REF123"
     }
   ]
@@ -118,12 +138,15 @@ txn_002,2025-09-23T15:45:00Z,25.50,REF124
 ### Verification Submission
 
 #### POST /verification/cycles/{cycle_id}/submit
+
 Submit verification results for a cycle.
 
 **Path Parameters:**
+
 - `cycle_id` (required): Unique cycle identifier
 
 **Request Body:**
+
 ```json
 {
   "verification_results": [
@@ -142,14 +165,15 @@ Submit verification results for a cycle.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
   "cycle_id": "uuid",
   "verified_count": 1,
   "fake_count": 1,
-  "total_rewards": 25.00,
-  "invoice_amount": 30.00,
+  "total_rewards": 25.0,
+  "invoice_amount": 30.0,
   "submission_timestamp": "2025-09-23T16:30:00Z"
 }
 ```
@@ -157,19 +181,22 @@ Submit verification results for a cycle.
 ### Payment Processing
 
 #### GET /verification/cycles/{cycle_id}/invoice
+
 Retrieve payment invoice for verified cycle.
 
 **Path Parameters:**
+
 - `cycle_id` (required): Unique cycle identifier
 
 **Response:**
+
 ```json
 {
   "invoice_id": "uuid",
   "cycle_id": "uuid",
-  "rewards_total": 750.00,
-  "admin_fee": 150.00,
-  "total_amount": 900.00,
+  "rewards_total": 750.0,
+  "admin_fee": 150.0,
+  "total_amount": 900.0,
   "currency": "SEK",
   "due_date": "2025-10-11T17:00:00Z",
   "status": "pending",
@@ -179,21 +206,25 @@ Retrieve payment invoice for verified cycle.
 ```
 
 #### POST /verification/cycles/{cycle_id}/payment
+
 Process payment for verification cycle.
 
 **Path Parameters:**
+
 - `cycle_id` (required): Unique cycle identifier
 
 **Request Body:**
+
 ```json
 {
   "payment_method": "bank_transfer",
   "reference_number": "PAY123456",
-  "amount": 900.00
+  "amount": 900.0
 }
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -207,11 +238,13 @@ Process payment for verification cycle.
 ## Status Codes
 
 ### Success Codes
+
 - `200 OK`: Request successful
 - `201 Created`: Resource created successfully
 - `204 No Content`: Request successful, no content returned
 
 ### Error Codes
+
 - `400 Bad Request`: Invalid request format or parameters
 - `401 Unauthorized`: Missing or invalid authentication
 - `403 Forbidden`: Insufficient permissions
@@ -245,55 +278,63 @@ Process payment for verification cycle.
 ## Data Models
 
 ### Verification Cycle
+
 ```typescript
 interface VerificationCycle {
-  id: string;
-  business_id: string;
-  cycle_start: string; // ISO 8601
-  cycle_end: string; // ISO 8601
-  verification_deadline: string; // ISO 8601
-  status: 'pending' | 'active' | 'verification_pending' | 'completed' | 'expired';
-  total_transactions: number;
-  verified_count: number;
-  estimated_rewards: number;
-  database_prepared: boolean;
-  payment_required: boolean;
-  created_at: string; // ISO 8601
-  updated_at: string; // ISO 8601
+  id: string
+  business_id: string
+  cycle_start: string // ISO 8601
+  cycle_end: string // ISO 8601
+  verification_deadline: string // ISO 8601
+  status:
+    | 'pending'
+    | 'active'
+    | 'verification_pending'
+    | 'completed'
+    | 'expired'
+  total_transactions: number
+  verified_count: number
+  estimated_rewards: number
+  database_prepared: boolean
+  payment_required: boolean
+  created_at: string // ISO 8601
+  updated_at: string // ISO 8601
 }
 ```
 
 ### Verification Record
+
 ```typescript
 interface VerificationRecord {
-  id: string;
-  cycle_id: string;
-  transaction_id: string;
-  original_feedback_id: string;
-  timestamp: string; // ISO 8601
-  amount: number;
-  pos_reference?: string;
-  verification_status: 'pending' | 'verified' | 'fake';
-  verified_at?: string; // ISO 8601
-  created_at: string; // ISO 8601
+  id: string
+  cycle_id: string
+  transaction_id: string
+  original_feedback_id: string
+  timestamp: string // ISO 8601
+  amount: number
+  pos_reference?: string
+  verification_status: 'pending' | 'verified' | 'fake'
+  verified_at?: string // ISO 8601
+  created_at: string // ISO 8601
 }
 ```
 
 ### Payment Invoice
+
 ```typescript
 interface PaymentInvoice {
-  id: string;
-  cycle_id: string;
-  business_id: string;
-  rewards_total: number;
-  admin_fee: number;
-  total_amount: number;
-  currency: string;
-  due_date: string; // ISO 8601
-  status: 'pending' | 'paid' | 'overdue' | 'cancelled';
-  payment_methods: string[];
-  created_at: string; // ISO 8601
-  paid_at?: string; // ISO 8601
+  id: string
+  cycle_id: string
+  business_id: string
+  rewards_total: number
+  admin_fee: number
+  total_amount: number
+  currency: string
+  due_date: string // ISO 8601
+  status: 'pending' | 'paid' | 'overdue' | 'cancelled'
+  payment_methods: string[]
+  created_at: string // ISO 8601
+  paid_at?: string // ISO 8601
 }
 ```
 
@@ -301,7 +342,8 @@ interface PaymentInvoice {
 
 - All data is protected by Row-Level Security (RLS) policies
 - Businesses can only access their own verification cycles and data
-- Sensitive customer information (phone numbers, feedback content) is never included in verification databases
+- Sensitive customer information (phone numbers, feedback content) is never
+  included in verification databases
 - All API requests are logged for audit purposes
 - File downloads are temporary and expire after 24 hours
 
@@ -310,13 +352,15 @@ interface PaymentInvoice {
 1. **Cycle Creation**: Only occurs on Mondays for the previous week
 2. **Verification Deadline**: 5 business days from cycle creation
 3. **Payment Terms**: Due within 7 days of verification submission
-4. **Data Retention**: Verification databases are purged after payment completion
+4. **Data Retention**: Verification databases are purged after payment
+   completion
 5. **Reward Calculations**: Based on verified transactions only
 6. **Admin Fee**: 20% of total rewards (minimum 5 SEK)
 
 ## Support
 
 For API support and technical questions:
+
 - Email: api-support@vocilia.com
 - Documentation: https://docs.vocilia.com/api
 - Status Page: https://status.vocilia.com

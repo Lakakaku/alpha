@@ -71,7 +71,7 @@
     {
       "src": "/screenshots/mobile-status.png",
       "sizes": "390x844",
-      "type": "image/png", 
+      "type": "image/png",
       "platform": "mobile",
       "label": "Real-time call status"
     }

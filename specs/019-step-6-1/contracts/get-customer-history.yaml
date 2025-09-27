@@ -43,7 +43,7 @@ paths:
             default: 0
           description: Pagination offset
       responses:
-        '200':
+        "200":
           description: Customer payment history retrieved successfully
           content:
             application/json:
@@ -156,7 +156,7 @@ paths:
                   offset:
                     type: integer
                     example: 0
-        '400':
+        "400":
           description: Invalid phone number format
           content:
             application/json:
@@ -172,7 +172,7 @@ paths:
                   error:
                     type: string
                     example: "Invalid phone number format"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
@@ -188,7 +188,7 @@ paths:
                   error:
                     type: string
                     example: "Admin authentication required"
-        '404':
+        "404":
           description: No payment history found
           content:
             application/json:
@@ -204,7 +204,7 @@ paths:
                   error:
                     type: string
                     example: "No payment history found for this customer"
-        '500':
+        "500":
           description: Internal server error
           content:
             application/json:

@@ -5,7 +5,7 @@ info:
   version: 1.0.0
   contact:
     name: Vocilia Development Team
-    
+
 servers:
   - url: https://api.vocilia.com/v1
     description: Production server
@@ -50,7 +50,7 @@ paths:
                   default: normal
                   description: Call priority level
       responses:
-        '202':
+        "202":
           description: Call initiation accepted
           content:
             application/json:
@@ -70,24 +70,24 @@ paths:
                     type: integer
                     minimum: 0
                     maximum: 3
-        '400':
+        "400":
           description: Invalid request data
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '409':
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
           description: Call already exists for this verification
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '429':
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
           description: Rate limit exceeded
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /ai/calls/{call_session_id}/status:
     get:
@@ -105,7 +105,7 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Call status retrieved
           content:
             application/json:
@@ -124,16 +124,16 @@ paths:
                     type: integer
                     nullable: true
                   quality_metrics:
-                    $ref: '#/components/schemas/CallQualityMetrics'
+                    $ref: "#/components/schemas/CallQualityMetrics"
                   failure_reason:
                     type: string
                     nullable: true
-        '404':
+        "404":
           description: Call session not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
     patch:
       summary: Update call session
@@ -164,9 +164,10 @@ paths:
                   maxLength: 100
                 end_reason:
                   type: string
-                  enum: [customer_hangup, technical_failure, non_swedish, timeout]
+                  enum:
+                    [customer_hangup, technical_failure, non_swedish, timeout]
       responses:
-        '200':
+        "200":
           description: Call session updated
           content:
             application/json:
@@ -181,12 +182,12 @@ paths:
                   updated_at:
                     type: string
                     format: date-time
-        '400':
+        "400":
           description: Invalid update request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /ai/calls/{call_session_id}/transcript:
     post:
@@ -216,7 +217,7 @@ paths:
                 messages:
                   type: array
                   items:
-                    $ref: '#/components/schemas/ConversationMessage'
+                    $ref: "#/components/schemas/ConversationMessage"
                 total_duration_seconds:
                   type: integer
                   minimum: 60
@@ -226,9 +227,9 @@ paths:
                   type: string
                   description: OpenAI Realtime API session identifier
                 final_audio_quality:
-                  $ref: '#/components/schemas/CallQualityMetrics'
+                  $ref: "#/components/schemas/CallQualityMetrics"
       responses:
-        '201':
+        "201":
           description: Transcript submitted successfully
           content:
             application/json:
@@ -243,12 +244,12 @@ paths:
                   estimated_analysis_completion:
                     type: string
                     format: date-time
-        '400':
+        "400":
           description: Invalid transcript data
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /ai/calls/retry/{customer_verification_id}:
     post:
@@ -266,7 +267,7 @@ paths:
             type: string
             format: uuid
       responses:
-        '202':
+        "202":
           description: Retry attempt accepted
           content:
             application/json:
@@ -283,12 +284,12 @@ paths:
                   estimated_call_time:
                     type: string
                     format: date-time
-        '409':
+        "409":
           description: Maximum retries exceeded (3 total attempts)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
 components:
   schemas:
@@ -323,7 +324,7 @@ components:
           enum: [question, response, system, error]
         language_detected:
           type: string
-          default: 'sv'
+          default: "sv"
           description: ISO 639-1 language code
 
     CallQualityMetrics:

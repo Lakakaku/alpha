@@ -34,7 +34,7 @@ paths:
                   description: Force reprocessing of already completed batch
                   default: false
       responses:
-        '202':
+        "202":
           description: Batch processing initiated
           content:
             application/json:
@@ -76,7 +76,7 @@ paths:
                   message:
                     type: string
                     example: "Batch processing started. Use GET /api/admin/payments/batch/{batchId} to monitor progress."
-        '400':
+        "400":
           description: Invalid request
           content:
             application/json:
@@ -92,7 +92,7 @@ paths:
                   error:
                     type: string
                     example: "Invalid batch week format"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
@@ -108,7 +108,7 @@ paths:
                   error:
                     type: string
                     example: "Admin authentication required"
-        '409':
+        "409":
           description: Batch already processing
           content:
             application/json:
@@ -128,7 +128,7 @@ paths:
                     type: string
                     format: uuid
                     example: "f6a7b8c9-d0e1-2345-f123-456789012345"
-        '500':
+        "500":
           description: Internal server error
           content:
             application/json:

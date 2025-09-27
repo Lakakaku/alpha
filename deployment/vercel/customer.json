@@ -116,10 +116,7 @@
       "destination": "/api/sitemap"
     }
   ],
-  "regions": [
-    "fra1",
-    "arn1"
-  ],
+  "regions": ["fra1", "arn1"],
   "github": {
     "enabled": true,
     "autoJobCancelation": true,
@@ -155,20 +152,11 @@
     }
   },
   "images": {
-    "domains": [
-      "supabase.co",
-      "vocilia.com"
-    ],
-    "formats": [
-      "image/avif",
-      "image/webp"
-    ],
+    "domains": ["supabase.co", "vocilia.com"],
+    "formats": ["image/avif", "image/webp"],
     "minimumCacheTTL": 3600
   },
   "preview": {
-    "allowlist": [
-      "development",
-      "staging"
-    ]
+    "allowlist": ["development", "staging"]
   }
 }

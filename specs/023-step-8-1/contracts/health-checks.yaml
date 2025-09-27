@@ -17,7 +17,7 @@ paths:
       description: Quick health check for load balancer and uptime monitoring
       operationId: basicHealthCheck
       responses:
-        '200':
+        "200":
           description: Service is healthy
           content:
             application/json:
@@ -34,12 +34,12 @@ paths:
                     type: number
                     description: Service uptime in seconds
                 required: [status, timestamp, uptime]
-        '503':
+        "503":
           description: Service unavailable
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /health/detailed:
     get:
@@ -47,7 +47,7 @@ paths:
       description: Comprehensive health check including dependencies and performance metrics
       operationId: detailedHealthCheck
       responses:
-        '200':
+        "200":
           description: Detailed health status
           content:
             application/json:
@@ -63,13 +63,13 @@ paths:
                   uptime:
                     type: number
                   memory:
-                    $ref: '#/components/schemas/MemoryUsage'
+                    $ref: "#/components/schemas/MemoryUsage"
                   checks:
                     type: array
                     items:
-                      $ref: '#/components/schemas/HealthCheck'
+                      $ref: "#/components/schemas/HealthCheck"
                   performance:
-                    $ref: '#/components/schemas/PerformanceMetrics'
+                    $ref: "#/components/schemas/PerformanceMetrics"
                 required: [status, timestamp, uptime, checks]
 
   /health/database:
@@ -78,7 +78,7 @@ paths:
       description: Specific health check for database connectivity and performance
       operationId: databaseHealthCheck
       responses:
-        '200':
+        "200":
           description: Database is healthy
           content:
             application/json:
@@ -117,7 +117,7 @@ paths:
       description: Status of background job processing and payment batch jobs
       operationId: jobsHealthCheck
       responses:
-        '200':
+        "200":
           description: Job system status
           content:
             application/json:

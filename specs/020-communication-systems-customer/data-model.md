@@ -1,21 +1,24 @@
 # Data Model: Communication Systems
 
-**Feature**: Communication Systems
-**Date**: 2025-09-25
-**Phase**: 1 - Database Design
+**Feature**: Communication Systems **Date**: 2025-09-25 **Phase**: 1 - Database
+Design
 
 ## Core Entities
 
 ### communication_notifications
+
 Primary entity for all system notifications (SMS, email, internal)
 
 **Fields**:
+
 - `id` (uuid, primary key)
 - `recipient_type` (enum: 'customer', 'business', 'admin')
-- `recipient_id` (uuid, references customers.id, businesses.id, or admin_accounts.id)
+- `recipient_id` (uuid, references customers.id, businesses.id, or
+  admin_accounts.id)
 - `recipient_phone` (text, encrypted via Supabase Vault)
 - `recipient_email` (text, for business notifications)
-- `notification_type` (enum: 'reward_earned', 'payment_confirmed', 'verification_request', 'payment_overdue', 'support_response')
+- `notification_type` (enum: 'reward_earned', 'payment_confirmed',
+  'verification_request', 'payment_overdue', 'support_response')
 - `channel` (enum: 'sms', 'email', 'internal')
 - `template_id` (uuid, references communication_templates.id)
 - `content` (text, rendered message content)
@@ -30,11 +33,13 @@ Primary entity for all system notifications (SMS, email, internal)
 - `updated_at` (timestamptz, default now())
 
 **Relationships**:
+
 - Belongs to customers, businesses, or admin_accounts
 - Belongs to communication_templates
 - Has many communication_retry_attempts
 
 **Validation Rules**:
+
 - Either recipient_phone OR recipient_email required based on channel
 - SMS notifications require recipient_phone
 - Email notifications require recipient_email
@@ -43,12 +48,15 @@ Primary entity for all system notifications (SMS, email, internal)
 - Retry_count automatically managed by retry service
 
 ### communication_templates
+
 Reusable message templates for different notification types
 
 **Fields**:
+
 - `id` (uuid, primary key)
 - `name` (text, unique)
-- `notification_type` (enum, matches communication_notifications.notification_type)
+- `notification_type` (enum, matches
+  communication_notifications.notification_type)
 - `channel` (enum: 'sms', 'email', 'internal')
 - `language` (text, default 'sv')
 - `subject_template` (text, for emails)
@@ -61,23 +69,28 @@ Reusable message templates for different notification types
 - `updated_at` (timestamptz, default now())
 
 **Relationships**:
+
 - Has many communication_notifications
 - Belongs to admin_accounts (created_by)
 
 **Validation Rules**:
+
 - Content_template must contain all required_variables
 - SMS templates limited to 1600 chars when fully rendered
 - Subject_template required for email channel, null for SMS
 - Template name must be unique per language/channel combination
 
 ### communication_preferences
+
 User preferences for notification frequency and channels
 
 **Fields**:
+
 - `id` (uuid, primary key)
 - `user_type` (enum: 'customer', 'business')
 - `user_id` (uuid, references customers.id or businesses.id)
-- `notification_type` (enum, matches communication_notifications.notification_type)
+- `notification_type` (enum, matches
+  communication_notifications.notification_type)
 - `channel_preference` (enum: 'sms', 'email', 'both', 'none')
 - `frequency_limit` (integer, max notifications per day, default 10)
 - `language_preference` (text, default 'sv')
@@ -88,26 +101,32 @@ User preferences for notification frequency and channels
 - `updated_at` (timestamptz, default now())
 
 **Relationships**:
+
 - Belongs to customers or businesses
 - Unique constraint on (user_type, user_id, notification_type)
 
 **Validation Rules**:
+
 - Frequency_limit between 0 and 50
 - Quiet hours must be valid time ranges
 - Language must be supported (sv, en)
 
 ### support_tickets
+
 Customer and business support request management
 
 **Fields**:
+
 - `id` (uuid, primary key)
 - `ticket_number` (text, unique, auto-generated like "SUP-2025-001234")
 - `requester_type` (enum: 'customer', 'business')
 - `requester_id` (uuid, references customers.id or businesses.id)
 - `requester_contact` (text, phone or email for follow-up)
-- `category` (enum: 'payment', 'verification', 'technical', 'feedback', 'general')
+- `category` (enum: 'payment', 'verification', 'technical', 'feedback',
+  'general')
 - `priority` (enum: 'low', 'normal', 'high', 'urgent')
-- `status` (enum: 'open', 'in_progress', 'pending_customer', 'resolved', 'closed')
+- `status` (enum: 'open', 'in_progress', 'pending_customer', 'resolved',
+  'closed')
 - `subject` (text)
 - `description` (text)
 - `assigned_to` (uuid, references admin_accounts.id)
@@ -121,19 +140,23 @@ Customer and business support request management
 - `updated_at` (timestamptz, default now())
 
 **Relationships**:
+
 - Belongs to customers or businesses (requester)
 - Belongs to admin_accounts (assigned_to)
 - Has many support_ticket_messages
 
 **Validation Rules**:
+
 - SLA deadline calculated based on channel (phone: now, email/chat: +2 hours)
 - Priority escalation rules (payment/verification issues = high priority)
 - Satisfaction rating only allowed when status = 'resolved'
 
 ### support_ticket_messages
+
 Conversation history for support tickets
 
 **Fields**:
+
 - `id` (uuid, primary key)
 - `ticket_id` (uuid, references support_tickets.id)
 - `sender_type` (enum: 'customer', 'business', 'admin', 'system')
@@ -144,18 +167,22 @@ Conversation history for support tickets
 - `created_at` (timestamptz, default now())
 
 **Relationships**:
+
 - Belongs to support_tickets
 - Belongs to customers, businesses, or admin_accounts (sender)
 
 **Validation Rules**:
+
 - Message content required and non-empty
 - Internal messages only visible to admin users
 - Attachments must be valid URLs or null
 
 ### communication_logs
+
 Audit trail for all communication activities
 
 **Fields**:
+
 - `id` (uuid, primary key)
 - `action` (enum: 'sent', 'delivered', 'failed', 'retry', 'cancelled')
 - `notification_id` (uuid, references communication_notifications.id)
@@ -166,18 +193,22 @@ Audit trail for all communication activities
 - `created_at` (timestamptz, default now())
 
 **Relationships**:
+
 - Belongs to communication_notifications
 - Optionally belongs to admin_accounts
 
 **Validation Rules**:
+
 - Automatic system actions have null admin_user_id
 - Manual actions require admin_user_id and ip_address
 - Details must contain relevant action information
 
 ### communication_retry_schedules
+
 Retry scheduling for failed notifications
 
 **Fields**:
+
 - `id` (uuid, primary key)
 - `notification_id` (uuid, references communication_notifications.id)
 - `attempt_number` (integer, 1-3)
@@ -188,9 +219,11 @@ Retry scheduling for failed notifications
 - `created_at` (timestamptz, default now())
 
 **Relationships**:
+
 - Belongs to communication_notifications
 
 **Validation Rules**:
+
 - Attempt_number between 1 and 3
 - Retry intervals: immediate, +5min, +30min from original failure
 - Cannot schedule retry if notification succeeded
@@ -215,6 +248,7 @@ communication_logs (N) ←→ (1) admin_accounts (optional)
 ## State Transitions
 
 ### Notification Lifecycle
+
 1. **pending** → **sent** (SMS/email dispatched)
 2. **sent** → **delivered** (delivery confirmed via webhook)
 3. **sent** → **failed** (delivery failed, schedule retry)
@@ -222,6 +256,7 @@ communication_logs (N) ←→ (1) admin_accounts (optional)
 5. **pending/sent/failed** → **cancelled** (manual cancellation)
 
 ### Support Ticket Lifecycle
+
 1. **open** → **in_progress** (admin picks up ticket)
 2. **in_progress** → **pending_customer** (waiting for customer response)
 3. **pending_customer** → **in_progress** (customer responds)
@@ -231,16 +266,23 @@ communication_logs (N) ←→ (1) admin_accounts (optional)
 ## Performance Considerations
 
 **Indexing Strategy**:
-- `communication_notifications`: Index on (status, scheduled_at) for retry processing
-- `communication_notifications`: Index on (recipient_type, recipient_id) for user queries
+
+- `communication_notifications`: Index on (status, scheduled_at) for retry
+  processing
+- `communication_notifications`: Index on (recipient_type, recipient_id) for
+  user queries
 - `support_tickets`: Index on (status, sla_deadline) for SLA monitoring
-- `support_tickets`: Index on (requester_type, requester_id) for user support history
+- `support_tickets`: Index on (requester_type, requester_id) for user support
+  history
 
 **Partitioning Strategy**:
-- `communication_logs`: Consider monthly partitions for long-term audit retention
+
+- `communication_logs`: Consider monthly partitions for long-term audit
+  retention
 - `communication_notifications`: Archive delivered notifications after 90 days
 
 **RLS (Row Level Security) Policies**:
+
 - Customers can only see their own notifications and support tickets
 - Businesses can only see their own notifications and support tickets
 - Admin users can see all data
@@ -249,5 +291,6 @@ communication_logs (N) ←→ (1) admin_accounts (optional)
 
 ---
 
-**Data Model Complete**: 7 entities designed with relationships, validation rules, and security policies
-**Next Step**: Generate API contracts for communication workflows
+**Data Model Complete**: 7 entities designed with relationships, validation
+rules, and security policies **Next Step**: Generate API contracts for
+communication workflows

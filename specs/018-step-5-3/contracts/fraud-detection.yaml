@@ -62,7 +62,7 @@ paths:
                     payment_method:
                       type: string
       responses:
-        '200':
+        "200":
           description: Fraud analysis completed successfully
           content:
             application/json:
@@ -131,7 +131,8 @@ paths:
                               type: string
                             category:
                               type: string
-                              enum: [profanity, threats, nonsensical, impossible]
+                              enum:
+                                [profanity, threats, nonsensical, impossible]
                             severity:
                               type: integer
                               minimum: 1
@@ -143,7 +144,13 @@ paths:
                           properties:
                             pattern_type:
                               type: string
-                              enum: [call_frequency, time_pattern, location_pattern, similarity_pattern]
+                              enum:
+                                [
+                                  call_frequency,
+                                  time_pattern,
+                                  location_pattern,
+                                  similarity_pattern,
+                                ]
                             risk_level:
                               type: string
                               enum: [low, medium, high, critical]
@@ -151,19 +158,19 @@ paths:
                     type: string
                     format: uuid
                     description: Correlation ID for audit tracking
-        '400':
+        "400":
           description: Invalid request parameters
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '401':
+                $ref: "#/components/schemas/Error"
+        "401":
           description: Authentication required
-        '403':
+        "403":
           description: Insufficient permissions
-        '429':
+        "429":
           description: Rate limit exceeded
-        '500':
+        "500":
           description: Internal server error
 
   /api/fraud/patterns/{phone_hash}:
@@ -190,7 +197,7 @@ paths:
             default: 24h
           description: Time window for pattern analysis
       responses:
-        '200':
+        "200":
           description: Behavioral patterns retrieved successfully
           content:
             application/json:
@@ -206,7 +213,13 @@ paths:
                       properties:
                         pattern_type:
                           type: string
-                          enum: [call_frequency, time_pattern, location_pattern, similarity_pattern]
+                          enum:
+                            [
+                              call_frequency,
+                              time_pattern,
+                              location_pattern,
+                              similarity_pattern,
+                            ]
                         risk_score:
                           type: integer
                           minimum: 0
@@ -222,9 +235,9 @@ paths:
                   overall_risk_level:
                     type: string
                     enum: [low, medium, high, critical]
-        '404':
+        "404":
           description: No patterns found for phone number
-        '403':
+        "403":
           description: Admin access required
 
   /api/fraud/keywords:
@@ -250,7 +263,7 @@ paths:
             default: sv
           description: Language code for keywords
       responses:
-        '200':
+        "200":
           description: Keywords retrieved successfully
           content:
             application/json:
@@ -310,13 +323,13 @@ paths:
                   type: string
                   description: Optional regex pattern
       responses:
-        '201':
+        "201":
           description: Keyword added successfully
-        '400':
+        "400":
           description: Invalid keyword data
-        '403':
+        "403":
           description: Admin access required
-        '409':
+        "409":
           description: Keyword already exists
 
 components:
