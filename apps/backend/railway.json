@@ -6,7 +6,7 @@
     "watchPatterns": ["src/**/*.ts", "package.json", "tsconfig.json"]
   },
   "deploy": {
-    "startCommand": "pnpm start",
+    "startCommand": "node dist/server.js",
     "numReplicas": 1,
     "sleepApplication": false,
     "restartPolicyType": "ON_FAILURE",

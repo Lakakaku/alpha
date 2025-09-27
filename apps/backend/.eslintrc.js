@@ -1,8 +1,8 @@
 module.exports = {
   extends: [
     '../../.eslintrc.js',
-    '@typescript-eslint/recommended',
-    '@typescript-eslint/recommended-requiring-type-checking'
+    'plugin:@typescript-eslint/recommended',
+    'plugin:@typescript-eslint/recommended-requiring-type-checking'
   ],
   parserOptions: {
     project: './tsconfig.json',
