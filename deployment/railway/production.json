@@ -1,0 +1,161 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "pnpm install --frozen-lockfile && pnpm --filter @vocilia/backend build",
+    "watchPatterns": [
+      "apps/backend/**/*",
+      "packages/**/*",
+      "package.json",
+      "pnpm-lock.yaml"
+    ]
+  },
+  "deploy": {
+    "numReplicas": 2,
+    "sleepApplication": false,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 3
+  },
+  "environments": {
+    "production": {
+      "variables": {
+        "NODE_ENV": "production",
+        "PORT": "${{RAILWAY_STATIC_PORT}}",
+        "DATABASE_URL": "${{DATABASE_URL}}",
+        "SUPABASE_URL": "${{SUPABASE_URL}}",
+        "SUPABASE_ANON_KEY": "${{SUPABASE_ANON_KEY}}",
+        "SUPABASE_SERVICE_ROLE_KEY": "${{SUPABASE_SERVICE_ROLE_KEY}}",
+        "JWT_SECRET": "${{JWT_SECRET}}",
+        "OPENAI_API_KEY": "${{OPENAI_API_KEY}}",
+        "SWISH_MERCHANT_ID": "${{SWISH_MERCHANT_ID}}",
+        "SWISH_API_KEY": "${{SWISH_API_KEY}}",
+        "SWISH_CERTIFICATE": "${{SWISH_CERTIFICATE}}",
+        "CORS_ORIGIN": "https://vocilia.com,https://business.vocilia.com,https://admin.vocilia.com",
+        "API_RATE_LIMIT": "1000",
+        "REDIS_URL": "${{REDIS_URL}}",
+        "WEBHOOK_SECRET": "${{WEBHOOK_SECRET}}",
+        "ENCRYPTION_KEY": "${{ENCRYPTION_KEY}}",
+        "BACKUP_ENCRYPTION_KEY": "${{BACKUP_ENCRYPTION_KEY}}"
+      },
+      "plugins": [
+        {
+          "type": "postgresql",
+          "config": {
+            "connectionPooling": true,
+            "maxConnections": 20,
+            "sslMode": "require"
+          }
+        },
+        {
+          "type": "redis",
+          "config": {
+            "maxMemory": "256mb",
+            "evictionPolicy": "allkeys-lru"
+          }
+        }
+      ]
+    }
+  },
+  "regions": [
+    "europe-west1"
+  ],
+  "runtime": {
+    "type": "nodejs",
+    "version": "18",
+    "packageManager": "pnpm"
+  },
+  "healthcheck": {
+    "path": "/health",
+    "port": "${{PORT}}",
+    "timeout": 30,
+    "interval": 60,
+    "retries": 3,
+    "startPeriod": 60
+  },
+  "networking": {
+    "allowPublic": true,
+    "internalPort": "${{PORT}}",
+    "customDomain": {
+      "domain": "api.vocilia.com",
+      "subdomain": "api"
+    }
+  },
+  "logging": {
+    "level": "info",
+    "format": "json",
+    "retention": "7d"
+  },
+  "monitoring": {
+    "metrics": {
+      "enabled": true,
+      "retention": "30d"
+    },
+    "alerts": [
+      {
+        "type": "cpu",
+        "threshold": 80,
+        "duration": "5m"
+      },
+      {
+        "type": "memory",
+        "threshold": 85,
+        "duration": "5m"
+      },
+      {
+        "type": "disk",
+        "threshold": 90,
+        "duration": "10m"
+      },
+      {
+        "type": "response_time",
+        "threshold": 2000,
+        "duration": "2m"
+      },
+      {
+        "type": "error_rate",
+        "threshold": 5,
+        "duration": "5m"
+      }
+    ]
+  },
+  "backup": {
+    "enabled": true,
+    "schedule": "0 2 * * *",
+    "retention": "30d",
+    "encryption": true
+  },
+  "security": {
+    "headers": {
+      "strictTransportSecurity": true,
+      "contentSecurityPolicy": true,
+      "xFrameOptions": "DENY",
+      "xContentTypeOptions": true
+    },
+    "rateLimiting": {
+      "enabled": true,
+      "requests": 1000,
+      "window": "15m"
+    }
+  },
+  "scaling": {
+    "autoscaling": {
+      "enabled": true,
+      "minReplicas": 2,
+      "maxReplicas": 10,
+      "targetCPU": 70,
+      "targetMemory": 80
+    },
+    "resources": {
+      "memory": "512Mi",
+      "cpu": "500m",
+      "storage": "10Gi"
+    }
+  },
+  "deployment": {
+    "strategy": "rolling",
+    "maxUnavailable": 1,
+    "maxSurge": 1,
+    "progressDeadlineSeconds": 600,
+    "revisionHistoryLimit": 10
+  }
+}

@@ -1,0 +1,17 @@
+# Vercel Environment Variables for All Frontend Apps
+# Add these to vocilia-customer-prod, vocilia-business-prod, and vocilia-admin-prod
+
+# Core Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://wtdckfgdcryjvbllcajq.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0ZGNrZmdkY3J5anZibGxjYWpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyMDgxNDcsImV4cCI6MjA3Mzc4NDE0N30.KF2AzXqPLvT8VDUiLOYu67DUvU6rnUZHqfpURdp14pU
+
+# Backend API URL (will update after Railway deployment)
+NEXT_PUBLIC_API_URL=PENDING_RAILWAY_URL
+
+# Feature Flags
+NEXT_PUBLIC_SUPPORT_ENABLED=true
+NEXT_PUBLIC_SUPPORT_CHANNELS=phone,email,chat
+NEXT_PUBLIC_COMMUNICATION_PREFERENCES_ENABLED=true
+NEXT_PUBLIC_VERIFICATION_NOTIFICATIONS_ENABLED=true
+NEXT_PUBLIC_COMMUNICATION_METRICS_ENABLED=true
+NEXT_PUBLIC_SUPPORT_SYSTEM_ENABLED=true

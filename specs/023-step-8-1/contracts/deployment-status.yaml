@@ -1,0 +1,403 @@
+openapi: 3.0.3
+info:
+  title: Vocilia Deployment Status API
+  description: API for monitoring deployment status and managing rollbacks
+  version: 1.0.0
+
+servers:
+  - url: https://api.vocilia.com
+    description: Production API
+  - url: https://staging-api.vocilia.com
+    description: Staging API
+
+paths:
+  /api/admin/deployment/status:
+    get:
+      summary: Get current deployment status
+      description: Returns current deployment status for all environments and applications
+      operationId: getDeploymentStatus
+      security:
+        - adminAuth: []
+      responses:
+        '200':
+          description: Current deployment status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  environments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EnvironmentStatus'
+                  last_updated:
+                    type: string
+                    format: date-time
+                required: [environments, last_updated]
+
+  /api/admin/deployment/history:
+    get:
+      summary: Get deployment history
+      description: Returns deployment history for rollback planning
+      operationId: getDeploymentHistory
+      security:
+        - adminAuth: []
+      parameters:
+        - name: environment
+          in: query
+          schema:
+            type: string
+            enum: [production, staging]
+        - name: app
+          in: query
+          schema:
+            type: string
+            enum: [backend, customer, business, admin]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 50
+      responses:
+        '200':
+          description: Deployment history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deployments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DeploymentRecord'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  /api/admin/deployment/rollback:
+    post:
+      summary: Initiate deployment rollback
+      description: Triggers rollback to a previous deployment within 15-minute target
+      operationId: initiateRollback
+      security:
+        - adminAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                target_deployment_id:
+                  type: string
+                  description: Deployment ID to rollback to
+                environment:
+                  type: string
+                  enum: [production, staging]
+                app:
+                  type: string
+                  enum: [backend, customer, business, admin]
+                reason:
+                  type: string
+                  description: Reason for rollback
+              required: [target_deployment_id, environment, app, reason]
+      responses:
+        '202':
+          description: Rollback initiated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rollback_id:
+                    type: string
+                  status:
+                    type: string
+                    enum: [initiated]
+                  estimated_completion:
+                    type: string
+                    format: date-time
+                    description: Expected completion within 15 minutes
+                required: [rollback_id, status]
+        '400':
+          description: Invalid rollback request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/admin/deployment/rollback/{rollbackId}/status:
+    get:
+      summary: Get rollback status
+      description: Monitor progress of ongoing rollback operation
+      operationId: getRollbackStatus
+      security:
+        - adminAuth: []
+      parameters:
+        - name: rollbackId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Rollback status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RollbackStatus'
+
+  /api/admin/deployment/validate:
+    post:
+      summary: Validate deployment health
+      description: Runs comprehensive health checks after deployment
+      operationId: validateDeployment
+      security:
+        - adminAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deployment_id:
+                  type: string
+                environment:
+                  type: string
+                  enum: [production, staging]
+                app:
+                  type: string
+                  enum: [backend, customer, business, admin]
+              required: [deployment_id, environment, app]
+      responses:
+        '200':
+          description: Validation results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResults'
+
+components:
+  securitySchemes:
+    adminAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+      required: [error, message, timestamp]
+
+    EnvironmentStatus:
+      type: object
+      properties:
+        environment:
+          type: string
+          enum: [production, staging]
+        apps:
+          type: array
+          items:
+            $ref: '#/components/schemas/AppStatus'
+        overall_health:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        last_deployment:
+          type: string
+          format: date-time
+      required: [environment, apps, overall_health]
+
+    AppStatus:
+      type: object
+      properties:
+        name:
+          type: string
+          enum: [backend, customer, business, admin]
+        platform:
+          type: string
+          enum: [railway, vercel]
+        status:
+          type: string
+          enum: [running, building, deploying, failed, stopped]
+        version:
+          type: string
+          description: Git commit SHA or version tag
+        deployment_id:
+          type: string
+        domain:
+          type: string
+          description: Deployed domain URL
+        ssl_status:
+          type: string
+          enum: [active, pending, expired, failed]
+        last_deployed:
+          type: string
+          format: date-time
+        health_check_url:
+          type: string
+        rollback_available:
+          type: boolean
+      required: [name, platform, status, version]
+
+    DeploymentRecord:
+      type: object
+      properties:
+        deployment_id:
+          type: string
+        environment:
+          type: string
+          enum: [production, staging]
+        app:
+          type: string
+          enum: [backend, customer, business, admin]
+        commit_sha:
+          type: string
+        branch:
+          type: string
+        status:
+          type: string
+          enum: [success, failed, rolled_back, in_progress]
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+        duration_seconds:
+          type: integer
+        deployed_by:
+          type: string
+          description: User or system that triggered deployment
+        rollback_target:
+          type: boolean
+          description: Whether this deployment can be used for rollback
+        performance_metrics:
+          $ref: '#/components/schemas/PostDeploymentMetrics'
+      required: [deployment_id, environment, app, commit_sha, status]
+
+    RollbackStatus:
+      type: object
+      properties:
+        rollback_id:
+          type: string
+        status:
+          type: string
+          enum: [initiated, in_progress, completed, failed]
+        progress_percent:
+          type: integer
+          minimum: 0
+          maximum: 100
+        current_step:
+          type: string
+          description: Current rollback step being executed
+        started_at:
+          type: string
+          format: date-time
+        estimated_completion:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+        error_message:
+          type: string
+          description: Error details if rollback failed
+        steps:
+          type: array
+          items:
+            type: object
+            properties:
+              step_name:
+                type: string
+              status:
+                type: string
+                enum: [pending, in_progress, completed, failed]
+              started_at:
+                type: string
+                format: date-time
+              completed_at:
+                type: string
+                format: date-time
+      required: [rollback_id, status, progress_percent]
+
+    ValidationResults:
+      type: object
+      properties:
+        deployment_id:
+          type: string
+        overall_status:
+          type: string
+          enum: [passed, failed, warning]
+        checks:
+          type: array
+          items:
+            type: object
+            properties:
+              check_name:
+                type: string
+              status:
+                type: string
+                enum: [passed, failed, warning]
+              details:
+                type: string
+              response_time_ms:
+                type: number
+        performance_baseline:
+          type: object
+          properties:
+            avg_response_time_ms:
+              type: number
+            meets_sla:
+              type: boolean
+              description: Whether performance meets <2s requirement
+        ssl_certificates:
+          type: array
+          items:
+            type: object
+            properties:
+              domain:
+                type: string
+              status:
+                type: string
+                enum: [valid, expired, invalid]
+              expires_at:
+                type: string
+                format: date-time
+      required: [deployment_id, overall_status, checks]
+
+    PostDeploymentMetrics:
+      type: object
+      properties:
+        avg_response_time_ms:
+          type: number
+        error_rate_percent:
+          type: number
+        uptime_percent:
+          type: number
+        ssl_score:
+          type: integer
+          minimum: 0
+          maximum: 100
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        per_page:
+          type: integer
+        has_next:
+          type: boolean
+      required: [total, page, per_page, has_next]

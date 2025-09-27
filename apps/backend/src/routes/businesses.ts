@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { createClient } from '@alpha/database';
+import { database } from '@vocilia/database';
 
 const router = Router();
 
@@ -71,7 +71,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     const offset = Math.max(parseInt(req.query.offset as string) || 0, 0);
     const search = req.query.search as string;
 
-    const supabase = createClient();
+    const supabase = database.createClient();
 
     let query = supabase
       .from('businesses')
@@ -183,7 +183,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
       });
     }
 
-    const supabase = createClient();
+    const supabase = database.createClient();
 
     const { data: business, error } = await supabase
       .from('businesses')
@@ -240,7 +240,7 @@ router.get('/:businessId', async (req: Request, res: Response, next: NextFunctio
       });
     }
 
-    const supabase = createClient();
+    const supabase = database.createClient();
 
     const { data: business, error } = await supabase
       .from('businesses')
@@ -324,7 +324,7 @@ router.patch('/:businessId', async (req: Request, res: Response, next: NextFunct
       });
     }
 
-    const supabase = createClient();
+    const supabase = database.createClient();
 
     // Build update object
     const updateData: Partial<UpdateBusinessRequest & { updated_at: string }> = {

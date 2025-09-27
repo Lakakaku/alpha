@@ -1,0 +1,537 @@
+name: Deploy Customer App to Vercel
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+    paths:
+      - 'apps/customer/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/deploy-customer.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'apps/customer/**'
+      - 'packages/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'preview'
+        type: choice
+        options:
+          - preview
+          - production
+      skip_tests:
+        description: 'Skip tests (use with caution)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  NODE_VERSION: '18'
+  PNPM_VERSION: '8'
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_CUSTOMER_PROJECT_ID }}
+
+jobs:
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      customer-changed: ${{ steps.changes.outputs.customer }}
+      should-deploy: ${{ steps.should-deploy.outputs.result }}
+      target-environment: ${{ steps.environment.outputs.result }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect file changes
+        uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            customer:
+              - 'apps/customer/**'
+              - 'packages/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+
+      - name: Determine if deployment should proceed
+        id: should-deploy
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "result=true" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "push" && "${{ steps.changes.outputs.customer }}" == "true" ]]; then
+            echo "result=true" >> $GITHUB_OUTPUT
+          else
+            echo "result=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Determine target environment
+        id: environment
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "result=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "result=production" >> $GITHUB_OUTPUT
+          else
+            echo "result=preview" >> $GITHUB_OUTPUT
+          fi
+
+  test:
+    name: Test Customer App
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.should-deploy == 'true' && github.event.inputs.skip_tests != 'true'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared packages
+        run: pnpm build --filter @vocilia/types --filter @vocilia/database --filter @vocilia/ui
+
+      - name: Lint customer app
+        run: pnpm --filter @vocilia/customer lint
+
+      - name: Type check customer app
+        run: pnpm --filter @vocilia/customer type-check
+
+      - name: Setup test environment
+        run: |
+          echo "NEXT_PUBLIC_SUPABASE_URL=https://test.supabase.co" > apps/customer/.env.test
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=test-anon-key" >> apps/customer/.env.test
+          echo "NODE_ENV=test" >> apps/customer/.env.test
+
+      - name: Run unit tests
+        run: pnpm --filter @vocilia/customer test:unit
+
+      - name: Run component tests
+        run: pnpm --filter @vocilia/customer test:components
+
+      - name: Build customer app (test build)
+        run: pnpm --filter @vocilia/customer build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://test.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: test-anon-key
+
+  accessibility-test:
+    name: Accessibility Tests
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.should-deploy == 'true'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared packages
+        run: pnpm build --filter @vocilia/types --filter @vocilia/database --filter @vocilia/ui
+
+      - name: Run accessibility tests
+        run: pnpm --filter @vocilia/customer test:a11y
+
+      - name: Install Playwright browsers
+        run: pnpm --filter @vocilia/customer exec playwright install --with-deps
+
+      - name: Run visual regression tests
+        run: pnpm --filter @vocilia/customer test:visual
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: customer-test-results
+          path: |
+            apps/customer/test-results/
+            apps/customer/playwright-report/
+          retention-days: 7
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.should-deploy == 'true'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run security audit
+        run: pnpm audit --audit-level moderate
+
+      - name: Check for vulnerable dependencies
+        run: pnpm --filter @vocilia/customer exec npm audit --audit-level high
+
+      - name: Scan for secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./apps/customer/
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --debug --only-verified
+
+  build:
+    name: Build Customer App
+    runs-on: ubuntu-latest
+    needs: [detect-changes, test, accessibility-test, security-scan]
+    if: always() && needs.detect-changes.outputs.should-deploy == 'true' && (needs.test.result == 'success' || needs.test.result == 'skipped') && needs.accessibility-test.result == 'success' && needs.security-scan.result == 'success'
+    
+    strategy:
+      matrix:
+        environment: [preview, production]
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared packages
+        run: pnpm build --filter @vocilia/types --filter @vocilia/database --filter @vocilia/ui
+
+      - name: Configure environment variables
+        run: |
+          if [[ "${{ matrix.environment }}" == "production" ]]; then
+            echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL_PROD }}" > apps/customer/.env.production
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY_PROD }}" >> apps/customer/.env.production
+            echo "NEXT_PUBLIC_API_URL=https://api.vocilia.com" >> apps/customer/.env.production
+            echo "NODE_ENV=production" >> apps/customer/.env.production
+          else
+            echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL_STAGING }}" > apps/customer/.env.preview
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY_STAGING }}" >> apps/customer/.env.preview
+            echo "NEXT_PUBLIC_API_URL=https://api-staging.vocilia.com" >> apps/customer/.env.preview
+            echo "NODE_ENV=production" >> apps/customer/.env.preview
+          fi
+
+      - name: Build customer app
+        run: pnpm --filter @vocilia/customer build
+        env:
+          NODE_ENV: production
+
+      - name: Generate static export (if configured)
+        run: |
+          if [[ -f "apps/customer/next.config.js" ]] && grep -q "output.*export" apps/customer/next.config.js; then
+            pnpm --filter @vocilia/customer export
+          fi
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: customer-build-${{ matrix.environment }}-${{ github.sha }}
+          path: |
+            apps/customer/.next/
+            apps/customer/out/
+            apps/customer/package.json
+            apps/customer/next.config.js
+            apps/customer/public/
+          retention-days: 30
+
+  lighthouse-audit:
+    name: Lighthouse Performance Audit
+    runs-on: ubuntu-latest
+    needs: [detect-changes, build]
+    if: needs.detect-changes.outputs.should-deploy == 'true' && needs.build.result == 'success'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: customer-build-preview-${{ github.sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli@0.12.x
+
+      - name: Run Lighthouse CI
+        run: lhci autorun
+        working-directory: apps/customer
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+      - name: Upload Lighthouse results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-results
+          path: apps/customer/.lighthouseci/
+          retention-days: 7
+
+  deploy-preview:
+    name: Deploy to Vercel Preview
+    runs-on: ubuntu-latest
+    needs: [detect-changes, build]
+    if: needs.detect-changes.outputs.target-environment == 'preview' && needs.build.result == 'success'
+    environment:
+      name: preview
+      url: ${{ steps.deploy.outputs.preview-url }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: customer-build-preview-${{ github.sha }}
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel environment information
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: apps/customer
+
+      - name: Deploy to Vercel Preview
+        id: deploy
+        run: |
+          url=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }})
+          echo "preview-url=$url" >> $GITHUB_OUTPUT
+          echo "🚀 Preview deployed to: $url"
+        working-directory: apps/customer
+
+      - name: Wait for deployment to be ready
+        run: |
+          echo "Waiting for preview deployment to be ready..."
+          for i in {1..30}; do
+            if curl -f -s "${{ steps.deploy.outputs.preview-url }}" > /dev/null; then
+              echo "✅ Preview deployment is ready"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "❌ Preview deployment failed to become ready"
+              exit 1
+            fi
+            echo "⏳ Checking preview readiness... (attempt $i/30)"
+            sleep 10
+          done
+
+      - name: Run smoke tests on preview
+        run: |
+          echo "Running smoke tests on preview..."
+          curl -f -s "${{ steps.deploy.outputs.preview-url }}" || exit 1
+          # Add more specific smoke tests for customer app
+          echo "✅ Preview smoke tests passed"
+
+      - name: Comment PR with preview URL
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🚀 **Customer App Preview Deployed**\n\n**Preview URL:** ${{ steps.deploy.outputs.preview-url }}\n\n**Environment:** Preview\n**Commit:** ${context.sha.substring(0, 7)}\n\nTest the customer app functionality and provide feedback!`
+            })
+
+  deploy-production:
+    name: Deploy to Vercel Production
+    runs-on: ubuntu-latest
+    needs: [detect-changes, build, deploy-preview, lighthouse-audit]
+    if: needs.detect-changes.outputs.target-environment == 'production' && needs.build.result == 'success' && (needs.deploy-preview.result == 'success' || needs.deploy-preview.result == 'skipped')
+    environment:
+      name: production
+      url: https://vocilia.com
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: customer-build-production-${{ github.sha }}
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel environment information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: apps/customer
+
+      - name: Deploy to Vercel Production
+        id: deploy
+        run: |
+          url=$(vercel --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "production-url=$url" >> $GITHUB_OUTPUT
+          echo "🚀 Production deployed to: $url"
+        working-directory: apps/customer
+
+      - name: Wait for production deployment
+        run: |
+          echo "Waiting for production deployment to be ready..."
+          for i in {1..60}; do
+            if curl -f -s "https://vocilia.com" > /dev/null; then
+              echo "✅ Production deployment is ready"
+              break
+            fi
+            if [ $i -eq 60 ]; then
+              echo "❌ Production deployment failed to become ready"
+              exit 1
+            fi
+            echo "⏳ Checking production readiness... (attempt $i/60)"
+            sleep 10
+          done
+
+      - name: Run production smoke tests
+        run: |
+          echo "Running smoke tests on production..."
+          curl -f -s "https://vocilia.com" || exit 1
+          # Test PWA manifest
+          curl -f -s "https://vocilia.com/manifest.json" || exit 1
+          # Test service worker
+          curl -f -s "https://vocilia.com/sw.js" || exit 1
+          echo "✅ Production smoke tests passed"
+
+      - name: Run post-deployment tests
+        run: |
+          echo "Running post-deployment validation..."
+          # Test key customer flows
+          curl -f -s "https://vocilia.com/api/health" || echo "⚠️ Health endpoint not available"
+          echo "✅ Post-deployment tests completed"
+
+      - name: Record production deployment
+        run: |
+          echo "📝 Production deployment recorded"
+          echo "Customer App: https://vocilia.com"
+          echo "Commit: ${{ github.sha }}"
+          echo "Deploy time: $(date)"
+
+  rollback:
+    name: Rollback on Failure
+    runs-on: ubuntu-latest
+    needs: [deploy-preview, deploy-production]
+    if: failure() && (needs.deploy-preview.result == 'failure' || needs.deploy-production.result == 'failure')
+    
+    steps:
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Rollback preview
+        if: needs.deploy-preview.result == 'failure'
+        run: |
+          echo "🔄 Rolling back preview deployment..."
+          # Vercel doesn't have direct rollback, but we can redeploy previous version
+          echo "⚠️ Manual intervention may be required for preview rollback"
+
+      - name: Rollback production
+        if: needs.deploy-production.result == 'failure'
+        run: |
+          echo "🔄 Rolling back production deployment..."
+          # Get previous deployment and promote it
+          vercel ls --token=${{ secrets.VERCEL_TOKEN }} | head -2 | tail -1 | awk '{print $2}' | xargs vercel promote --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: apps/customer
+
+  notify:
+    name: Notify Results
+    runs-on: ubuntu-latest
+    needs: [detect-changes, test, accessibility-test, security-scan, build, lighthouse-audit, deploy-preview, deploy-production, rollback]
+    if: always() && needs.detect-changes.outputs.should-deploy == 'true'
+    
+    steps:
+      - name: Determine overall status
+        id: status
+        run: |
+          if [[ "${{ needs.deploy-production.result }}" == "success" ]] || [[ "${{ needs.deploy-preview.result }}" == "success" ]]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "message=✅ Customer app deployment completed successfully" >> $GITHUB_OUTPUT
+          elif [[ "${{ needs.rollback.result }}" == "success" ]]; then
+            echo "status=rolled_back" >> $GITHUB_OUTPUT
+            echo "message=🔄 Deployment failed but rollback succeeded" >> $GITHUB_OUTPUT
+          else
+            echo "status=failed" >> $GITHUB_OUTPUT
+            echo "message=❌ Customer app deployment failed" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create deployment summary
+        run: |
+          echo "## 📱 Customer App Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ steps.status.outputs.message }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ needs.detect-changes.outputs.target-environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Job Results" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tests:** ${{ needs.test.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Accessibility:** ${{ needs.accessibility-test.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Security Scan:** ${{ needs.security-scan.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build:** ${{ needs.build.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Lighthouse:** ${{ needs.lighthouse-audit.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Preview Deploy:** ${{ needs.deploy-preview.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Production Deploy:** ${{ needs.deploy-production.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Rollback:** ${{ needs.rollback.result || 'not_needed' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Customer App URLs" >> $GITHUB_STEP_SUMMARY
+          echo "- **Production:** https://vocilia.com" >> $GITHUB_STEP_SUMMARY
+          echo "- **Preview:** Available in PR comments" >> $GITHUB_STEP_SUMMARY

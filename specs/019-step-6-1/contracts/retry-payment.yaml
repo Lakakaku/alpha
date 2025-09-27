@@ -1,0 +1,190 @@
+openapi: 3.0.0
+info:
+  title: Retry Payment API
+  version: 1.0.0
+  description: Manually retry a failed payment
+
+paths:
+  /api/admin/payments/retry/{transactionId}:
+    post:
+      summary: Manually retry failed payment
+      description: |
+        Triggers manual retry for a failed payment transaction. Admin can optionally
+        update customer phone number or add notes before retrying. Bypasses automatic
+        retry limit if force flag is set.
+      operationId: retryPayment
+      tags:
+        - Payments
+      security:
+        - AdminAuth: []
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Payment transaction ID to retry
+          example: "c9d0e1f2-a3b4-5678-c123-456789012345"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                updatedPhone:
+                  type: string
+                  pattern: '^467\d{8}$'
+                  description: Updated customer phone number (if original was invalid)
+                  example: "467087654321"
+                adminNotes:
+                  type: string
+                  maxLength: 500
+                  description: Notes about the retry attempt
+                  example: "Customer confirmed new phone number via support ticket"
+                force:
+                  type: boolean
+                  default: false
+                  description: Force retry even if automatic retry limit exceeded
+      responses:
+        '200':
+          description: Payment retry initiated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - transaction
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  transaction:
+                    type: object
+                    required:
+                      - id
+                      - customerPhone
+                      - amountSek
+                      - status
+                      - retryCount
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        example: "c9d0e1f2-a3b4-5678-c123-456789012345"
+                      customerPhone:
+                        type: string
+                        pattern: '^467\d{8}$'
+                        example: "467087654321"
+                      amountSek:
+                        type: number
+                        format: decimal
+                        example: 44.00
+                      status:
+                        type: string
+                        enum: [processing]
+                        example: "processing"
+                      retryCount:
+                        type: integer
+                        example: 4
+                      swishPaymentReference:
+                        type: string
+                        nullable: true
+                        example: "REF-2025W09-467087654321"
+                      updatedAt:
+                        type: string
+                        format: date-time
+                        example: "2025-09-25T14:30:00Z"
+                  message:
+                    type: string
+                    example: "Payment retry initiated. Check status in 2-5 seconds."
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Invalid phone number format"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Admin authentication required"
+        '404':
+          description: Transaction not found
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Payment transaction not found"
+        '409':
+          description: Transaction already successful
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Payment already successful, cannot retry"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Failed to retry payment"
+
+components:
+  securitySchemes:
+    AdminAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Admin session token from /api/admin/auth/login

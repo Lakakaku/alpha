@@ -1,0 +1,84 @@
+{
+  "version": 2,
+  "name": "vocilia-admin",
+  "scope": "vocilia",
+  "alias": ["admin.vocilia.com"],
+  "regions": ["arn1"],
+  "buildCommand": "cd ../.. && pnpm build --filter=@vocilia/admin",
+  "outputDirectory": "../../apps/admin/.next",
+  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+  "framework": "nextjs",
+  "nodejs": "18.x",
+  "env": {
+    "NODE_ENV": "production",
+    "NEXT_PUBLIC_SUPABASE_URL": "@supabase-url",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase-anon-key",
+    "SUPABASE_SERVICE_ROLE_KEY": "@supabase-service-key",
+    "NEXTAUTH_URL": "https://admin.vocilia.com",
+    "NEXTAUTH_SECRET": "@nextauth-secret",
+    "ADMIN_ENCRYPTION_KEY": "@admin-encryption-key"
+  },
+  "build": {
+    "env": {
+      "NODE_ENV": "production"
+    }
+  },
+  "functions": {
+    "apps/admin/src/pages/api/**/*.ts": {
+      "runtime": "nodejs18.x",
+      "maxDuration": 30
+    }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(), payment=()"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.vocilia.com;"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://api.vocilia.com/api/admin/:path*"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/admin/dashboard",
+      "permanent": false
+    }
+  ],
+  "images": {
+    "domains": ["vocilia.com"],
+    "formats": ["image/avif", "image/webp"],
+    "minimumCacheTTL": 3600
+  },
+  "crons": [],
+  "cleanUrls": true,
+  "trailingSlash": false
+}

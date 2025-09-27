@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { createClient } from '@alpha/database';
+import { database } from '@vocilia/database';
 
 const router = Router();
 
@@ -25,7 +25,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 
     const category = req.query.category as string;
 
-    const supabase = createClient();
+    const supabase = database.createClient();
 
     let query = supabase
       .from('permissions')

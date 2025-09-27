@@ -1,0 +1,479 @@
+name: Deploy Business App
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'apps/business/**'
+      - 'packages/**'
+      - '.github/workflows/deploy-business.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'apps/business/**'
+      - 'packages/**'
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_BUSINESS_PROJECT_ID }}
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      business: ${{ steps.changes.outputs.business }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            business:
+              - 'apps/business/**'
+              - 'packages/**'
+
+  test:
+    needs: changes
+    if: ${{ needs.changes.outputs.business == 'true' }}
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm --filter @vocilia/business run type-check
+
+      - name: Lint
+        run: pnpm --filter @vocilia/business run lint
+
+      - name: Unit tests
+        run: pnpm --filter @vocilia/business run test
+
+      - name: Component tests
+        run: pnpm --filter @vocilia/business run test:component
+
+      - name: Build business app
+        run: pnpm --filter @vocilia/business run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_BUSINESS_API_URL }}
+
+  security-scan:
+    needs: changes
+    if: ${{ needs.changes.outputs.business == 'true' }}
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Security audit
+        run: pnpm audit --audit-level moderate
+
+      - name: Dependency check
+        run: pnpm --filter @vocilia/business run security:check
+
+  e2e-tests:
+    needs: [changes, test]
+    if: ${{ needs.changes.outputs.business == 'true' }}
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: vocilia_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+
+      - name: Start test environment
+        run: |
+          pnpm --filter @vocilia/business run build
+          pnpm --filter @vocilia/business run start &
+          sleep 30
+        env:
+          DATABASE_URL: postgres://postgres:test@localhost:5432/vocilia_test
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_API_URL: http://localhost:3001
+          PORT: 3002
+
+      - name: E2E tests
+        run: pnpm --filter @vocilia/business run test:e2e
+        env:
+          BASE_URL: http://localhost:3002
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-test-results
+          path: apps/business/test-results/
+
+  deploy-preview:
+    needs: [changes, test, security-scan]
+    if: ${{ needs.changes.outputs.business == 'true' && github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    environment: preview
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: apps/business
+
+      - name: Build Project Artifacts
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: apps/business
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_BUSINESS_API_URL_STAGING }}
+
+      - name: Deploy Project Artifacts to Vercel
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "preview_url=$url" >> $GITHUB_OUTPUT
+        working-directory: apps/business
+
+      - name: Comment PR with Preview URL
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const existingComment = comments.find(comment => 
+              comment.user.login === 'github-actions[bot]' && 
+              comment.body.includes('🏢 Business App Preview')
+            );
+            
+            const body = `🏢 **Business App Preview**
+            
+            📱 Preview URL: ${{ steps.deploy.outputs.preview_url }}
+            
+            🔗 [View Business Dashboard →](${{ steps.deploy.outputs.preview_url }})
+            
+            Changes in this PR:
+            - Business dashboard features
+            - Store management updates
+            - Customer feedback analytics
+            - Payment and reward systems`;
+            
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }
+
+  deploy-staging:
+    needs: [changes, test, security-scan, e2e-tests]
+    if: ${{ needs.changes.outputs.business == 'true' && github.ref == 'refs/heads/develop' }}
+    runs-on: ubuntu-latest
+    environment: staging
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=staging --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: apps/business
+
+      - name: Build Project Artifacts
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: apps/business
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_BUSINESS_API_URL_STAGING }}
+
+      - name: Deploy to Staging
+        run: vercel deploy --target staging --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: apps/business
+
+      - name: Post-deployment health check
+        run: |
+          sleep 30
+          curl -f https://business-staging.vocilia.com/api/health || exit 1
+
+  performance-audit:
+    needs: [changes, deploy-staging]
+    if: ${{ needs.changes.outputs.business == 'true' && github.ref == 'refs/heads/develop' }}
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Lighthouse
+        run: npm install -g lighthouse
+
+      - name: Performance audit
+        run: |
+          lighthouse https://business-staging.vocilia.com --only-categories=performance --output=json --output-path=lighthouse-perf.json
+          lighthouse https://business-staging.vocilia.com --only-categories=accessibility --output=json --output-path=lighthouse-a11y.json
+          lighthouse https://business-staging.vocilia.com --only-categories=best-practices --output=json --output-path=lighthouse-bp.json
+          
+      - name: Upload performance reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: lighthouse-*.json
+
+      - name: Check performance thresholds
+        run: |
+          perf_score=$(node -e "console.log(JSON.parse(require('fs').readFileSync('lighthouse-perf.json')).categories.performance.score * 100)")
+          a11y_score=$(node -e "console.log(JSON.parse(require('fs').readFileSync('lighthouse-a11y.json')).categories.accessibility.score * 100)")
+          
+          echo "Performance Score: $perf_score"
+          echo "Accessibility Score: $a11y_score"
+          
+          if [ "$perf_score" -lt "85" ]; then
+            echo "Performance score $perf_score is below threshold (85)"
+            exit 1
+          fi
+          
+          if [ "$a11y_score" -lt "90" ]; then
+            echo "Accessibility score $a11y_score is below threshold (90)"
+            exit 1
+          fi
+
+  deploy-production:
+    needs: [changes, test, security-scan, e2e-tests, performance-audit]
+    if: ${{ needs.changes.outputs.business == 'true' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: apps/business
+
+      - name: Build Project Artifacts
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: apps/business
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_BUSINESS_API_URL }}
+
+      - name: Deploy to Production
+        id: production-deploy
+        run: |
+          url=$(vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "production_url=$url" >> $GITHUB_OUTPUT
+        working-directory: apps/business
+
+      - name: Post-deployment validation
+        run: |
+          sleep 60
+          
+          # Health check
+          curl -f https://business.vocilia.com/api/health || exit 1
+          
+          # Authentication flow
+          curl -f https://business.vocilia.com/api/auth/status || exit 1
+          
+          # Dashboard accessibility
+          curl -f https://business.vocilia.com || exit 1
+          
+          # Store management endpoints
+          curl -f https://business.vocilia.com/api/stores || exit 1
+
+      - name: Performance validation
+        run: |
+          npm install -g lighthouse
+          lighthouse https://business.vocilia.com --only-categories=performance --output=json --output-path=lighthouse-prod.json
+          
+          # Check production performance score
+          score=$(node -e "console.log(JSON.parse(require('fs').readFileSync('lighthouse-prod.json')).categories.performance.score * 100)")
+          if [ "$score" -lt "90" ]; then
+            echo "Production performance score $score is below threshold (90)"
+            exit 1
+          fi
+
+      - name: Upload production report
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-lighthouse-report
+          path: lighthouse-prod.json
+
+      - name: Create deployment record
+        run: |
+          curl -X POST https://api.vocilia.com/admin/deployments \
+            -H "Authorization: Bearer ${{ secrets.ADMIN_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "service": "business",
+              "version": "${{ github.sha }}",
+              "environment": "production",
+              "deployment_url": "${{ steps.production-deploy.outputs.production_url }}",
+              "deployed_at": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'",
+              "deployed_by": "${{ github.actor }}"
+            }'
+
+  rollback:
+    needs: [deploy-production]
+    if: ${{ failure() && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Get previous deployment
+        id: previous-deployment
+        run: |
+          # Get previous successful deployment
+          previous=$(vercel list --token=${{ secrets.VERCEL_TOKEN }} | grep -A1 "READY" | tail -n1 | awk '{print $1}')
+          echo "deployment_id=$previous" >> $GITHUB_OUTPUT
+
+      - name: Rollback to previous deployment
+        if: steps.previous-deployment.outputs.deployment_id != ''
+        run: |
+          vercel promote ${{ steps.previous-deployment.outputs.deployment_id }} --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Verify rollback
+        if: steps.previous-deployment.outputs.deployment_id != ''
+        run: |
+          sleep 30
+          curl -f https://business.vocilia.com/api/health || exit 1
+
+      - name: Create rollback record
+        if: steps.previous-deployment.outputs.deployment_id != ''
+        run: |
+          curl -X POST https://api.vocilia.com/admin/deployments/rollback \
+            -H "Authorization: Bearer ${{ secrets.ADMIN_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "service": "business",
+              "from_version": "${{ github.sha }}",
+              "to_deployment": "${{ steps.previous-deployment.outputs.deployment_id }}",
+              "rolled_back_at": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'",
+              "rolled_back_by": "github-actions",
+              "reason": "Deployment failure"
+            }'
+
+      - name: Notify team of rollback
+        if: steps.previous-deployment.outputs.deployment_id != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Business App Production Rollback Required',
+              body: `## Deployment Rollback Alert
+              
+              **Service**: Business App
+              **Environment**: Production
+              **Failed Commit**: ${context.sha}
+              **Rolled Back To**: ${{ steps.previous-deployment.outputs.deployment_id }}
+              **Time**: ${new Date().toISOString()}
+              
+              ### Action Required
+              - [ ] Investigate deployment failure
+              - [ ] Fix issues in failed deployment
+              - [ ] Validate fix in staging
+              - [ ] Redeploy to production
+              
+              ### Links
+              - [Failed Workflow Run](${context.payload.repository.html_url}/actions/runs/${context.runId})
+              - [Business Dashboard](https://business.vocilia.com)
+              - [Store Management](https://business.vocilia.com/stores)
+              - [Performance Monitoring](https://business.vocilia.com/analytics)`,
+              labels: ['bug', 'production', 'rollback', 'business']
+            });

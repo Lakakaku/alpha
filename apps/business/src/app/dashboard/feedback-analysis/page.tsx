@@ -1,0 +1,354 @@
+/**
+ * Main Feedback Analysis Dashboard Page
+ * Feature: 008-step-2-6
+ * 
+ * Provides comprehensive feedback analysis interface with current week summaries,
+ * search functionality, temporal comparisons, and actionable insights.
+ */
+
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@vocilia/ui/components/card';
+import { Button } from '@vocilia/ui/components/button';
+import { Badge } from '@vocilia/ui/components/badge';
+import { AlertCircle, TrendingUp, TrendingDown, Calendar, Search, Filter, BarChart3, Users } from 'lucide-react';
+import { CategorizationDisplay } from '../../../components/feedback-analysis/categorization-display';
+import { SearchInterface } from '../../../components/feedback-analysis/search-interface';
+import { TemporalComparison } from '../../../components/feedback-analysis/temporal-comparison';
+import { InsightsPanel } from '../../../components/feedback-analysis/insights-panel';
+import { useAuth } from '@vocilia/auth/context/AuthContext';
+import { useActiveStore } from '../../../hooks/useActiveStore';
+import type { AnalysisReport, SearchResponse } from '@vocilia/types/feedback-analysis';
+
+interface DashboardStats {
+  total_feedback: number;
+  current_week_feedback: number;
+  pending_insights: number;
+  critical_insights: number;
+  avg_sentiment_score: number;
+  weekly_change_percent: number;
+}
+
+export default function FeedbackAnalysisPage() {
+  const { user } = useAuth();
+  const { activeStore } = useActiveStore();
+  
+  // State management
+  const [currentReport, setCurrentReport] = useState<AnalysisReport | null>(null);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
+  const [searchResults, setSearchResults] = useState<SearchResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'search' | 'temporal' | 'insights'>('overview');
+
+  // Load initial data
+  useEffect(() => {
+    if (!activeStore?.id) return;
+
+    const loadDashboardData = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        // Load current week report and dashboard stats in parallel
+        const [reportResponse, statsResponse] = await Promise.all([
+          fetch(`/api/feedback-analysis/reports/${activeStore.id}/current`, {
+            headers: {
+              'Authorization': `Bearer ${user?.access_token}`,
+            },
+          }),
+          fetch(`/api/feedback-analysis/stats/${activeStore.id}`, {
+            headers: {
+              'Authorization': `Bearer ${user?.access_token}`,
+            },
+          }),
+        ]);
+
+        // Handle current report (might be 404 if no data yet)
+        if (reportResponse.ok) {
+          const reportData = await reportResponse.json();
+          setCurrentReport(reportData);
+        } else if (reportResponse.status === 404) {
+          setCurrentReport(null); // No report available yet
+        } else {
+          throw new Error('Kunde inte ladda aktuell veckorapport');
+        }
+
+        // Handle dashboard stats
+        if (statsResponse.ok) {
+          const statsData = await statsResponse.json();
+          setDashboardStats(statsData);
+        } else {
+          throw new Error('Kunde inte ladda dashboard-statistik');
+        }
+
+      } catch (err) {
+        console.error('Dashboard loading error:', err);
+        setError(err instanceof Error ? err.message : 'Ett fel uppstod vid laddning av data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadDashboardData();
+  }, [activeStore?.id, user?.access_token]);
+
+  // Handle search
+  const handleSearch = (results: SearchResponse) => {
+    setSearchResults(results);
+    setActiveTab('search');
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-64 mb-6"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-32 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+          <div className="h-96 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card className="border-red-200 bg-red-50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-red-800">
+              <AlertCircle className="h-5 w-5" />
+              Fel vid laddning
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-red-700 mb-4">{error}</p>
+            <Button 
+              onClick={() => window.location.reload()} 
+              variant="outline"
+              className="border-red-300 text-red-700 hover:bg-red-100"
+            >
+              Försök igen
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto p-6 space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Feedback-analys</h1>
+          <p className="text-gray-600 mt-1">
+            Översikt och analys av kundfeedback för {activeStore?.name}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-gray-500">
+          <Calendar className="h-4 w-4" />
+          Vecka {new Date().getWeek()}, {new Date().getFullYear()}
+        </div>
+      </div>
+
+      {/* Dashboard Stats */}
+      {dashboardStats && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Feedback</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{dashboardStats.total_feedback.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">
+                {dashboardStats.current_week_feedback} denna vecka
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Väntande Insights</CardTitle>
+              <AlertCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{dashboardStats.pending_insights}</div>
+              <p className="text-xs text-muted-foreground">
+                {dashboardStats.critical_insights} kritiska
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Sentiment Score</CardTitle>
+              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {dashboardStats.avg_sentiment_score.toFixed(1)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Genomsnittlig poäng (1-10)
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Veckoförändring</CardTitle>
+              {dashboardStats.weekly_change_percent >= 0 ? (
+                <TrendingUp className="h-4 w-4 text-green-600" />
+              ) : (
+                <TrendingDown className="h-4 w-4 text-red-600" />
+              )}
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${
+                dashboardStats.weekly_change_percent >= 0 ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {dashboardStats.weekly_change_percent >= 0 ? '+' : ''}
+                {dashboardStats.weekly_change_percent.toFixed(1)}%
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Jämfört med förra veckan
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Navigation Tabs */}
+      <div className="flex space-x-1 border-b">
+        {[
+          { id: 'overview', label: 'Översikt', icon: BarChart3 },
+          { id: 'search', label: 'Sök', icon: Search },
+          { id: 'temporal', label: 'Trends', icon: TrendingUp },
+          { id: 'insights', label: 'Insights', icon: AlertCircle },
+        ].map((tab) => (
+          <Button
+            key={tab.id}
+            variant={activeTab === tab.id ? 'default' : 'ghost'}
+            className={`flex items-center gap-2 rounded-b-none ${
+              activeTab === tab.id ? 'border-b-2 border-blue-500' : ''
+            }`}
+            onClick={() => setActiveTab(tab.id as any)}
+          >
+            <tab.icon className="h-4 w-4" />
+            {tab.label}
+          </Button>
+        ))}
+      </div>
+
+      {/* Tab Content */}
+      <div className="min-h-[500px]">
+        {activeTab === 'overview' && (
+          <div className="space-y-6">
+            {/* Current Week Report */}
+            {currentReport ? (
+              <CategorizationDisplay report={currentReport} />
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Denna veckans rapport</CardTitle>
+                  <CardDescription>
+                    Ingen rapport tillgänglig för aktuell vecka ännu
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600 mb-4">
+                    Rapporter genereras automatiskt varje måndag baserat på föregående veckas feedback.
+                  </p>
+                  <Button variant="outline">
+                    Generera rapport manuellt
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Snabbåtgärder</CardTitle>
+                <CardDescription>
+                  Vanliga uppgifter för feedback-analys
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-wrap gap-3">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setActiveTab('search')}
+                  className="flex items-center gap-2"
+                >
+                  <Search className="h-4 w-4" />
+                  Sök feedback
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => setActiveTab('insights')}
+                  className="flex items-center gap-2"
+                >
+                  <AlertCircle className="h-4 w-4" />
+                  Hantera insights
+                  {dashboardStats?.pending_insights && dashboardStats.pending_insights > 0 && (
+                    <Badge variant="destructive" className="ml-1">
+                      {dashboardStats.pending_insights}
+                    </Badge>
+                  )}
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => setActiveTab('temporal')}
+                  className="flex items-center gap-2"
+                >
+                  <TrendingUp className="h-4 w-4" />
+                  Visa trends
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {activeTab === 'search' && (
+          <SearchInterface
+            storeId={activeStore?.id || ''}
+            onSearchResults={handleSearch}
+            initialResults={searchResults}
+          />
+        )}
+
+        {activeTab === 'temporal' && (
+          <TemporalComparison storeId={activeStore?.id || ''} />
+        )}
+
+        {activeTab === 'insights' && (
+          <InsightsPanel storeId={activeStore?.id || ''} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Utility to get week number
+declare global {
+  interface Date {
+    getWeek(): number;
+  }
+}
+
+Date.prototype.getWeek = function() {
+  const date = new Date(this.getTime());
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+  const week1 = new Date(date.getFullYear(), 0, 4);
+  return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+};

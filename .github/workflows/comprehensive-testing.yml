@@ -1,0 +1,507 @@
+name: Comprehensive Testing Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  NODE_VERSION: '18'
+  SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+  SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+  CI: true
+
+jobs:
+  setup:
+    name: Setup and Install Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache node_modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+  lint-and-typecheck:
+    name: Lint and Type Check
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Restore dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run ESLint
+        run: pnpm run lint
+
+      - name: Run TypeScript type check
+        run: pnpm run typecheck
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    strategy:
+      matrix:
+        app: [backend, customer, business, admin]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Restore dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run unit tests for ${{ matrix.app }}
+        run: pnpm --filter @vocilia/${{ matrix.app }} test --coverage --passWithNoTests
+        env:
+          JEST_JUNIT_OUTPUT_DIR: test-results/${{ matrix.app }}
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: unit-test-results-${{ matrix.app }}
+          path: test-results/${{ matrix.app }}
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: apps/${{ matrix.app }}/coverage/lcov.info
+          flags: unit-${{ matrix.app }}
+          name: unit-${{ matrix.app }}
+
+  contract-tests:
+    name: Contract Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: vocilia_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Restore dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup test database
+        run: |
+          npm install -g supabase
+          supabase db reset --db-url postgresql://postgres:postgres@localhost:5432/vocilia_test
+
+      - name: Run contract tests
+        run: pnpm test:contract
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/vocilia_test
+
+      - name: Upload contract test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: contract-test-results
+          path: test-results/contract
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: vocilia_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Restore dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup test database
+        run: |
+          npm install -g supabase
+          supabase db reset --db-url postgresql://postgres:postgres@localhost:5432/vocilia_test
+
+      - name: Start backend services
+        run: |
+          pnpm --filter @vocilia/backend build
+          pnpm --filter @vocilia/backend start &
+          sleep 10
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/vocilia_test
+          PORT: 3001
+
+      - name: Run integration tests
+        run: pnpm test:integration
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/vocilia_test
+          API_BASE_URL: http://localhost:3001
+
+      - name: Upload integration test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: integration-test-results
+          path: test-results/integration
+
+  e2e-tests:
+    name: End-to-End Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: vocilia_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Restore dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Setup test database
+        run: |
+          npm install -g supabase
+          supabase db reset --db-url postgresql://postgres:postgres@localhost:5432/vocilia_test
+
+      - name: Build applications
+        run: |
+          pnpm --filter @vocilia/backend build
+          pnpm --filter @vocilia/customer build
+          pnpm --filter @vocilia/business build
+          pnpm --filter @vocilia/admin build
+
+      - name: Start all services
+        run: |
+          # Start backend
+          pnpm --filter @vocilia/backend start &
+          # Start frontend apps
+          pnpm --filter @vocilia/customer start &
+          pnpm --filter @vocilia/business start &
+          pnpm --filter @vocilia/admin start &
+          # Wait for services to be ready
+          sleep 30
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/vocilia_test
+
+      - name: Run E2E tests
+        run: npx playwright test
+        env:
+          CUSTOMER_APP_URL: http://localhost:3000
+          BUSINESS_APP_URL: http://localhost:3001
+          ADMIN_APP_URL: http://localhost:3002
+          API_BASE_URL: http://localhost:3003
+
+      - name: Upload E2E test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: e2e-test-results
+          path: |
+            test-results/
+            playwright-report/
+
+  performance-tests:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: vocilia_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Restore dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Artillery
+        run: npm install -g artillery@latest
+
+      - name: Setup test database
+        run: |
+          npm install -g supabase
+          supabase db reset --db-url postgresql://postgres:postgres@localhost:5432/vocilia_test
+
+      - name: Build and start services
+        run: |
+          pnpm --filter @vocilia/backend build
+          pnpm --filter @vocilia/customer build
+          pnpm --filter @vocilia/backend start &
+          pnpm --filter @vocilia/customer start &
+          sleep 30
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/vocilia_test
+
+      - name: Run API performance tests
+        run: pnpm test:performance:api
+
+      - name: Run page performance tests
+        run: pnpm test:performance:pages
+
+      - name: Run load tests with Artillery
+        run: |
+          artillery run tests/performance/qr-workflow-load.yml
+          artillery run tests/performance/verification-load.yml
+
+      - name: Run Lighthouse CI
+        run: |
+          npm install -g @lhci/cli
+          lhci autorun --config=tests/performance/lighthouse.config.js
+
+      - name: Upload performance results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: performance-test-results
+          path: |
+            test-results/performance/
+            .lighthouseci/
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Restore dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run npm audit
+        run: pnpm audit --audit-level moderate
+
+      - name: Run security tests
+        run: pnpm test:security
+        if: always()
+
+  report:
+    name: Test Report
+    runs-on: ubuntu-latest
+    needs: [lint-and-typecheck, unit-tests, contract-tests, integration-tests, e2e-tests, security-scan]
+    if: always()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all test artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Generate test report
+        run: |
+          mkdir -p test-reports
+          echo "# Comprehensive Test Report" > test-reports/summary.md
+          echo "## Test Results Summary" >> test-reports/summary.md
+          echo "- Lint and Type Check: ${{ needs.lint-and-typecheck.result }}" >> test-reports/summary.md
+          echo "- Unit Tests: ${{ needs.unit-tests.result }}" >> test-reports/summary.md
+          echo "- Contract Tests: ${{ needs.contract-tests.result }}" >> test-reports/summary.md
+          echo "- Integration Tests: ${{ needs.integration-tests.result }}" >> test-reports/summary.md
+          echo "- E2E Tests: ${{ needs.e2e-tests.result }}" >> test-reports/summary.md
+          echo "- Security Scan: ${{ needs.security-scan.result }}" >> test-reports/summary.md
+
+      - name: Upload test report
+        uses: actions/upload-artifact@v3
+        with:
+          name: comprehensive-test-report
+          path: test-reports/
+
+      - name: Send webhook notification
+        if: always()
+        run: |
+          curl -X POST ${{ secrets.TEST_WEBHOOK_URL }} \
+            -H "Content-Type: application/json" \
+            -d '{
+              "repository": "${{ github.repository }}",
+              "branch": "${{ github.ref_name }}",
+              "commit": "${{ github.sha }}",
+              "workflow": "${{ github.workflow }}",
+              "status": "${{ job.status }}",
+              "results": {
+                "lint": "${{ needs.lint-and-typecheck.result }}",
+                "unit": "${{ needs.unit-tests.result }}",
+                "contract": "${{ needs.contract-tests.result }}",
+                "integration": "${{ needs.integration-tests.result }}",
+                "e2e": "${{ needs.e2e-tests.result }}",
+                "security": "${{ needs.security-scan.result }}"
+              },
+              "timestamp": "${{ github.event.head_commit.timestamp }}"
+            }'
+        env:
+          TEST_WEBHOOK_URL: ${{ secrets.TEST_WEBHOOK_URL }}
+
+  deployment-gate:
+    name: Deployment Gate
+    runs-on: ubuntu-latest
+    needs: [lint-and-typecheck, unit-tests, contract-tests, integration-tests, e2e-tests, security-scan]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    steps:
+      - name: Check all tests passed
+        run: |
+          if [[ "${{ needs.lint-and-typecheck.result }}" != "success" ]] || \
+             [[ "${{ needs.unit-tests.result }}" != "success" ]] || \
+             [[ "${{ needs.contract-tests.result }}" != "success" ]] || \
+             [[ "${{ needs.integration-tests.result }}" != "success" ]] || \
+             [[ "${{ needs.e2e-tests.result }}" != "success" ]] || \
+             [[ "${{ needs.security-scan.result }}" != "success" ]]; then
+            echo "❌ One or more test suites failed. Blocking deployment."
+            echo "Lint & TypeCheck: ${{ needs.lint-and-typecheck.result }}"
+            echo "Unit Tests: ${{ needs.unit-tests.result }}"
+            echo "Contract Tests: ${{ needs.contract-tests.result }}"
+            echo "Integration Tests: ${{ needs.integration-tests.result }}"
+            echo "E2E Tests: ${{ needs.e2e-tests.result }}"
+            echo "Security Scan: ${{ needs.security-scan.result }}"
+            exit 1
+          else
+            echo "✅ All tests passed. Deployment can proceed."
+          fi
+
+      - name: Trigger deployment
+        if: success()
+        run: |
+          echo "🚀 All tests passed. Triggering deployment..."
+          # Deployment will be handled by Railway/Vercel webhooks
+          # This job serves as the gate that must pass before deployment

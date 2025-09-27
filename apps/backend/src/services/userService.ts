@@ -1,4 +1,4 @@
-import { createClient } from '@alpha/database';
+import { database } from '@vocilia/database';
 import { ValidationError, NotFoundError, ConflictError } from '../middleware/errorHandler';
 
 export interface UserProfile {
@@ -29,7 +29,7 @@ export interface UpdateUserProfile {
 }
 
 export class UserService {
-  private supabase = createClient();
+  private supabase = database.createClient();
 
   async getUserById(id: string): Promise<UserProfile> {
     if (!id) {

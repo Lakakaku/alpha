@@ -1,0 +1,855 @@
+openapi: 3.0.3
+info:
+  title: AI Assistant Interface API
+  description: Conversational AI assistant for business context building
+  version: 1.0.0
+  contact:
+    name: Vocilia Development Team
+
+servers:
+  - url: https://api.vocilia.com/v1
+    description: Production server
+  - url: https://staging-api.vocilia.com/v1
+    description: Staging server
+
+security:
+  - bearerAuth: []
+
+paths:
+  # Conversation Management
+  /ai-assistant/conversations:
+    get:
+      summary: List AI conversations for business
+      description: Retrieve paginated list of conversations with filtering and sorting
+      parameters:
+        - name: store_id
+          in: query
+          description: Filter conversations by store
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          description: Filter by conversation status
+          schema:
+            type: string
+            enum: [active, paused, completed, archived]
+        - name: limit
+          in: query
+          description: Number of conversations to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          description: Number of conversations to skip
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  conversations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Conversation'
+                  total:
+                    type: integer
+                  has_more:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      summary: Create new AI conversation
+      description: Start a new conversation session with the AI assistant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                store_id:
+                  type: string
+                  format: uuid
+                  description: Optional store context for conversation
+                title:
+                  type: string
+                  description: Optional custom title for conversation
+                initial_context:
+                  type: object
+                  description: Any existing context to include
+              required: []
+      responses:
+        '201':
+          description: Conversation created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /ai-assistant/conversations/{conversationId}:
+    get:
+      summary: Get conversation details
+      description: Retrieve full conversation with message history
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: include_messages
+          in: query
+          description: Include conversation messages in response
+          schema:
+            type: boolean
+            default: true
+        - name: message_limit
+          in: query
+          description: Limit number of messages to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+      responses:
+        '200':
+          description: Conversation details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Conversation'
+                  - type: object
+                    properties:
+                      messages:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ConversationMessage'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    patch:
+      summary: Update conversation
+      description: Update conversation status, title, or other properties
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [active, paused, completed, archived]
+                title:
+                  type: string
+                  maxLength: 200
+      responses:
+        '200':
+          description: Conversation updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Chat Interface
+  /ai-assistant/conversations/{conversationId}/messages:
+    post:
+      summary: Send message to AI assistant
+      description: Send user message and receive AI response with streaming support
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: stream
+          in: query
+          description: Enable streaming response
+          schema:
+            type: boolean
+            default: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                  minLength: 1
+                  maxLength: 4000
+                  description: User message content
+                message_type:
+                  type: string
+                  enum: [text, context_update]
+                  default: text
+                metadata:
+                  type: object
+                  description: Additional message metadata
+              required:
+                - content
+      responses:
+        '200':
+          description: AI response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_message:
+                    $ref: '#/components/schemas/ConversationMessage'
+                  ai_response:
+                    $ref: '#/components/schemas/ConversationMessage'
+                  context_updates:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ContextEntry'
+                  suggestions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Suggestion'
+            text/event-stream:
+              schema:
+                type: string
+                description: Server-sent events with message chunks (when streaming=true)
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Context Management
+  /ai-assistant/context/entries:
+    get:
+      summary: Get business context entries
+      description: Retrieve structured context information for business
+      parameters:
+        - name: store_id
+          in: query
+          description: Filter by specific store
+          schema:
+            type: string
+            format: uuid
+        - name: category
+          in: query
+          description: Filter by context category
+          schema:
+            type: string
+            enum: [store_profile, personnel, layout, inventory, operations, customer_journey, fraud_detection, seasonal_variations]
+        - name: verified_only
+          in: query
+          description: Only return verified context entries
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Context entries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entries:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ContextEntry'
+                  categories:
+                    type: object
+                    description: Entries grouped by category
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      summary: Create or update context entry
+      description: Add new context information or update existing entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                store_id:
+                  type: string
+                  format: uuid
+                category:
+                  type: string
+                  enum: [store_profile, personnel, layout, inventory, operations, customer_journey, fraud_detection, seasonal_variations]
+                subcategory:
+                  type: string
+                  maxLength: 100
+                key:
+                  type: string
+                  maxLength: 100
+                value:
+                  type: object
+                  description: Structured value based on category
+                confidence_score:
+                  type: number
+                  minimum: 0
+                  maximum: 1
+                  default: 0.8
+                is_verified:
+                  type: boolean
+                  default: false
+              required:
+                - category
+                - key
+                - value
+      responses:
+        '201':
+          description: Context entry created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContextEntry'
+        '200':
+          description: Context entry updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContextEntry'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  # Suggestions
+  /ai-assistant/suggestions:
+    get:
+      summary: Get AI suggestions
+      description: Retrieve AI-generated suggestions for context improvement
+      parameters:
+        - name: store_id
+          in: query
+          description: Filter by specific store
+          schema:
+            type: string
+            format: uuid
+        - name: suggestion_type
+          in: query
+          description: Filter by suggestion type
+          schema:
+            type: string
+            enum: [context_gap, question_recommendation, fraud_improvement, frequency_optimization, validation_enhancement]
+        - name: status
+          in: query
+          description: Filter by suggestion status
+          schema:
+            type: string
+            enum: [pending, accepted, rejected, implemented]
+            default: pending
+        - name: priority
+          in: query
+          description: Filter by priority level
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+      responses:
+        '200':
+          description: List of suggestions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  suggestions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Suggestion'
+                  summary:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      by_priority:
+                        type: object
+                      by_type:
+                        type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /ai-assistant/suggestions/{suggestionId}/accept:
+    post:
+      summary: Accept suggestion
+      description: Accept and optionally implement AI suggestion
+      parameters:
+        - name: suggestionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                implement_immediately:
+                  type: boolean
+                  default: false
+                  description: Whether to implement the suggestion right away
+                notes:
+                  type: string
+                  maxLength: 500
+                  description: Optional notes about acceptance
+      responses:
+        '200':
+          description: Suggestion accepted
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Suggestion'
+                  - type: object
+                    properties:
+                      implementation_result:
+                        type: object
+                        description: Result of immediate implementation if requested
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /ai-assistant/suggestions/{suggestionId}/reject:
+    post:
+      summary: Reject suggestion
+      description: Reject AI suggestion with optional feedback
+      parameters:
+        - name: suggestionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  maxLength: 500
+                  description: Reason for rejection
+      responses:
+        '200':
+          description: Suggestion rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Suggestion'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Context Validation
+  /ai-assistant/validation/score:
+    get:
+      summary: Get context validation score
+      description: Get current completeness score and validation results
+      parameters:
+        - name: store_id
+          in: query
+          description: Score for specific store
+          schema:
+            type: string
+            format: uuid
+        - name: recalculate
+          in: query
+          description: Force recalculation instead of using cached result
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Validation score and results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      summary: Request context validation
+      description: Trigger comprehensive context validation and scoring
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                store_id:
+                  type: string
+                  format: uuid
+                include_fraud_analysis:
+                  type: boolean
+                  default: true
+                validation_rules:
+                  type: object
+                  description: Custom validation rules to apply
+      responses:
+        '202':
+          description: Validation started (async processing)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  validation_id:
+                    type: string
+                    format: uuid
+                  estimated_completion:
+                    type: string
+                    format: date-time
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Conversation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        business_id:
+          type: string
+          format: uuid
+        store_id:
+          type: string
+          format: uuid
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [active, paused, completed, archived]
+        completeness_score:
+          type: integer
+          minimum: 0
+          maximum: 100
+          nullable: true
+        message_count:
+          type: integer
+          minimum: 0
+        last_message_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - business_id
+        - status
+        - created_at
+        - updated_at
+
+    ConversationMessage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        conversation_id:
+          type: string
+          format: uuid
+        message_type:
+          type: string
+          enum: [text, suggestion, validation, context_update]
+        sender_type:
+          type: string
+          enum: [user, assistant]
+        content:
+          type: object
+          description: Message content structure varies by type
+        metadata:
+          type: object
+          description: Additional message metadata
+        sequence_number:
+          type: integer
+          minimum: 1
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - conversation_id
+        - message_type
+        - sender_type
+        - content
+        - sequence_number
+        - created_at
+
+    ContextEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        business_id:
+          type: string
+          format: uuid
+        store_id:
+          type: string
+          format: uuid
+          nullable: true
+        conversation_id:
+          type: string
+          format: uuid
+          nullable: true
+        category:
+          type: string
+          enum: [store_profile, personnel, layout, inventory, operations, customer_journey, fraud_detection, seasonal_variations]
+        subcategory:
+          type: string
+          nullable: true
+        key:
+          type: string
+        value:
+          type: object
+        confidence_score:
+          type: number
+          minimum: 0
+          maximum: 1
+        source_type:
+          type: string
+          enum: [conversation, ai_inference, manual_input, system_default]
+        is_verified:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - business_id
+        - category
+        - key
+        - value
+        - confidence_score
+        - source_type
+        - is_verified
+        - created_at
+        - updated_at
+
+    Suggestion:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        business_id:
+          type: string
+          format: uuid
+        store_id:
+          type: string
+          format: uuid
+          nullable: true
+        conversation_id:
+          type: string
+          format: uuid
+          nullable: true
+        suggestion_type:
+          type: string
+          enum: [context_gap, question_recommendation, fraud_improvement, frequency_optimization, validation_enhancement]
+        category:
+          type: string
+          enum: [store_profile, personnel, layout, inventory, operations, customer_journey, fraud_detection, seasonal_variations]
+          nullable: true
+        title:
+          type: string
+        description:
+          type: string
+        action_data:
+          type: object
+          nullable: true
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        status:
+          type: string
+          enum: [pending, accepted, rejected, implemented]
+        accepted_at:
+          type: string
+          format: date-time
+          nullable: true
+        rejected_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - business_id
+        - suggestion_type
+        - title
+        - description
+        - priority
+        - status
+        - created_at
+
+    ValidationResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        business_id:
+          type: string
+          format: uuid
+        store_id:
+          type: string
+          format: uuid
+          nullable: true
+        conversation_id:
+          type: string
+          format: uuid
+          nullable: true
+        overall_score:
+          type: integer
+          minimum: 0
+          maximum: 100
+        category_scores:
+          type: object
+          description: Scores per context category
+        missing_requirements:
+          type: array
+          items:
+            type: object
+            properties:
+              category:
+                type: string
+              field:
+                type: string
+              importance:
+                type: string
+                enum: [required, recommended, optional]
+              description:
+                type: string
+        improvement_suggestions:
+          type: array
+          items:
+            type: object
+            properties:
+              action:
+                type: string
+              description:
+                type: string
+              impact:
+                type: integer
+                minimum: 1
+                maximum: 10
+        fraud_readiness_score:
+          type: integer
+          minimum: 0
+          maximum: 100
+          nullable: true
+        validation_version:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - business_id
+        - overall_score
+        - category_scores
+        - missing_requirements
+        - improvement_suggestions
+        - validation_version
+        - created_at
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid input
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              details:
+                type: object
+
+    Unauthorized:
+      description: Unauthorized - authentication required
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Authentication required"
+
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Insufficient permissions"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Resource not found"

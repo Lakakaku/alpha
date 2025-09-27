@@ -2,5 +2,6 @@
   "buildCommand": "pnpm run build",
   "installCommand": "pnpm install",
   "framework": "nextjs",
-  "outputDirectory": ".next"
+  "outputDirectory": ".next",
+  "ignoreCommand": "./scripts/check-tests.sh"
 }

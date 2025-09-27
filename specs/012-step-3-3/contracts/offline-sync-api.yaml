@@ -1,0 +1,283 @@
+openapi: 3.0.3
+info:
+  title: Offline Sync API
+  description: API for managing offline verification submissions and background sync
+  version: 1.0.0
+
+paths:
+  /api/offline/submit:
+    post:
+      summary: Submit offline verification data
+      description: Submit verification data that was collected offline
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OfflineSubmission'
+      responses:
+        '200':
+          description: Offline submission queued successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfflineSubmissionResponse'
+        '400':
+          description: Invalid submission data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/offline/sync:
+    post:
+      summary: Sync offline submissions
+      description: Process pending offline submissions and create call sessions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncRequest'
+      responses:
+        '200':
+          description: Sync completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncResponse'
+
+  /api/offline/status:
+    get:
+      summary: Get offline sync status
+      description: Check status of pending offline submissions
+      parameters:
+        - name: phone_hash
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Offline sync status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfflineSyncStatus'
+
+  /api/offline/retry/{submissionId}:
+    post:
+      summary: Retry failed sync
+      description: Retry synchronization for a failed offline submission
+      parameters:
+        - name: submissionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Retry initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetryResponse'
+
+components:
+  schemas:
+    OfflineSubmission:
+      type: object
+      required:
+        - store_id
+        - customer_phone_hash
+        - transaction_time
+        - transaction_value
+        - submission_data
+      properties:
+        store_id:
+          type: string
+          format: uuid
+        customer_phone_hash:
+          type: string
+        transaction_time:
+          type: string
+          format: date-time
+        transaction_value:
+          type: number
+          minimum: 0
+        submission_data:
+          type: object
+          properties:
+            verification_details:
+              type: object
+              properties:
+                transaction_time_input:
+                  type: string
+                transaction_value_input:
+                  type: string
+                phone_number_input:
+                  type: string
+            device_info:
+              type: object
+              properties:
+                user_agent:
+                  type: string
+                screen_resolution:
+                  type: string
+                platform:
+                  type: string
+                connection_type:
+                  type: string
+            submission_context:
+              type: object
+              properties:
+                submitted_at:
+                  type: string
+                  format: date-time
+                offline_duration:
+                  type: integer
+                retry_count:
+                  type: integer
+
+    OfflineSubmissionResponse:
+      type: object
+      required:
+        - submission_id
+        - queued_at
+        - estimated_sync_time
+      properties:
+        submission_id:
+          type: string
+          format: uuid
+        queued_at:
+          type: string
+          format: date-time
+        position_in_queue:
+          type: integer
+        estimated_sync_time:
+          type: string
+          format: date-time
+
+    SyncRequest:
+      type: object
+      required:
+        - submission_ids
+      properties:
+        submission_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        force_retry:
+          type: boolean
+          default: false
+
+    SyncResponse:
+      type: object
+      required:
+        - sync_results
+        - summary
+      properties:
+        sync_results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SyncResult'
+        summary:
+          type: object
+          properties:
+            total_processed:
+              type: integer
+            successful:
+              type: integer
+            failed:
+              type: integer
+            conflicts:
+              type: integer
+
+    SyncResult:
+      type: object
+      required:
+        - submission_id
+        - status
+      properties:
+        submission_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [success, failure, conflict, duplicate]
+        call_session_id:
+          type: string
+          format: uuid
+          description: Created call session ID (on success)
+        error_message:
+          type: string
+        conflict_details:
+          type: object
+          properties:
+            existing_session_id:
+              type: string
+              format: uuid
+            conflict_type:
+              type: string
+              enum: [duplicate_transaction, timing_conflict]
+
+    OfflineSyncStatus:
+      type: object
+      required:
+        - pending_count
+        - last_sync_time
+        - sync_state
+      properties:
+        pending_count:
+          type: integer
+        last_sync_time:
+          type: string
+          format: date-time
+        sync_state:
+          type: string
+          enum: [idle, syncing, error]
+        pending_submissions:
+          type: array
+          items:
+            type: object
+            properties:
+              submission_id:
+                type: string
+                format: uuid
+              created_at:
+                type: string
+                format: date-time
+              sync_attempts:
+                type: integer
+              last_error:
+                type: string
+
+    RetryResponse:
+      type: object
+      required:
+        - submission_id
+        - retry_initiated
+      properties:
+        submission_id:
+          type: string
+          format: uuid
+        retry_initiated:
+          type: boolean
+        estimated_completion:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object

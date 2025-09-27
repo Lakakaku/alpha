@@ -1,4 +1,4 @@
-import { createClient } from '@alpha/database';
+import { database } from '@vocilia/database';
 import { ValidationError, AuthenticationError, NotFoundError } from '../middleware/errorHandler';
 import { userService, UserProfile } from './userService';
 import { loggingService } from './loggingService';
@@ -49,7 +49,7 @@ export interface ResetPasswordRequest {
 }
 
 export class AuthService {
-  private supabase = createClient();
+  private supabase = database.createClient();
 
   async authenticate(request: AuthenticateRequest): Promise<AuthenticateResponse> {
     const { email, password, ipAddress, userAgent } = request;

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { createClient } from '@alpha/database';
+import { database } from '@vocilia/database';
+import type { UserProfile } from '@vocilia/types';
 
 // Extend the Request interface to include user information
 declare global {
@@ -45,7 +46,7 @@ export async function authMiddleware(
     const token = bearerMatch[1];
 
     // Verify token with Supabase
-    const supabase = createClient();
+    const supabase = database.createClient();
 
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
@@ -58,7 +59,10 @@ export async function authMiddleware(
     }
 
     // Get user profile information
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError }: { 
+      data: UserProfile | null, 
+      error: any 
+    } = await supabase
       .from('user_profiles')
       .select('id, email, role, business_id')
       .eq('id', user.id)

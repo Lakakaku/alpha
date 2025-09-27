@@ -1,0 +1,222 @@
+openapi: 3.0.3
+info:
+  title: Vocilia Production Health Checks API
+  description: Health check endpoints for monitoring production deployment status and system health
+  version: 1.0.0
+
+servers:
+  - url: https://api.vocilia.com
+    description: Production API
+  - url: https://staging-api.vocilia.com
+    description: Staging API
+
+paths:
+  /health:
+    get:
+      summary: Basic health check
+      description: Quick health check for load balancer and uptime monitoring
+      operationId: basicHealthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy]
+                  timestamp:
+                    type: string
+                    format: date-time
+                  uptime:
+                    type: number
+                    description: Service uptime in seconds
+                required: [status, timestamp, uptime]
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /health/detailed:
+    get:
+      summary: Detailed health check
+      description: Comprehensive health check including dependencies and performance metrics
+      operationId: detailedHealthCheck
+      responses:
+        '200':
+          description: Detailed health status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy, degraded, unhealthy]
+                  timestamp:
+                    type: string
+                    format: date-time
+                  uptime:
+                    type: number
+                  memory:
+                    $ref: '#/components/schemas/MemoryUsage'
+                  checks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/HealthCheck'
+                  performance:
+                    $ref: '#/components/schemas/PerformanceMetrics'
+                required: [status, timestamp, uptime, checks]
+
+  /health/database:
+    get:
+      summary: Database health check
+      description: Specific health check for database connectivity and performance
+      operationId: databaseHealthCheck
+      responses:
+        '200':
+          description: Database is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy, degraded]
+                  connection_pool:
+                    type: object
+                    properties:
+                      active_connections:
+                        type: integer
+                      max_connections:
+                        type: integer
+                      pool_utilization:
+                        type: number
+                        minimum: 0
+                        maximum: 100
+                  query_performance:
+                    type: object
+                    properties:
+                      avg_response_time_ms:
+                        type: number
+                      slow_queries_count:
+                        type: integer
+                  last_backup:
+                    type: string
+                    format: date-time
+                required: [status, connection_pool]
+
+  /health/jobs:
+    get:
+      summary: Background jobs health check
+      description: Status of background job processing and payment batch jobs
+      operationId: jobsHealthCheck
+      responses:
+        '200':
+          description: Job system status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy, degraded]
+                  scheduler_running:
+                    type: boolean
+                  last_payment_batch:
+                    type: object
+                    properties:
+                      batch_id:
+                        type: string
+                      completed_at:
+                        type: string
+                        format: date-time
+                      status:
+                        type: string
+                        enum: [completed, failed, in_progress]
+                      processed_count:
+                        type: integer
+                  job_queue:
+                    type: object
+                    properties:
+                      pending_jobs:
+                        type: integer
+                      failed_jobs:
+                        type: integer
+                required: [status, scheduler_running]
+
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+      required: [error, message, timestamp]
+
+    MemoryUsage:
+      type: object
+      properties:
+        rss:
+          type: number
+          description: Resident Set Size in bytes
+        heapTotal:
+          type: number
+          description: Total heap allocated in bytes
+        heapUsed:
+          type: number
+          description: Heap used in bytes
+        external:
+          type: number
+          description: External memory in bytes
+      required: [rss, heapTotal, heapUsed]
+
+    HealthCheck:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the component being checked
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        response_time_ms:
+          type: number
+        details:
+          type: string
+          description: Additional information about the check
+        last_checked:
+          type: string
+          format: date-time
+      required: [name, status]
+
+    PerformanceMetrics:
+      type: object
+      properties:
+        avg_response_time_ms:
+          type: number
+        requests_per_minute:
+          type: number
+        error_rate_percent:
+          type: number
+          minimum: 0
+          maximum: 100
+        cpu_usage_percent:
+          type: number
+          minimum: 0
+          maximum: 100
+        memory_usage_percent:
+          type: number
+          minimum: 0
+          maximum: 100

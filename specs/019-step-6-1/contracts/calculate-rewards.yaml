@@ -1,0 +1,188 @@
+openapi: 3.0.0
+info:
+  title: Calculate Rewards API
+  version: 1.0.0
+  description: Calculate rewards for verified feedback submissions
+
+paths:
+  /api/admin/payments/calculate-rewards:
+    post:
+      summary: Calculate rewards for verified feedback
+      description: |
+        Calculates reward amounts for verified feedback submissions based on quality scores
+        and transaction values. Maps quality scores 50-100 to reward percentages 2-15% linearly.
+        Stores calculations in reward_calculations table.
+      operationId: calculateRewards
+      tags:
+        - Payments
+      security:
+        - AdminAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - feedbackIds
+              properties:
+                feedbackIds:
+                  type: array
+                  description: Array of feedback session IDs to calculate rewards for
+                  items:
+                    type: string
+                    format: uuid
+                  minItems: 1
+                  maxItems: 1000
+                  example:
+                    - "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    - "b2c3d4e5-f6a7-8901-bcde-f12345678901"
+      responses:
+        '200':
+          description: Rewards calculated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - processedCount
+                  - totalRewardAmountSek
+                  - calculations
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  processedCount:
+                    type: integer
+                    description: Number of feedback submissions processed
+                    example: 2
+                  skippedCount:
+                    type: integer
+                    description: Number of submissions skipped (already calculated or invalid)
+                    example: 0
+                  totalRewardAmountSek:
+                    type: number
+                    format: decimal
+                    description: Total reward amount in SEK (converted from öre)
+                    example: 26.00
+                  calculations:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - id
+                        - feedbackId
+                        - qualityScore
+                        - rewardPercentage
+                        - transactionAmountSek
+                        - rewardAmountSek
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          example: "c3d4e5f6-a7b8-9012-cdef-123456789012"
+                        feedbackId:
+                          type: string
+                          format: uuid
+                          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                        transactionId:
+                          type: string
+                          format: uuid
+                          example: "d4e5f6a7-b8c9-0123-def1-234567890123"
+                        storeId:
+                          type: string
+                          format: uuid
+                          example: "e5f6a7b8-c9d0-1234-ef12-345678901234"
+                        customerPhone:
+                          type: string
+                          pattern: '^467\d{8}$'
+                          example: "467012345678"
+                        qualityScore:
+                          type: integer
+                          minimum: 0
+                          maximum: 100
+                          example: 85
+                        rewardPercentage:
+                          type: number
+                          format: decimal
+                          minimum: 0.02
+                          maximum: 0.15
+                          example: 0.111
+                        transactionAmountSek:
+                          type: number
+                          format: decimal
+                          example: 200.00
+                        rewardAmountSek:
+                          type: number
+                          format: decimal
+                          example: 22.20
+                        verifiedByBusiness:
+                          type: boolean
+                          example: true
+                        createdAt:
+                          type: string
+                          format: date-time
+                          example: "2025-09-25T12:00:00Z"
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Invalid feedback IDs provided"
+                  details:
+                    type: array
+                    items:
+                      type: string
+                    example:
+                      - "Feedback a1b2c3d4-e5f6-7890-abcd-ef1234567890 not found"
+        '401':
+          description: Unauthorized - admin authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Admin authentication required"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Failed to calculate rewards"
+
+components:
+  securitySchemes:
+    AdminAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Admin session token from /api/admin/auth/login

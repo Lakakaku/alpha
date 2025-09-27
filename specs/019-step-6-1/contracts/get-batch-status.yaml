@@ -1,0 +1,167 @@
+openapi: 3.0.0
+info:
+  title: Get Batch Status API
+  version: 1.0.0
+  description: Get payment batch processing status
+
+paths:
+  /api/admin/payments/batch/{batchId}:
+    get:
+      summary: Get batch processing status
+      description: |
+        Retrieves detailed status of a payment batch including progress,
+        successful/failed payment counts, and processing timeline.
+      operationId: getBatchStatus
+      tags:
+        - Payments
+      security:
+        - AdminAuth: []
+      parameters:
+        - name: batchId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Batch ID to query
+          example: "f6a7b8c9-d0e1-2345-f123-456789012345"
+      responses:
+        '200':
+          description: Batch status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - batch
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  batch:
+                    type: object
+                    required:
+                      - id
+                      - batchWeek
+                      - status
+                      - totalCustomers
+                      - totalTransactions
+                      - totalAmountSek
+                      - successfulPayments
+                      - failedPayments
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        example: "f6a7b8c9-d0e1-2345-f123-456789012345"
+                      batchWeek:
+                        type: string
+                        example: "2025-W09"
+                      weekStartDate:
+                        type: string
+                        format: date
+                        example: "2025-09-15"
+                      weekEndDate:
+                        type: string
+                        format: date
+                        example: "2025-09-21"
+                      status:
+                        type: string
+                        enum: [pending, processing, completed, failed, partial]
+                        example: "completed"
+                      totalCustomers:
+                        type: integer
+                        example: 127
+                      totalTransactions:
+                        type: integer
+                        example: 127
+                      totalAmountSek:
+                        type: number
+                        format: decimal
+                        example: 5420.50
+                      successfulPayments:
+                        type: integer
+                        example: 124
+                      failedPayments:
+                        type: integer
+                        example: 3
+                      successRate:
+                        type: number
+                        format: decimal
+                        description: Success rate percentage
+                        example: 97.64
+                      startedAt:
+                        type: string
+                        format: date-time
+                        example: "2025-09-25T00:00:00Z"
+                      completedAt:
+                        type: string
+                        format: date-time
+                        nullable: true
+                        example: "2025-09-25T00:08:32Z"
+                      processingDurationSeconds:
+                        type: integer
+                        nullable: true
+                        example: 512
+                      jobLockedBy:
+                        type: string
+                        nullable: true
+                        description: Railway instance/pod ID that processed the batch
+                        example: "railway-pod-abc123"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Admin authentication required"
+        '404':
+          description: Batch not found
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Batch not found"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Failed to retrieve batch status"
+
+components:
+  securitySchemes:
+    AdminAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Admin session token from /api/admin/auth/login

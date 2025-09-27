@@ -1,0 +1,356 @@
+openapi: 3.0.3
+info:
+  title: Business Verification API
+  description: API endpoints for business verification workflow
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api/business
+    description: Development server
+  - url: https://business.vocilia.com/api/business
+    description: Production server
+
+security:
+  - BusinessAuth: []
+
+paths:
+  /verification/databases:
+    get:
+      summary: List verification databases
+      description: Get verification databases for the authenticated business
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [ready, downloaded, submitted, processed, expired]
+        - name: cycle_week
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of verification databases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VerificationDatabase'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /verification/databases/{databaseId}:
+    get:
+      summary: Get verification database details
+      description: Get details of a specific verification database
+      parameters:
+        - name: databaseId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Verification database details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationDatabaseDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /verification/databases/{databaseId}/download/{format}:
+    get:
+      summary: Download verification database file
+      description: Download verification database in specified format
+      parameters:
+        - name: databaseId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: format
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [csv, excel, json]
+      responses:
+        '200':
+          description: File download URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  download_url:
+                    type: string
+                    format: uri
+                  expires_at:
+                    type: string
+                    format: date-time
+                  filename:
+                    type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /verification/databases/{databaseId}/submit:
+    post:
+      summary: Submit verification results
+      description: Submit verified transaction data back to admin
+      parameters:
+        - name: databaseId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                verification_file:
+                  type: string
+                  format: binary
+                  description: CSV/Excel file with verification results
+                format:
+                  type: string
+                  enum: [csv, excel]
+              required:
+                - verification_file
+                - format
+      responses:
+        '200':
+          description: Verification submitted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  verified_count:
+                    type: integer
+                  fake_count:
+                    type: integer
+                  total_processed:
+                    type: integer
+        '400':
+          description: Invalid file format or data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+  /verification/databases/{databaseId}/records:
+    get:
+      summary: Get verification records
+      description: Get individual transaction records for verification
+      parameters:
+        - name: databaseId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+      responses:
+        '200':
+          description: List of verification records
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  records:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/VerificationRecord'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+    patch:
+      summary: Update verification records
+      description: Mark individual transactions as verified or fake
+      parameters:
+        - name: databaseId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                records:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      record_id:
+                        type: string
+                        format: uuid
+                      verification_status:
+                        type: string
+                        enum: [verified, fake]
+                    required:
+                      - record_id
+                      - verification_status
+              required:
+                - records
+      responses:
+        '200':
+          description: Records updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated_count:
+                    type: integer
+                  message:
+                    type: string
+
+components:
+  securitySchemes:
+    BusinessAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Business JWT token from login
+
+  schemas:
+    VerificationDatabase:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        store_id:
+          type: string
+          format: uuid
+        store_name:
+          type: string
+        transaction_count:
+          type: integer
+        status:
+          type: string
+          enum: [ready, downloaded, submitted, processed, expired]
+        deadline_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    VerificationDatabaseDetail:
+      allOf:
+        - $ref: '#/components/schemas/VerificationDatabase'
+        - type: object
+          properties:
+            verified_count:
+              type: integer
+            fake_count:
+              type: integer
+            unverified_count:
+              type: integer
+            available_formats:
+              type: array
+              items:
+                type: string
+                enum: [csv, excel, json]
+
+    VerificationRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        transaction_time:
+          type: string
+          format: date-time
+        transaction_value:
+          type: number
+          format: decimal
+        verification_status:
+          type: string
+          enum: [pending, verified, fake]
+        reward_percentage:
+          type: number
+          format: decimal
+        reward_amount:
+          type: number
+          format: decimal
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        total_pages:
+          type: integer
+
+    ValidationError:
+      type: object
+      properties:
+        error:
+          type: string
+        validation_errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+              row:
+                type: integer
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

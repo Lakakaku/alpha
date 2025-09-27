@@ -1,0 +1,254 @@
+# Artillery Load Testing Configuration for QR Scan Workflow
+# Tests the complete customer journey from QR scan to feedback submission
+
+config:
+  target: '{{ $processEnvironment.BACKEND_API_URL || "http://localhost:8000" }}'
+  phases:
+    # Warm-up phase
+    - duration: 60
+      arrivalRate: 1
+      name: "Warm-up"
+    # Gradual load increase
+    - duration: 120
+      arrivalRate: 2
+      rampTo: 10
+      name: "Ramp-up"
+    # Sustained load
+    - duration: 300
+      arrivalRate: 10
+      name: "Sustained load"
+    # Peak load
+    - duration: 120
+      arrivalRate: 10
+      rampTo: 25
+      name: "Peak load"
+    # Cool-down
+    - duration: 60
+      arrivalRate: 25
+      rampTo: 0
+      name: "Cool-down"
+  
+  # Performance thresholds
+  ensure:
+    thresholds:
+      - http.response_time.p95: 1000  # 95% of responses under 1s
+      - http.response_time.p99: 2000  # 99% of responses under 2s
+      - http.response_time.median: 500  # Median under 500ms
+      - http.codes.200: 95  # 95% success rate minimum
+      - http.codes.500: 0   # No server errors
+    
+  # Load testing configuration
+  http:
+    timeout: 10
+    extendedMetrics: true
+    
+  # Payload configuration for test data
+  payload:
+    path: "{{ $processEnvironment.TEST_DATA_PATH || './tests/generators/load-test-data.csv' }}"
+    fields:
+      - swedishPhone
+      - personalNumber
+      - storeId
+      - feedbackText
+    order: sequence
+    skipHeader: true
+
+  # Custom plugins for Swedish data
+  plugins:
+    statsd:
+      host: "{{ $processEnvironment.STATSD_HOST }}"
+      port: "{{ $processEnvironment.STATSD_PORT || 8125 }}"
+      prefix: "vocilia.load_test"
+
+scenarios:
+  # Complete QR scan to feedback workflow
+  - name: "QR Scan to Feedback Workflow"
+    weight: 70
+    flow:
+      # Step 1: Generate QR code (business side)
+      - post:
+          url: "/api/qr/generate"
+          headers:
+            Content-Type: "application/json"
+          json:
+            storeId: "{{ storeId }}"
+            customerId: "{{ swedishPhone }}"
+            expiresIn: 3600
+          capture:
+            - json: "$.data.qrId"
+              as: "qrId"
+            - json: "$.data.sessionId"  
+              as: "sessionId"
+          expect:
+            - statusCode: 201
+            - contentType: json
+            - hasProperty: "data.qrId"
+
+      # Step 2: Customer scans QR code
+      - get:
+          url: "/api/qr/{{ qrId }}/scan"
+          headers:
+            User-Agent: "VociliaCustomerApp/1.0 (iPhone; iOS 15.0)"
+          expect:
+            - statusCode: 200
+            - contentType: json
+            - hasProperty: "data.verificationRequired"
+
+      # Step 3: Customer submits verification data
+      - post:
+          url: "/api/verification/submit"
+          headers:
+            Content-Type: "application/json"
+          json:
+            sessionId: "{{ sessionId }}"
+            phone: "{{ swedishPhone }}"
+            personalNumber: "{{ personalNumber }}"
+            consent: true
+          capture:
+            - json: "$.data.verificationId"
+              as: "verificationId"
+          expect:
+            - statusCode: 200
+            - contentType: json
+            - hasProperty: "data.verificationId"
+
+      # Step 4: Verification processing
+      - get:
+          url: "/api/verification/{{ verificationId }}/status"
+          expect:
+            - statusCode: 200
+            - contentType: json
+          think: 2
+
+      # Step 5: AI feedback call simulation
+      - post:
+          url: "/api/calls/initiate"
+          headers:
+            Content-Type: "application/json"
+          json:
+            verificationId: "{{ verificationId }}"
+            phone: "{{ swedishPhone }}"
+            language: "sv-SE"
+          capture:
+            - json: "$.data.callId"
+              as: "callId"
+          expect:
+            - statusCode: 200
+            - contentType: json
+            - hasProperty: "data.callId"
+
+      # Step 6: Feedback submission (simulating AI call completion)
+      - post:
+          url: "/api/feedback/submit"
+          headers:
+            Content-Type: "application/json"
+          json:
+            callId: "{{ callId }}"
+            feedback: "{{ feedbackText }}"
+            score: 85
+            duration: 120
+            aiMetadata:
+              sentiment: "positive"
+              keywords: ["service", "kvalitet", "bra"]
+          expect:
+            - statusCode: 201
+            - contentType: json
+            - hasProperty: "data.feedbackId"
+
+      # Step 7: Feedback processing and grading
+      - get:
+          url: "/api/feedback/{{ callId }}/grade"
+          expect:
+            - statusCode: 200
+            - contentType: json
+            - hasProperty: "data.grade"
+            - hasProperty: "data.rewardPercentage"
+
+  # QR code generation load testing
+  - name: "QR Code Generation Load"
+    weight: 15
+    flow:
+      - post:
+          url: "/api/qr/generate"
+          headers:
+            Content-Type: "application/json"
+          json:
+            storeId: "{{ storeId }}"
+            customerId: "{{ swedishPhone }}"
+            expiresIn: 3600
+          expect:
+            - statusCode: 201
+            - contentType: json
+            - hasProperty: "data.qrId"
+
+  # Verification system load testing
+  - name: "Verification System Load"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/verification/submit"
+          headers:
+            Content-Type: "application/json"
+          json:
+            sessionId: "load-test-{{ $randomString() }}"
+            phone: "{{ swedishPhone }}"
+            personalNumber: "{{ personalNumber }}"
+            consent: true
+          expect:
+            - statusCode: 200
+            - contentType: json
+            - hasProperty: "data.verificationId"
+
+  # Feedback processing load testing
+  - name: "Feedback Processing Load"
+    weight: 5
+    flow:
+      - post:
+          url: "/api/feedback/submit"
+          headers:
+            Content-Type: "application/json"
+          json:
+            callId: "load-test-{{ $randomString() }}"
+            feedback: "{{ feedbackText }}"
+            score: "{{ $randomInt(50, 100) }}"
+            duration: "{{ $randomInt(60, 300) }}"
+            aiMetadata:
+              sentiment: "{{ $pick(['positive', 'neutral', 'negative']) }}"
+              keywords: ["test", "load", "performance"]
+          expect:
+            - statusCode: 201
+            - contentType: json
+            - hasProperty: "data.feedbackId"
+
+# Custom functions for Swedish data generation
+before:
+  flow:
+    - log: "Starting QR workflow load test"
+    - log: "Target: {{ $processEnvironment.BACKEND_API_URL }}"
+    - log: "Expected concurrent users: 25 peak"
+
+after:
+  flow:
+    - log: "QR workflow load test completed"
+    - log: "Check metrics for performance analysis"
+
+# Error handling configuration
+defaults:
+  headers:
+    Accept: "application/json"
+    X-Load-Test: "artillery-qr-workflow"
+  
+  # Retry configuration
+  beforeRequest: |
+    function(requestParams, context, ee, next) {
+      requestParams.timeout = 10000; // 10 second timeout
+      return next();
+    }
+  
+  afterResponse: |
+    function(requestParams, response, context, ee, next) {
+      if (response.statusCode >= 400) {
+        console.log(`Error ${response.statusCode}: ${response.body}`);
+      }
+      return next();
+    }

@@ -1,0 +1,527 @@
+openapi: 3.0.3
+info:
+  title: Security API
+  description: Security hardening, audit logging, and intrusion detection
+  version: 1.0.0
+  contact:
+    name: Vocilia Security Team
+
+servers:
+  - url: https://api.vocilia.com
+    description: Production API
+  - url: https://api-staging.vocilia.com
+    description: Staging API
+
+paths:
+  /api/security/audit-logs:
+    get:
+      summary: Retrieve audit logs
+      description: Gets audit logs with filtering and pagination
+      operationId: getAuditLogs
+      tags:
+        - Security
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: event_type
+          in: query
+          schema:
+            type: string
+            enum: [authentication, authorization, data_access, data_modification, admin_action, security_violation, system_event, fraud_detection]
+          description: Filter by event type
+        - name: user_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by user ID
+        - name: correlation_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by correlation ID
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter from this date
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter until this date
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+          description: Number of results to return
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Number of results to skip
+      responses:
+        '200':
+          description: Audit logs retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  logs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        event_type:
+                          type: string
+                          enum: [authentication, authorization, data_access, data_modification, admin_action, security_violation, system_event, fraud_detection]
+                        user_id:
+                          type: string
+                          format: uuid
+                          nullable: true
+                        user_type:
+                          type: string
+                          enum: [customer, business, admin, system]
+                          nullable: true
+                        action_performed:
+                          type: string
+                        resource_type:
+                          type: string
+                          nullable: true
+                        resource_id:
+                          type: string
+                          nullable: true
+                        ip_address:
+                          type: string
+                          nullable: true
+                        user_agent:
+                          type: string
+                          nullable: true
+                        correlation_id:
+                          type: string
+                          format: uuid
+                        event_metadata:
+                          type: object
+                        result_status:
+                          type: string
+                          enum: [success, failure, blocked, warning]
+                        created_at:
+                          type: string
+                          format: date-time
+                  pagination:
+                    type: object
+                    properties:
+                      total_count:
+                        type: integer
+                      has_next:
+                        type: boolean
+                      has_previous:
+                        type: boolean
+        '403':
+          description: Admin access required
+        '400':
+          description: Invalid query parameters
+
+    post:
+      summary: Create audit log entry
+      description: Records a security or audit event
+      operationId: createAuditLog
+      tags:
+        - Security
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - event_type
+                - action_performed
+                - result_status
+              properties:
+                event_type:
+                  type: string
+                  enum: [authentication, authorization, data_access, data_modification, admin_action, security_violation, system_event, fraud_detection]
+                user_id:
+                  type: string
+                  format: uuid
+                  nullable: true
+                user_type:
+                  type: string
+                  enum: [customer, business, admin, system]
+                  nullable: true
+                action_performed:
+                  type: string
+                  maxLength: 500
+                resource_type:
+                  type: string
+                  maxLength: 100
+                resource_id:
+                  type: string
+                  maxLength: 100
+                ip_address:
+                  type: string
+                user_agent:
+                  type: string
+                correlation_id:
+                  type: string
+                  format: uuid
+                event_metadata:
+                  type: object
+                result_status:
+                  type: string
+                  enum: [success, failure, blocked, warning]
+      responses:
+        '201':
+          description: Audit log created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  correlation_id:
+                    type: string
+                    format: uuid
+                  created_at:
+                    type: string
+                    format: date-time
+        '400':
+          description: Invalid audit log data
+        '403':
+          description: Insufficient permissions
+
+  /api/security/intrusion-events:
+    get:
+      summary: Get intrusion detection events
+      description: Retrieves security intrusion events with filtering
+      operationId: getIntrusionEvents
+      tags:
+        - Security
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: event_type
+          in: query
+          schema:
+            type: string
+            enum: [brute_force, sql_injection, unusual_access, privilege_escalation, data_exfiltration, rate_limit_violation, authentication_bypass]
+        - name: severity_level
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10
+        - name: incident_status
+          in: query
+          schema:
+            type: string
+            enum: [detected, investigating, contained, resolved, false_positive]
+        - name: source_ip
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        '200':
+          description: Intrusion events retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  events:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        event_type:
+                          type: string
+                          enum: [brute_force, sql_injection, unusual_access, privilege_escalation, data_exfiltration, rate_limit_violation, authentication_bypass]
+                        source_ip:
+                          type: string
+                        target_resource:
+                          type: string
+                          nullable: true
+                        attack_pattern:
+                          type: string
+                          nullable: true
+                        severity_level:
+                          type: integer
+                          minimum: 1
+                          maximum: 10
+                        detection_method:
+                          type: string
+                        automated_response:
+                          type: object
+                        admin_notified:
+                          type: boolean
+                        incident_status:
+                          type: string
+                          enum: [detected, investigating, contained, resolved, false_positive]
+                        first_detected_at:
+                          type: string
+                          format: date-time
+                        resolved_at:
+                          type: string
+                          format: date-time
+                          nullable: true
+        '403':
+          description: Admin access required
+
+    post:
+      summary: Report intrusion event
+      description: Reports a detected security intrusion
+      operationId: reportIntrusionEvent
+      tags:
+        - Security
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - event_type
+                - source_ip
+                - severity_level
+                - detection_method
+              properties:
+                event_type:
+                  type: string
+                  enum: [brute_force, sql_injection, unusual_access, privilege_escalation, data_exfiltration, rate_limit_violation, authentication_bypass]
+                source_ip:
+                  type: string
+                target_resource:
+                  type: string
+                attack_pattern:
+                  type: string
+                severity_level:
+                  type: integer
+                  minimum: 1
+                  maximum: 10
+                detection_method:
+                  type: string
+                  maxLength: 200
+                automated_response:
+                  type: object
+                  description: Actions taken automatically
+      responses:
+        '201':
+          description: Intrusion event reported successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  incident_status:
+                    type: string
+                  admin_notified:
+                    type: boolean
+                  created_at:
+                    type: string
+                    format: date-time
+        '400':
+          description: Invalid intrusion event data
+
+  /api/security/intrusion-events/{event_id}:
+    patch:
+      summary: Update intrusion event status
+      description: Updates the investigation status of an intrusion event
+      operationId: updateIntrusionEvent
+      tags:
+        - Security
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                incident_status:
+                  type: string
+                  enum: [investigating, contained, resolved, false_positive]
+                resolution_notes:
+                  type: string
+                  maxLength: 1000
+      responses:
+        '200':
+          description: Intrusion event updated successfully
+        '404':
+          description: Intrusion event not found
+        '403':
+          description: Admin access required
+
+  /api/security/rls-policies:
+    get:
+      summary: Get RLS policy violations
+      description: Retrieves Row Level Security policy violations
+      operationId: getRLSViolations
+      tags:
+        - Security
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: table_name
+          in: query
+          schema:
+            type: string
+        - name: policy_name
+          in: query
+          schema:
+            type: string
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: RLS violations retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  violations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        policy_name:
+                          type: string
+                        table_name:
+                          type: string
+                        violation_count:
+                          type: integer
+                        last_violation:
+                          type: string
+                          format: date-time
+                        affected_users:
+                          type: array
+                          items:
+                            type: string
+        '403':
+          description: Super admin access required
+
+  /api/security/monitoring/alerts:
+    get:
+      summary: Get real-time security alerts
+      description: Retrieves active security monitoring alerts
+      operationId: getSecurityAlerts
+      tags:
+        - Security
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: alert_type
+          in: query
+          schema:
+            type: string
+            enum: [failed_logins, unusual_access, privilege_escalation]
+        - name: severity
+          in: query
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+      responses:
+        '200':
+          description: Security alerts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  alerts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        alert_type:
+                          type: string
+                        severity:
+                          type: string
+                        description:
+                          type: string
+                        affected_resource:
+                          type: string
+                        detection_time:
+                          type: string
+                          format: date-time
+                        auto_resolved:
+                          type: boolean
+                  summary:
+                    type: object
+                    properties:
+                      total_alerts:
+                        type: integer
+                      critical_count:
+                        type: integer
+                      high_count:
+                        type: integer
+        '403':
+          description: Admin access required
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        correlation_id:
+          type: string
+          format: uuid

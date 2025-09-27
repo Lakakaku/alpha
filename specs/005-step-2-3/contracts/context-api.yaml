@@ -1,0 +1,1368 @@
+openapi: 3.0.3
+info:
+  title: Business Context Management API
+  description: Store context configuration and management for AI-powered feedback collection
+  version: 1.0.0
+  contact:
+    name: Vocilia Alpha Team
+    email: team@vocilia.se
+
+servers:
+  - url: https://api.vocilia.se/v1
+    description: Production API
+  - url: http://localhost:3000
+    description: Development API
+
+security:
+  - supabaseAuth: []
+
+paths:
+  /business/stores/{storeId}/context:
+    get:
+      summary: Get complete store context
+      description: Retrieve all context information for a specific store
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Store identifier
+        - name: version
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+          description: Specific context version (defaults to latest)
+      responses:
+        '200':
+          description: Store context retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreContextResponse'
+        '404':
+          description: Store not found or no context configured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Insufficient permissions to access store context
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update complete store context
+      description: Update all context sections for a store (creates new version)
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreContextUpdate'
+      responses:
+        '200':
+          description: Context updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreContextResponse'
+        '400':
+          description: Invalid context data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '403':
+          description: Insufficient permissions to modify context
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /business/stores/{storeId}/context/profile:
+    get:
+      summary: Get store profile context
+      description: Retrieve basic store characteristics and operational information
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Store profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreProfile'
+        '404':
+          description: Store profile not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create or update store profile
+      description: Set basic store characteristics and operational details
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreProfileUpdate'
+      responses:
+        '201':
+          description: Store profile created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreProfile'
+        '200':
+          description: Store profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreProfile'
+        '400':
+          description: Invalid profile data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+
+  /business/stores/{storeId}/context/personnel:
+    get:
+      summary: Get personnel context
+      description: Retrieve staff information and organizational structure
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Personnel context retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonnelContext'
+
+    post:
+      summary: Create or update personnel context
+      description: Set staff allocation and organizational information
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonnelContextUpdate'
+      responses:
+        '201':
+          description: Personnel context created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonnelContext'
+        '200':
+          description: Personnel context updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonnelContext'
+
+  /business/stores/{storeId}/context/layout:
+    get:
+      summary: Get layout context
+      description: Retrieve store layout and department positioning
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Layout context retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LayoutContext'
+
+    post:
+      summary: Create or update layout context
+      description: Set store layout and department positioning
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                layoutData:
+                  $ref: '#/components/schemas/LayoutContextUpdate'
+                layoutImage:
+                  type: string
+                  format: binary
+                  description: Store layout map image
+      responses:
+        '201':
+          description: Layout context created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LayoutContext'
+
+  /business/stores/{storeId}/context/inventory:
+    get:
+      summary: Get inventory context
+      description: Retrieve product categories and service offerings
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Inventory context retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryContext'
+
+    post:
+      summary: Create or update inventory context
+      description: Set product categories and service offerings
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventoryContextUpdate'
+      responses:
+        '201':
+          description: Inventory context created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryContext'
+
+  /business/stores/{storeId}/context/completeness:
+    get:
+      summary: Get context completeness score
+      description: Calculate and return context completeness percentage and recommendations
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Completeness score calculated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompletenessScore'
+
+  /business/stores/{storeId}/context/versions:
+    get:
+      summary: List context versions
+      description: Get version history for store context changes
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        '200':
+          description: Context versions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  versions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ContextVersion'
+
+    post:
+      summary: Create context version
+      description: Create new version snapshot of current context
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                changeSummary:
+                  type: string
+                  description: Brief description of changes
+                changeReason:
+                  type: string
+                  description: Reason for creating new version
+              required:
+                - changeSummary
+      responses:
+        '201':
+          description: Context version created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContextVersion'
+
+  /business/stores/{storeId}/context/export:
+    get:
+      summary: Export context for AI integration
+      description: Get formatted context data for AI feedback systems
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [structured, narrative, compact]
+            default: structured
+      responses:
+        '200':
+          description: Context exported successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIContextExport'
+
+components:
+  securitySchemes:
+    supabaseAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    StoreContextResponse:
+      type: object
+      properties:
+        storeId:
+          type: string
+          format: uuid
+        completenessScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        lastUpdated:
+          type: string
+          format: date-time
+        version:
+          type: integer
+        profile:
+          $ref: '#/components/schemas/StoreProfile'
+        personnel:
+          $ref: '#/components/schemas/PersonnelContext'
+        layout:
+          $ref: '#/components/schemas/LayoutContext'
+        inventory:
+          $ref: '#/components/schemas/InventoryContext'
+      required:
+        - storeId
+        - completenessScore
+        - lastUpdated
+        - version
+
+    StoreContextUpdate:
+      type: object
+      properties:
+        profile:
+          $ref: '#/components/schemas/StoreProfileUpdate'
+        personnel:
+          $ref: '#/components/schemas/PersonnelContextUpdate'
+        layout:
+          $ref: '#/components/schemas/LayoutContextUpdate'
+        inventory:
+          $ref: '#/components/schemas/InventoryContextUpdate'
+        changeSummary:
+          type: string
+          description: Brief description of changes made
+
+    StoreProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        storeType:
+          type: string
+          enum: [grocery, electronics, clothing, restaurant, pharmacy, hardware, bookstore, other]
+        storeSubtype:
+          type: string
+          nullable: true
+        squareFootage:
+          type: integer
+          minimum: 1
+        departmentCount:
+          type: integer
+          minimum: 1
+        layoutType:
+          type: string
+          enum: [linear, grid, free-form, multi-level]
+        address:
+          $ref: '#/components/schemas/StoreAddress'
+        operatingHours:
+          type: array
+          items:
+            $ref: '#/components/schemas/OperatingHours'
+        parkingAvailable:
+          type: boolean
+        accessibilityFeatures:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - storeType
+        - squareFootage
+        - departmentCount
+        - layoutType
+        - address
+
+    StoreProfileUpdate:
+      type: object
+      properties:
+        storeType:
+          type: string
+          enum: [grocery, electronics, clothing, restaurant, pharmacy, hardware, bookstore, other]
+        storeSubtype:
+          type: string
+          nullable: true
+        squareFootage:
+          type: integer
+          minimum: 1
+        departmentCount:
+          type: integer
+          minimum: 1
+        layoutType:
+          type: string
+          enum: [linear, grid, free-form, multi-level]
+        address:
+          $ref: '#/components/schemas/StoreAddress'
+        operatingHours:
+          type: array
+          items:
+            $ref: '#/components/schemas/OperatingHoursUpdate'
+        parkingAvailable:
+          type: boolean
+        accessibilityFeatures:
+          type: array
+          items:
+            type: string
+      required:
+        - storeType
+        - squareFootage
+        - departmentCount
+        - layoutType
+        - address
+
+    StoreAddress:
+      type: object
+      properties:
+        line1:
+          type: string
+        line2:
+          type: string
+          nullable: true
+        city:
+          type: string
+        postalCode:
+          type: string
+      required:
+        - line1
+        - city
+        - postalCode
+
+    OperatingHours:
+      type: object
+      properties:
+        dayOfWeek:
+          type: integer
+          minimum: 0
+          maximum: 6
+          description: 0=Sunday, 6=Saturday
+        openTime:
+          type: string
+          format: time
+          nullable: true
+          description: Opening time (null = closed)
+        closeTime:
+          type: string
+          format: time
+          nullable: true
+          description: Closing time (null = closed)
+        isSpecialHours:
+          type: boolean
+        specialDate:
+          type: string
+          format: date
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+      required:
+        - dayOfWeek
+
+    OperatingHoursUpdate:
+      type: object
+      properties:
+        dayOfWeek:
+          type: integer
+          minimum: 0
+          maximum: 6
+        openTime:
+          type: string
+          format: time
+          nullable: true
+        closeTime:
+          type: string
+          format: time
+          nullable: true
+        isSpecialHours:
+          type: boolean
+        specialDate:
+          type: string
+          format: date
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+      required:
+        - dayOfWeek
+
+    PersonnelContext:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        totalStaffCount:
+          type: integer
+          minimum: 1
+        managerName:
+          type: string
+        assistantManagerName:
+          type: string
+          nullable: true
+        customerServicePoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServicePoint'
+        departmentHeads:
+          type: object
+          additionalProperties:
+            type: string
+          description: Department name to manager name mapping
+        staffExpertiseAreas:
+          type: array
+          items:
+            type: string
+        shifts:
+          type: array
+          items:
+            $ref: '#/components/schemas/PersonnelShift'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - totalStaffCount
+        - managerName
+        - customerServicePoints
+
+    PersonnelContextUpdate:
+      type: object
+      properties:
+        totalStaffCount:
+          type: integer
+          minimum: 1
+        managerName:
+          type: string
+        assistantManagerName:
+          type: string
+          nullable: true
+        customerServicePoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServicePointUpdate'
+        departmentHeads:
+          type: object
+          additionalProperties:
+            type: string
+        staffExpertiseAreas:
+          type: array
+          items:
+            type: string
+        shifts:
+          type: array
+          items:
+            $ref: '#/components/schemas/PersonnelShiftUpdate'
+      required:
+        - totalStaffCount
+        - managerName
+        - customerServicePoints
+
+    ServicePoint:
+      type: object
+      properties:
+        location:
+          type: string
+        type:
+          type: string
+          enum: [information_desk, customer_service, checkout, returns]
+        staffCount:
+          type: integer
+          minimum: 1
+        hours:
+          type: string
+          description: Operating hours for this service point
+      required:
+        - location
+        - type
+        - staffCount
+        - hours
+
+    ServicePointUpdate:
+      type: object
+      properties:
+        location:
+          type: string
+        type:
+          type: string
+          enum: [information_desk, customer_service, checkout, returns]
+        staffCount:
+          type: integer
+          minimum: 1
+        hours:
+          type: string
+      required:
+        - location
+        - type
+        - staffCount
+        - hours
+
+    PersonnelShift:
+      type: object
+      properties:
+        shiftName:
+          type: string
+          enum: [morning, afternoon, evening, night]
+        startTime:
+          type: string
+          format: time
+        endTime:
+          type: string
+          format: time
+        staffCount:
+          type: integer
+          minimum: 1
+        departmentAllocation:
+          type: object
+          additionalProperties:
+            type: integer
+            minimum: 0
+          description: Department name to staff count mapping
+        daysOfWeek:
+          type: array
+          items:
+            type: integer
+            minimum: 0
+            maximum: 6
+      required:
+        - shiftName
+        - startTime
+        - endTime
+        - staffCount
+        - departmentAllocation
+        - daysOfWeek
+
+    PersonnelShiftUpdate:
+      type: object
+      properties:
+        shiftName:
+          type: string
+          enum: [morning, afternoon, evening, night]
+        startTime:
+          type: string
+          format: time
+        endTime:
+          type: string
+          format: time
+        staffCount:
+          type: integer
+          minimum: 1
+        departmentAllocation:
+          type: object
+          additionalProperties:
+            type: integer
+            minimum: 0
+        daysOfWeek:
+          type: array
+          items:
+            type: integer
+            minimum: 0
+            maximum: 6
+      required:
+        - shiftName
+        - startTime
+        - endTime
+        - staffCount
+        - departmentAllocation
+        - daysOfWeek
+
+    LayoutContext:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        layoutImageUrl:
+          type: string
+          nullable: true
+          description: URL to store layout map image
+        entranceCount:
+          type: integer
+          minimum: 1
+        exitCount:
+          type: integer
+          minimum: 1
+        checkoutLocations:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckoutLocation'
+        customerFlowPattern:
+          type: string
+          enum: [clockwise, counterclockwise, grid, free]
+        specialAreas:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/SpecialArea'
+        departments:
+          type: array
+          items:
+            $ref: '#/components/schemas/LayoutDepartment'
+        changes:
+          type: array
+          items:
+            $ref: '#/components/schemas/LayoutChange'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - entranceCount
+        - exitCount
+        - checkoutLocations
+        - customerFlowPattern
+
+    LayoutContextUpdate:
+      type: object
+      properties:
+        entranceCount:
+          type: integer
+          minimum: 1
+        exitCount:
+          type: integer
+          minimum: 1
+        checkoutLocations:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckoutLocationUpdate'
+        customerFlowPattern:
+          type: string
+          enum: [clockwise, counterclockwise, grid, free]
+        specialAreas:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/SpecialAreaUpdate'
+        departments:
+          type: array
+          items:
+            $ref: '#/components/schemas/LayoutDepartmentUpdate'
+      required:
+        - entranceCount
+        - exitCount
+        - checkoutLocations
+        - customerFlowPattern
+
+    CheckoutLocation:
+      type: object
+      properties:
+        id:
+          type: string
+        position:
+          $ref: '#/components/schemas/Position'
+        counterCount:
+          type: integer
+          minimum: 1
+        expressLanes:
+          type: integer
+          minimum: 0
+      required:
+        - id
+        - position
+        - counterCount
+
+    CheckoutLocationUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+        position:
+          $ref: '#/components/schemas/Position'
+        counterCount:
+          type: integer
+          minimum: 1
+        expressLanes:
+          type: integer
+          minimum: 0
+      required:
+        - id
+        - position
+        - counterCount
+
+    Position:
+      type: object
+      properties:
+        x:
+          type: integer
+        y:
+          type: integer
+      required:
+        - x
+        - y
+
+    SpecialArea:
+      type: object
+      properties:
+        position:
+          $ref: '#/components/schemas/Position'
+        size:
+          type: string
+          enum: [small, medium, large]
+      required:
+        - position
+        - size
+
+    SpecialAreaUpdate:
+      type: object
+      properties:
+        position:
+          $ref: '#/components/schemas/Position'
+        size:
+          type: string
+          enum: [small, medium, large]
+      required:
+        - position
+        - size
+
+    LayoutDepartment:
+      type: object
+      properties:
+        departmentName:
+          type: string
+        position:
+          $ref: '#/components/schemas/Position'
+        width:
+          type: integer
+          minimum: 1
+        height:
+          type: integer
+          minimum: 1
+        departmentType:
+          type: string
+          enum: [product, service, infrastructure]
+        adjacencyPriority:
+          type: integer
+          minimum: 0
+      required:
+        - departmentName
+        - position
+        - width
+        - height
+        - departmentType
+
+    LayoutDepartmentUpdate:
+      type: object
+      properties:
+        departmentName:
+          type: string
+        position:
+          $ref: '#/components/schemas/Position'
+        width:
+          type: integer
+          minimum: 1
+        height:
+          type: integer
+          minimum: 1
+        departmentType:
+          type: string
+          enum: [product, service, infrastructure]
+        adjacencyPriority:
+          type: integer
+          minimum: 0
+      required:
+        - departmentName
+        - position
+        - width
+        - height
+        - departmentType
+
+    LayoutChange:
+      type: object
+      properties:
+        changeDate:
+          type: string
+          format: date
+        changeType:
+          type: string
+          enum: [renovation, expansion, department_move]
+        changeDescription:
+          type: string
+        affectedDepartments:
+          type: array
+          items:
+            type: string
+        reason:
+          type: string
+          nullable: true
+      required:
+        - changeDate
+        - changeType
+        - changeDescription
+        - affectedDepartments
+
+    InventoryContext:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        primaryCategories:
+          type: array
+          items:
+            type: string
+        paymentMethods:
+          type: array
+          items:
+            type: string
+            enum: [cash, card, mobile_pay, swish, klarna, paypal]
+        loyaltyPrograms:
+          type: object
+          additionalProperties: true
+          description: Existing loyalty program details
+        seasonalVariations:
+          type: object
+          additionalProperties: true
+          description: Seasonal inventory changes
+        priceRange:
+          type: string
+          enum: [budget, mid-range, premium, luxury]
+        brandFocus:
+          type: string
+          enum: [national_brands, store_brands, mixed]
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductCategory'
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/SpecialService'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - primaryCategories
+        - paymentMethods
+        - priceRange
+        - brandFocus
+
+    InventoryContextUpdate:
+      type: object
+      properties:
+        primaryCategories:
+          type: array
+          items:
+            type: string
+        paymentMethods:
+          type: array
+          items:
+            type: string
+            enum: [cash, card, mobile_pay, swish, klarna, paypal]
+        loyaltyPrograms:
+          type: object
+          additionalProperties: true
+        seasonalVariations:
+          type: object
+          additionalProperties: true
+        priceRange:
+          type: string
+          enum: [budget, mid-range, premium, luxury]
+        brandFocus:
+          type: string
+          enum: [national_brands, store_brands, mixed]
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductCategoryUpdate'
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/SpecialServiceUpdate'
+      required:
+        - primaryCategories
+        - paymentMethods
+        - priceRange
+        - brandFocus
+
+    ProductCategory:
+      type: object
+      properties:
+        categoryName:
+          type: string
+        subcategories:
+          type: array
+          items:
+            type: string
+        departmentLocation:
+          type: string
+        seasonalAvailability:
+          type: object
+          nullable: true
+          additionalProperties: true
+        staffExpertiseRequired:
+          type: boolean
+      required:
+        - categoryName
+        - departmentLocation
+
+    ProductCategoryUpdate:
+      type: object
+      properties:
+        categoryName:
+          type: string
+        subcategories:
+          type: array
+          items:
+            type: string
+        departmentLocation:
+          type: string
+        seasonalAvailability:
+          type: object
+          nullable: true
+          additionalProperties: true
+        staffExpertiseRequired:
+          type: boolean
+      required:
+        - categoryName
+        - departmentLocation
+
+    SpecialService:
+      type: object
+      properties:
+        serviceName:
+          type: string
+        serviceType:
+          type: string
+          enum: [delivery, installation, custom_order, repair]
+        availabilitySchedule:
+          type: object
+          additionalProperties: true
+        costStructure:
+          type: string
+          enum: [free, fee_based, purchase_dependent]
+        staffRequirements:
+          type: string
+          nullable: true
+      required:
+        - serviceName
+        - serviceType
+        - availabilitySchedule
+        - costStructure
+
+    SpecialServiceUpdate:
+      type: object
+      properties:
+        serviceName:
+          type: string
+        serviceType:
+          type: string
+          enum: [delivery, installation, custom_order, repair]
+        availabilitySchedule:
+          type: object
+          additionalProperties: true
+        costStructure:
+          type: string
+          enum: [free, fee_based, purchase_dependent]
+        staffRequirements:
+          type: string
+          nullable: true
+      required:
+        - serviceName
+        - serviceType
+        - availabilitySchedule
+        - costStructure
+
+    CompletenessScore:
+      type: object
+      properties:
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+        missingFields:
+          type: array
+          items:
+            type: string
+        recommendations:
+          type: array
+          items:
+            type: string
+        sectionScores:
+          type: object
+          properties:
+            profile:
+              type: integer
+              minimum: 0
+              maximum: 100
+            personnel:
+              type: integer
+              minimum: 0
+              maximum: 100
+            layout:
+              type: integer
+              minimum: 0
+              maximum: 100
+            inventory:
+              type: integer
+              minimum: 0
+              maximum: 100
+          required:
+            - profile
+            - personnel
+            - layout
+            - inventory
+      required:
+        - score
+        - missingFields
+        - recommendations
+        - sectionScores
+
+    ContextVersion:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        versionNumber:
+          type: integer
+        changeSummary:
+          type: string
+        changedSections:
+          type: array
+          items:
+            type: string
+        changeReason:
+          type: string
+          nullable: true
+        createdBy:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - versionNumber
+        - changeSummary
+        - changedSections
+        - createdAt
+
+    AIContextExport:
+      type: object
+      properties:
+        storeId:
+          type: string
+          format: uuid
+        format:
+          type: string
+          enum: [structured, narrative, compact]
+        contextData:
+          oneOf:
+            - $ref: '#/components/schemas/StructuredContext'
+            - $ref: '#/components/schemas/NarrativeContext'
+            - $ref: '#/components/schemas/CompactContext'
+        exportedAt:
+          type: string
+          format: date-time
+      required:
+        - storeId
+        - format
+        - contextData
+        - exportedAt
+
+    StructuredContext:
+      type: object
+      properties:
+        profile:
+          $ref: '#/components/schemas/StoreProfile'
+        personnel:
+          $ref: '#/components/schemas/PersonnelContext'
+        layout:
+          $ref: '#/components/schemas/LayoutContext'
+        inventory:
+          $ref: '#/components/schemas/InventoryContext'
+
+    NarrativeContext:
+      type: object
+      properties:
+        storeDescription:
+          type: string
+        operationalContext:
+          type: string
+        customerExperience:
+          type: string
+        fraudDetectionBaseline:
+          type: string
+
+    CompactContext:
+      type: object
+      properties:
+        essentials:
+          type: object
+          additionalProperties: true
+        fraudFlags:
+          type: array
+          items:
+            type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+      required:
+        - error
+        - message
+        - timestamp
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        validationErrors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+              value:
+                type: string
+        timestamp:
+          type: string
+          format: date-time
+      required:
+        - error
+        - message
+        - validationErrors
+        - timestamp

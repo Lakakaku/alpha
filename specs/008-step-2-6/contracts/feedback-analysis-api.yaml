@@ -1,0 +1,525 @@
+openapi: 3.0.3
+info:
+  title: Feedback Analysis Dashboard API
+  description: API contracts for feedback analysis, search, and reporting functionality
+  version: 1.0.0
+  contact:
+    name: Vocilia Development Team
+
+servers:
+  - url: https://api.vocilia.com
+    description: Production server
+  - url: http://localhost:3001
+    description: Development server
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    FeedbackRecord:
+      type: object
+      required:
+        - id
+        - store_id
+        - business_id
+        - content
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        store_id:
+          type: string
+          format: uuid
+        business_id:
+          type: string
+          format: uuid
+        content:
+          type: string
+          minLength: 10
+          maxLength: 5000
+        sentiment:
+          type: string
+          enum: [positive, negative, neutral, mixed]
+        department_tags:
+          type: array
+          items:
+            type: string
+        ai_summary:
+          type: string
+          maxLength: 1000
+        priority_score:
+          type: integer
+          minimum: 1
+          maximum: 10
+        analysis_status:
+          type: string
+          enum: [pending, processing, completed, failed]
+        week_number:
+          type: integer
+          minimum: 1
+          maximum: 53
+        year:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        processed_at:
+          type: string
+          format: date-time
+
+    AnalysisReport:
+      type: object
+      required:
+        - id
+        - store_id
+        - business_id
+        - week_number
+        - year
+      properties:
+        id:
+          type: string
+          format: uuid
+        store_id:
+          type: string
+          format: uuid
+        business_id:
+          type: string
+          format: uuid
+        week_number:
+          type: integer
+          minimum: 1
+          maximum: 53
+        year:
+          type: integer
+        positive_summary:
+          type: string
+        negative_summary:
+          type: string
+        general_opinions:
+          type: string
+        new_critiques:
+          type: array
+          items:
+            type: string
+        actionable_insights:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActionableInsight'
+        total_feedback_count:
+          type: integer
+          minimum: 0
+        sentiment_breakdown:
+          $ref: '#/components/schemas/SentimentBreakdown'
+        department_breakdown:
+          type: object
+          additionalProperties:
+            type: integer
+        trend_comparison:
+          $ref: '#/components/schemas/TrendComparison'
+        generated_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    ActionableInsight:
+      type: object
+      required:
+        - title
+        - description
+        - priority
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        department:
+          type: string
+        suggested_actions:
+          type: array
+          items:
+            type: string
+
+    SentimentBreakdown:
+      type: object
+      properties:
+        positive:
+          type: integer
+          minimum: 0
+        negative:
+          type: integer
+          minimum: 0
+        neutral:
+          type: integer
+          minimum: 0
+        mixed:
+          type: integer
+          minimum: 0
+
+    TrendComparison:
+      type: object
+      properties:
+        sentiment_change:
+          type: object
+          properties:
+            positive_change:
+              type: number
+              description: Percentage change in positive feedback
+            negative_change:
+              type: number
+              description: Percentage change in negative feedback
+        new_issues:
+          type: array
+          items:
+            type: string
+        resolved_issues:
+          type: array
+          items:
+            type: string
+        trend_direction:
+          type: string
+          enum: [improving, declining, stable]
+
+    SearchQuery:
+      type: object
+      required:
+        - query_text
+      properties:
+        query_text:
+          type: string
+          minLength: 1
+          maxLength: 500
+        departments:
+          type: array
+          items:
+            type: string
+        sentiment_filter:
+          type: string
+          enum: [positive, negative, neutral, mixed, all]
+        date_range:
+          $ref: '#/components/schemas/DateRange'
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+
+    DateRange:
+      type: object
+      properties:
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+
+    SearchResults:
+      type: object
+      properties:
+        feedback:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeedbackRecord'
+        total_count:
+          type: integer
+        execution_time_ms:
+          type: integer
+        summary:
+          type: string
+          description: AI-generated summary of search results
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+paths:
+  /feedback-analysis/reports/{storeId}/current:
+    get:
+      summary: Get current week's analysis report
+      description: Retrieve the analysis report for the current week for a specific store
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Current week analysis report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisReport'
+        '404':
+          description: No analysis available for current week
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Access denied to store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /feedback-analysis/reports/{storeId}/historical:
+    get:
+      summary: Get historical analysis reports
+      description: Retrieve analysis reports for previous weeks
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: weeks
+          in: query
+          description: Number of previous weeks to retrieve
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 52
+            default: 4
+      responses:
+        '200':
+          description: Historical analysis reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AnalysisReport'
+
+  /feedback-analysis/search/{storeId}:
+    post:
+      summary: Search feedback with natural language queries
+      description: Search and filter feedback using natural language or structured queries
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchQuery'
+      responses:
+        '200':
+          description: Search results with AI-generated summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResults'
+        '400':
+          description: Invalid search query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /feedback-analysis/temporal/{storeId}:
+    get:
+      summary: Get temporal comparison data
+      description: Compare current week's feedback with previous periods
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: comparison_weeks
+          in: query
+          description: Number of weeks to compare against
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+            default: 1
+      responses:
+        '200':
+          description: Temporal comparison data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrendComparison'
+
+  /feedback-analysis/insights/{storeId}:
+    get:
+      summary: Get actionable insights
+      description: Retrieve AI-generated actionable insights for a store
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: priority
+          in: query
+          description: Filter insights by priority level
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+        - name: status
+          in: query
+          description: Filter insights by status
+          schema:
+            type: string
+            enum: [new, acknowledged, in_progress, resolved, dismissed]
+      responses:
+        '200':
+          description: List of actionable insights
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActionableInsight'
+
+  /feedback-analysis/insights/{insightId}/status:
+    patch:
+      summary: Update insight status
+      description: Update the status of a specific insight (acknowledge, mark in progress, etc.)
+      parameters:
+        - name: insightId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [acknowledged, in_progress, resolved, dismissed]
+                notes:
+                  type: string
+                  maxLength: 1000
+      responses:
+        '200':
+          description: Insight status updated successfully
+        '404':
+          description: Insight not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /feedback-analysis/reports/{storeId}/generate:
+    post:
+      summary: Trigger manual report generation
+      description: Manually trigger AI analysis report generation for a specific week
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                week_number:
+                  type: integer
+                  minimum: 1
+                  maximum: 53
+                year:
+                  type: integer
+                force_regenerate:
+                  type: boolean
+                  default: false
+      responses:
+        '202':
+          description: Report generation started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id:
+                    type: string
+                  estimated_completion:
+                    type: string
+                    format: date-time
+        '409':
+          description: Report already exists and force_regenerate is false
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /feedback-analysis/status/{jobId}:
+    get:
+      summary: Check analysis job status
+      description: Check the status of a background analysis job
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job status information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id:
+                    type: string
+                  status:
+                    type: string
+                    enum: [pending, processing, completed, failed]
+                  progress:
+                    type: integer
+                    minimum: 0
+                    maximum: 100
+                  estimated_completion:
+                    type: string
+                    format: date-time
+                  error_message:
+                    type: string
+                    description: Present only if status is 'failed'

@@ -1,0 +1,493 @@
+openapi: 3.0.3
+info:
+  title: Store Management API
+  description: Admin endpoints for store CRUD operations and monitoring
+  version: 1.0.0
+
+servers:
+  - url: https://alpha-backend.railway.app/api
+    description: Production backend
+  - url: http://localhost:3001/api
+    description: Development backend
+
+paths:
+  /admin/stores:
+    get:
+      summary: List stores
+      description: Get paginated list of all stores with status information
+      operationId: listStores
+      tags:
+        - Store Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number (1-based)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of stores per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: status
+          in: query
+          description: Filter by online status
+          schema:
+            type: string
+            enum: [online, offline, all]
+            default: all
+        - name: search
+          in: query
+          description: Search by name or email
+          schema:
+            type: string
+            maxLength: 100
+      responses:
+        '200':
+          description: Stores retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      stores:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Store'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Create store
+      description: Create a new store with comprehensive business information
+      operationId: createStore
+      tags:
+        - Store Management
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - business_email
+                - phone_number
+                - physical_address
+                - business_registration_number
+              properties:
+                name:
+                  type: string
+                  minLength: 2
+                  maxLength: 100
+                  example: Café Stockholm Central
+                business_email:
+                  type: string
+                  format: email
+                  example: info@cafestockholm.se
+                phone_number:
+                  type: string
+                  pattern: '^(\+46|0)[0-9\s\-]{8,15}$'
+                  example: '+46 8 123 456 78'
+                physical_address:
+                  type: string
+                  minLength: 10
+                  maxLength: 500
+                  example: Centralplan 15, 111 20 Stockholm, Sweden
+                business_registration_number:
+                  type: string
+                  pattern: '^[0-9]{6}-[0-9]{4}$'
+                  example: 556123-4567
+      responses:
+        '201':
+          description: Store created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      store:
+                        $ref: '#/components/schemas/Store'
+                      qr_code:
+                        type: string
+                        description: Generated QR code data
+                        example: vocilia://store/550e8400-e29b-41d4-a716-446655440000
+        '400':
+          description: Invalid store data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Store already exists (duplicate email or registration number)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/stores/{storeId}:
+    get:
+      summary: Get store details
+      description: Retrieve comprehensive store information including status metrics
+      operationId: getStore
+      tags:
+        - Store Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          description: Store UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Store details retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      store:
+                        $ref: '#/components/schemas/StoreDetailed'
+                      metrics:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/StoreMetric'
+        '404':
+          description: Store not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      summary: Update store
+      description: Update store information and settings
+      operationId: updateStore
+      tags:
+        - Store Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          description: Store UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 2
+                  maxLength: 100
+                business_email:
+                  type: string
+                  format: email
+                phone_number:
+                  type: string
+                  pattern: '^(\+46|0)[0-9\s\-]{8,15}$'
+                physical_address:
+                  type: string
+                  minLength: 10
+                  maxLength: 500
+                monitoring_enabled:
+                  type: boolean
+      responses:
+        '200':
+          description: Store updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      store:
+                        $ref: '#/components/schemas/Store'
+        '400':
+          description: Invalid update data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Store not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/stores/{storeId}/upload:
+    post:
+      summary: Upload verification database
+      description: Upload weekly verification database for store
+      operationId: uploadVerificationData
+      tags:
+        - Store Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          description: Store UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - week_start_date
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: CSV file with verification data
+                week_start_date:
+                  type: string
+                  format: date
+                  example: '2025-09-22'
+                notes:
+                  type: string
+                  maxLength: 500
+                  example: Regular weekly upload
+      responses:
+        '200':
+          description: Upload successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      upload_id:
+                        type: string
+                        format: uuid
+                      records_processed:
+                        type: integer
+                        example: 1247
+                      week_start_date:
+                        type: string
+                        format: date
+                        example: '2025-09-22'
+        '400':
+          description: Invalid file or parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: File too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Store:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        name:
+          type: string
+          example: Café Stockholm Central
+        business_email:
+          type: string
+          format: email
+          example: info@cafestockholm.se
+        phone_number:
+          type: string
+          example: '+46 8 123 456 78'
+        physical_address:
+          type: string
+          example: Centralplan 15, 111 20 Stockholm, Sweden
+        business_registration_number:
+          type: string
+          example: 556123-4567
+        online_status:
+          type: boolean
+          example: true
+        sync_status:
+          type: string
+          enum: [pending, success, failed]
+          example: success
+        last_sync_at:
+          type: string
+          format: date-time
+          nullable: true
+          example: 2025-09-23T12:00:00Z
+        error_count:
+          type: integer
+          example: 0
+        performance_score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 10
+          nullable: true
+          example: 8.5
+        monitoring_enabled:
+          type: boolean
+          example: true
+        created_at:
+          type: string
+          format: date-time
+          example: 2025-09-20T10:00:00Z
+        updated_at:
+          type: string
+          format: date-time
+          example: 2025-09-23T14:30:00Z
+
+    StoreDetailed:
+      allOf:
+        - $ref: '#/components/schemas/Store'
+        - type: object
+          properties:
+            qr_code_data:
+              type: string
+              example: vocilia://store/550e8400-e29b-41d4-a716-446655440000
+            total_calls_count:
+              type: integer
+              example: 1247
+            recent_calls_count:
+              type: integer
+              description: Calls in last 24 hours
+              example: 23
+
+    StoreMetric:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        store_id:
+          type: string
+          format: uuid
+        metric_type:
+          type: string
+          enum: [sync, error, performance, availability]
+          example: performance
+        metric_value:
+          type: number
+          example: 8.5
+        metric_unit:
+          type: string
+          example: score
+        recorded_at:
+          type: string
+          format: date-time
+          example: 2025-09-23T14:30:00Z
+        metadata:
+          type: object
+          nullable: true
+          example:
+            response_time_ms: 120
+            success_rate: 0.98
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        total_pages:
+          type: integer
+          example: 5
+        total_items:
+          type: integer
+          example: 87
+        has_next:
+          type: boolean
+          example: true
+        has_prev:
+          type: boolean
+          example: false
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: STORE_NOT_FOUND
+            message:
+              type: string
+              example: Store not found
+            details:
+              type: object
+              nullable: true
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

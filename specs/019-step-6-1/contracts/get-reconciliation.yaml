@@ -1,0 +1,208 @@
+openapi: 3.0.0
+info:
+  title: Get Reconciliation Report API
+  version: 1.0.0
+  description: Get weekly reconciliation report with store-by-store breakdown
+
+paths:
+  /api/admin/payments/reconciliation/{batchId}:
+    get:
+      summary: Get reconciliation report
+      description: |
+        Retrieves comprehensive reconciliation report for a payment batch including
+        total rewards paid, admin fees, payment success/failure counts, store-by-store
+        breakdown, and discrepancy tracking.
+      operationId: getReconciliation
+      tags:
+        - Payments
+      security:
+        - AdminAuth: []
+      parameters:
+        - name: batchId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Batch ID to reconcile
+          example: "f6a7b8c9-d0e1-2345-f123-456789012345"
+      responses:
+        '200':
+          description: Reconciliation report retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - report
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  report:
+                    type: object
+                    required:
+                      - id
+                      - batchId
+                      - reportPeriod
+                      - totalRewardsPaidSek
+                      - adminFeesCollectedSek
+                      - paymentSuccessCount
+                      - paymentFailureCount
+                      - paymentSuccessRate
+                      - businessInvoiceTotalSek
+                      - storeBreakdown
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        example: "a7b8c9d0-e1f2-3456-a123-456789012345"
+                      batchId:
+                        type: string
+                        format: uuid
+                        example: "f6a7b8c9-d0e1-2345-f123-456789012345"
+                      reportPeriod:
+                        type: string
+                        example: "2025-W09"
+                      totalRewardsPaidSek:
+                        type: number
+                        format: decimal
+                        example: 5420.50
+                      adminFeesCollectedSek:
+                        type: number
+                        format: decimal
+                        description: 20% of total rewards
+                        example: 1084.10
+                      paymentSuccessCount:
+                        type: integer
+                        example: 124
+                      paymentFailureCount:
+                        type: integer
+                        example: 3
+                      paymentSuccessRate:
+                        type: number
+                        format: decimal
+                        example: 97.64
+                      discrepancyCount:
+                        type: integer
+                        example: 0
+                      discrepancyAmountSek:
+                        type: number
+                        format: decimal
+                        example: 0.00
+                      businessInvoiceTotalSek:
+                        type: number
+                        format: decimal
+                        description: Total business invoices (rewards + admin fees)
+                        example: 6504.60
+                      generatedAt:
+                        type: string
+                        format: date-time
+                        example: "2025-09-25T00:10:00Z"
+                      storeBreakdown:
+                        type: array
+                        description: Per-store reward breakdown
+                        items:
+                          type: object
+                          required:
+                            - storeId
+                            - storeName
+                            - businessId
+                            - businessName
+                            - feedbackCount
+                            - verifiedCount
+                            - totalRewardsSek
+                            - successfulPayments
+                            - failedPayments
+                          properties:
+                            storeId:
+                              type: string
+                              format: uuid
+                              example: "e5f6a7b8-c9d0-1234-ef12-345678901234"
+                            storeName:
+                              type: string
+                              example: "Store A - Downtown"
+                            businessId:
+                              type: string
+                              format: uuid
+                              example: "d4e5f6a7-b8c9-0123-def1-234567890123"
+                            businessName:
+                              type: string
+                              example: "Business A AB"
+                            feedbackCount:
+                              type: integer
+                              example: 42
+                            verifiedCount:
+                              type: integer
+                              example: 40
+                            avgQualityScore:
+                              type: number
+                              format: decimal
+                              example: 78.5
+                            totalRewardsSek:
+                              type: number
+                              format: decimal
+                              example: 1820.30
+                            successfulPayments:
+                              type: integer
+                              example: 39
+                            failedPayments:
+                              type: integer
+                              example: 1
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Admin authentication required"
+        '404':
+          description: Reconciliation report not found
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Reconciliation report not found for batch"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Failed to retrieve reconciliation report"
+
+components:
+  securitySchemes:
+    AdminAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Admin session token from /api/admin/auth/login

@@ -1,0 +1,7 @@
+{
+  "buildCommand": "pnpm run build --filter=@vocilia/customer",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "framework": "nextjs",
+  "outputDirectory": "apps/customer/.next",
+  "rootDirectory": "apps/customer"
+}

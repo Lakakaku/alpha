@@ -1,0 +1,222 @@
+openapi: 3.0.3
+info:
+  title: Admin Authentication API
+  description: Authentication endpoints for admin dashboard
+  version: 1.0.0
+  
+servers:
+  - url: https://alpha-backend.railway.app/api
+    description: Production backend
+  - url: http://localhost:3001/api
+    description: Development backend
+
+paths:
+  /admin/auth/login:
+    post:
+      summary: Admin login
+      description: Authenticate admin user with username and password
+      operationId: adminLogin
+      tags:
+        - Admin Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  minLength: 3
+                  maxLength: 50
+                  pattern: '^[a-zA-Z0-9_]+$'
+                  example: admin_user
+                password:
+                  type: string
+                  minLength: 8
+                  example: secure_password
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      admin:
+                        $ref: '#/components/schemas/Admin'
+                      session:
+                        $ref: '#/components/schemas/AdminSession'
+                      token:
+                        type: string
+                        description: Supabase Auth JWT token
+                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too many login attempts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/auth/logout:
+    post:
+      summary: Admin logout
+      description: End admin session and invalidate token
+      operationId: adminLogout
+      tags:
+        - Admin Authentication
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Logged out successfully
+        '401':
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/auth/session:
+    get:
+      summary: Get current session
+      description: Retrieve current admin session information
+      operationId: getAdminSession
+      tags:
+        - Admin Authentication
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Session information retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      admin:
+                        $ref: '#/components/schemas/Admin'
+                      session:
+                        $ref: '#/components/schemas/AdminSession'
+        '401':
+          description: Invalid or expired session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Admin:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        username:
+          type: string
+          example: admin_user
+        full_name:
+          type: string
+          example: Admin User
+        email:
+          type: string
+          format: email
+          example: admin@vocilia.com
+        is_active:
+          type: boolean
+          example: true
+        created_at:
+          type: string
+          format: date-time
+          example: 2025-09-23T10:00:00Z
+        last_login_at:
+          type: string
+          format: date-time
+          nullable: true
+          example: 2025-09-23T14:30:00Z
+
+    AdminSession:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 660e8400-e29b-41d4-a716-446655440001
+        admin_id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        created_at:
+          type: string
+          format: date-time
+          example: 2025-09-23T14:30:00Z
+        last_activity_at:
+          type: string
+          format: date-time
+          example: 2025-09-23T16:15:00Z
+        expires_at:
+          type: string
+          format: date-time
+          example: 2025-09-23T16:30:00Z
+        is_active:
+          type: boolean
+          example: true
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: INVALID_CREDENTIALS
+            message:
+              type: string
+              example: Invalid username or password
+            details:
+              type: object
+              nullable: true
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

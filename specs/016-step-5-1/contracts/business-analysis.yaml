@@ -1,0 +1,726 @@
+openapi: 3.0.3
+info:
+  title: Business Analysis API
+  description: API for AI-powered business intelligence and weekly feedback analysis
+  version: 1.0.0
+  contact:
+    name: Vocilia Development Team
+
+servers:
+  - url: https://api.vocilia.com/v1
+    description: Production server
+  - url: https://staging-api.vocilia.com/v1
+    description: Staging server
+
+paths:
+  /ai/business-analysis/weekly-reports:
+    post:
+      summary: Generate weekly analysis report
+      description: Create comprehensive weekly feedback analysis for a store (FR-017, FR-018, FR-019)
+      tags:
+        - Business Analysis
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - store_id
+                - analysis_week
+              properties:
+                store_id:
+                  type: string
+                  format: uuid
+                analysis_week:
+                  type: string
+                  format: date
+                  description: Monday of the week to analyze (YYYY-MM-DD)
+                include_comparisons:
+                  type: boolean
+                  default: true
+                  description: Include historical trend analysis
+                analysis_depth:
+                  type: string
+                  enum: [standard, detailed, comprehensive]
+                  default: standard
+                custom_focus_areas:
+                  type: array
+                  items:
+                    type: string
+                    enum: [customer_service, product_quality, store_environment, pricing, accessibility]
+      responses:
+        '202':
+          description: Weekly analysis generation started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  analysis_job_id:
+                    type: string
+                    format: uuid
+                  estimated_completion:
+                    type: string
+                    format: date-time
+                  status:
+                    type: string
+                    enum: [queued, processing]
+        '400':
+          description: Invalid analysis request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Analysis already exists for this week
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ai/business-analysis/weekly-reports/{store_id}:
+    get:
+      summary: List weekly reports for store
+      description: Retrieve historical weekly analysis reports
+      tags:
+        - Business Analysis
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: store_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: weeks_back
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 52
+            default: 12
+          description: Number of weeks of history to return
+        - name: include_summary_only
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: Return only report summaries, not full details
+      responses:
+        '200':
+          description: Weekly reports retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reports:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WeeklyAnalysisReport'
+                  pagination:
+                    $ref: '#/components/schemas/PaginationInfo'
+
+  /ai/business-analysis/weekly-reports/{store_id}/{analysis_week}:
+    get:
+      summary: Get specific weekly report
+      description: Retrieve detailed weekly analysis for a specific week (FR-020, FR-021, FR-022)
+      tags:
+        - Business Analysis
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: store_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: analysis_week
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Monday of the analysis week (YYYY-MM-DD)
+      responses:
+        '200':
+          description: Weekly report retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeeklyAnalysisReport'
+        '404':
+          description: Report not found for specified week
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ai/business-analysis/search:
+    post:
+      summary: Search feedback and insights
+      description: Natural language search across feedback and analysis reports (FR-023)
+      tags:
+        - Business Analysis
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - store_id
+                - query
+              properties:
+                store_id:
+                  type: string
+                  format: uuid
+                query:
+                  type: string
+                  maxLength: 500
+                  description: Natural language query (e.g., "meat section opinions")
+                time_range:
+                  type: object
+                  properties:
+                    start_date:
+                      type: string
+                      format: date
+                    end_date:
+                      type: string
+                      format: date
+                search_scope:
+                  type: array
+                  items:
+                    type: string
+                    enum: [feedback_summaries, weekly_reports, actionable_items, trends]
+                  default: [feedback_summaries, weekly_reports]
+                max_results:
+                  type: integer
+                  minimum: 1
+                  maximum: 100
+                  default: 20
+      responses:
+        '200':
+          description: Search results returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SearchResult'
+                  total_matches:
+                    type: integer
+                  search_metadata:
+                    type: object
+                    properties:
+                      query_interpretation:
+                        type: string
+                      search_time_ms:
+                        type: integer
+                      relevance_threshold:
+                        type: number
+
+  /ai/business-analysis/insights/trends:
+    get:
+      summary: Get trend analysis
+      description: Retrieve trend identification and predictive insights (FR-021, FR-022)
+      tags:
+        - Business Analysis
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: store_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: trend_period
+          in: query
+          schema:
+            type: string
+            enum: [4_weeks, 8_weeks, 12_weeks, 26_weeks]
+            default: 8_weeks
+        - name: trend_types
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [positive_trends, negative_trends, emerging_issues, improvement_opportunities]
+            default: [positive_trends, negative_trends, emerging_issues]
+        - name: include_predictions
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Trend analysis retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  trend_analysis:
+                    $ref: '#/components/schemas/TrendAnalysis'
+                  predictive_insights:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PredictiveInsight'
+                  analysis_period:
+                    type: object
+                    properties:
+                      start_date:
+                        type: string
+                        format: date
+                      end_date:
+                        type: string
+                        format: date
+                      weeks_analyzed:
+                        type: integer
+
+  /ai/business-analysis/recommendations:
+    get:
+      summary: Get actionable recommendations
+      description: Retrieve AI-generated improvement recommendations (FR-024)
+      tags:
+        - Business Analysis
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: store_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: priority_filter
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [low, medium, high, urgent]
+            default: [high, urgent]
+        - name: category_filter
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [product, service, environment, staff, pricing, accessibility]
+        - name: implementation_complexity
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [simple, moderate, complex]
+        - name: max_recommendations
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        '200':
+          description: Recommendations retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recommendations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BusinessRecommendation'
+                  summary_stats:
+                    type: object
+                    properties:
+                      total_recommendations:
+                        type: integer
+                      by_priority:
+                        type: object
+                      by_category:
+                        type: object
+                      estimated_impact_score:
+                        type: number
+                        minimum: 0
+                        maximum: 10
+
+components:
+  schemas:
+    WeeklyAnalysisReport:
+      type: object
+      required:
+        - report_id
+        - store_id
+        - analysis_week
+        - total_feedback_count
+      properties:
+        report_id:
+          type: string
+          format: uuid
+        store_id:
+          type: string
+          format: uuid
+        analysis_week:
+          type: string
+          format: date
+          description: Monday of analysis week
+        total_feedback_count:
+          type: integer
+          minimum: 0
+        average_quality_score:
+          type: number
+          minimum: 0
+          maximum: 1
+          nullable: true
+        positive_trends:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrendItem'
+        negative_issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/IssueItem'
+        new_issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/IssueItem'
+          description: Issues not present in previous week
+        department_insights:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/DepartmentInsight'
+        historical_comparison:
+          $ref: '#/components/schemas/HistoricalComparison'
+        predictive_insights:
+          type: array
+          items:
+            $ref: '#/components/schemas/PredictiveInsight'
+        actionable_recommendations:
+          type: array
+          items:
+            $ref: '#/components/schemas/BusinessRecommendation'
+        report_metadata:
+          type: object
+          properties:
+            analysis_model_version:
+              type: string
+            generation_time_ms:
+              type: integer
+            data_quality_score:
+              type: number
+              minimum: 0
+              maximum: 1
+        generated_at:
+          type: string
+          format: date-time
+
+    TrendItem:
+      type: object
+      required:
+        - category
+        - description
+        - trend_strength
+      properties:
+        category:
+          type: string
+          enum: [customer_service, product_quality, store_environment, pricing, accessibility]
+        description:
+          type: string
+          maxLength: 300
+        trend_strength:
+          type: string
+          enum: [weak, moderate, strong, very_strong]
+        supporting_feedback_count:
+          type: integer
+        confidence_level:
+          type: number
+          minimum: 0
+          maximum: 1
+        trend_direction:
+          type: string
+          enum: [improving, stable, declining]
+        departments_affected:
+          type: array
+          items:
+            type: string
+
+    IssueItem:
+      type: object
+      required:
+        - category
+        - description
+        - severity
+      properties:
+        category:
+          type: string
+          enum: [customer_service, product_quality, store_environment, pricing, accessibility]
+        description:
+          type: string
+          maxLength: 300
+        severity:
+          type: string
+          enum: [minor, moderate, serious, critical]
+        frequency:
+          type: integer
+          description: Number of times mentioned
+        impact_assessment:
+          type: string
+          enum: [low, medium, high, very_high]
+        departments_affected:
+          type: array
+          items:
+            type: string
+        first_mentioned:
+          type: string
+          format: date
+          description: When this issue was first detected
+
+    DepartmentInsight:
+      type: object
+      properties:
+        department_name:
+          type: string
+        feedback_count:
+          type: integer
+        average_satisfaction:
+          type: number
+          minimum: 0
+          maximum: 10
+        top_positive_aspects:
+          type: array
+          items:
+            type: string
+          maxItems: 5
+        top_concerns:
+          type: array
+          items:
+            type: string
+          maxItems: 5
+        improvement_trend:
+          type: string
+          enum: [improving, stable, declining]
+        specific_recommendations:
+          type: array
+          items:
+            $ref: '#/components/schemas/BusinessRecommendation'
+
+    HistoricalComparison:
+      type: object
+      properties:
+        previous_week:
+          $ref: '#/components/schemas/WeekComparisonMetrics'
+        four_week_average:
+          $ref: '#/components/schemas/WeekComparisonMetrics'
+        twelve_week_average:
+          $ref: '#/components/schemas/WeekComparisonMetrics'
+        year_over_year:
+          $ref: '#/components/schemas/WeekComparisonMetrics'
+
+    WeekComparisonMetrics:
+      type: object
+      properties:
+        feedback_count_change:
+          type: number
+          description: Percentage change in feedback volume
+        quality_score_change:
+          type: number
+          description: Change in average quality score
+        satisfaction_trend:
+          type: string
+          enum: [improving, stable, declining]
+        notable_changes:
+          type: array
+          items:
+            type: string
+
+    PredictiveInsight:
+      type: object
+      required:
+        - insight_type
+        - description
+        - confidence_level
+      properties:
+        insight_type:
+          type: string
+          enum: [opportunity, risk, trend_continuation, seasonal_prediction]
+        description:
+          type: string
+          maxLength: 400
+        confidence_level:
+          type: number
+          minimum: 0
+          maximum: 1
+        time_horizon:
+          type: string
+          enum: [next_week, next_month, next_quarter]
+        potential_impact:
+          type: string
+          enum: [low, medium, high, very_high]
+        supporting_data_points:
+          type: array
+          items:
+            type: string
+        recommended_actions:
+          type: array
+          items:
+            type: string
+
+    TrendAnalysis:
+      type: object
+      properties:
+        positive_trends:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrendItem'
+        negative_trends:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrendItem'
+        emerging_issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/IssueItem'
+        improvement_opportunities:
+          type: array
+          items:
+            $ref: '#/components/schemas/BusinessRecommendation'
+
+    BusinessRecommendation:
+      type: object
+      required:
+        - recommendation_id
+        - category
+        - title
+        - description
+        - priority
+      properties:
+        recommendation_id:
+          type: string
+          format: uuid
+        category:
+          type: string
+          enum: [product, service, environment, staff, pricing, accessibility]
+        title:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        implementation_complexity:
+          type: string
+          enum: [simple, moderate, complex]
+        estimated_impact:
+          type: string
+          enum: [minor, moderate, significant, major]
+        departments_involved:
+          type: array
+          items:
+            type: string
+        estimated_cost_range:
+          type: string
+          enum: [minimal, low, medium, high, very_high]
+        timeline_estimate:
+          type: string
+          enum: [immediate, days, weeks, months]
+        supporting_feedback_count:
+          type: integer
+        related_issues:
+          type: array
+          items:
+            type: string
+        success_metrics:
+          type: array
+          items:
+            type: string
+
+    SearchResult:
+      type: object
+      properties:
+        result_type:
+          type: string
+          enum: [feedback_summary, weekly_report, actionable_item, trend]
+        result_id:
+          type: string
+        title:
+          type: string
+        content_excerpt:
+          type: string
+          maxLength: 300
+        relevance_score:
+          type: number
+          minimum: 0
+          maximum: 1
+        source_date:
+          type: string
+          format: date
+        source_week:
+          type: string
+          format: date
+          nullable: true
+        department:
+          type: string
+          nullable: true
+        category:
+          type: string
+          nullable: true
+
+    PaginationInfo:
+      type: object
+      properties:
+        total_items:
+          type: integer
+        items_per_page:
+          type: integer
+        current_page:
+          type: integer
+        total_pages:
+          type: integer
+        has_next:
+          type: boolean
+        has_previous:
+          type: boolean
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          description: Additional error context
+        timestamp:
+          type: string
+          format: date-time
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token from existing authentication system

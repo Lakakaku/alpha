@@ -1,0 +1,455 @@
+openapi: 3.0.3
+info:
+  title: Vocilia Production Monitoring API
+  description: API for monitoring system performance, uptime, and backup status
+  version: 1.0.0
+
+servers:
+  - url: https://api.vocilia.com
+    description: Production API
+  - url: https://staging-api.vocilia.com
+    description: Staging API
+
+paths:
+  /api/admin/monitoring/uptime:
+    get:
+      summary: Get system uptime metrics
+      description: Returns uptime statistics for 99.5% SLA monitoring
+      operationId: getUptimeMetrics
+      security:
+        - adminAuth: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [hour, day, week, month]
+            default: day
+        - name: environment
+          in: query
+          schema:
+            type: string
+            enum: [production, staging]
+            default: production
+      responses:
+        '200':
+          description: Uptime metrics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  period:
+                    type: string
+                  uptime_percent:
+                    type: number
+                    minimum: 0
+                    maximum: 100
+                  sla_target:
+                    type: number
+                    default: 99.5
+                  sla_status:
+                    type: string
+                    enum: [meeting, at_risk, violated]
+                  total_downtime_minutes:
+                    type: number
+                  incidents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UptimeIncident'
+                  current_status:
+                    type: string
+                    enum: [operational, degraded, outage]
+                required: [period, uptime_percent, sla_target, sla_status]
+
+  /api/admin/monitoring/performance:
+    get:
+      summary: Get performance metrics
+      description: Returns response time and performance data for <2s SLA monitoring
+      operationId: getPerformanceMetrics
+      security:
+        - adminAuth: []
+      parameters:
+        - name: timeframe
+          in: query
+          schema:
+            type: string
+            enum: [1h, 6h, 24h, 7d]
+            default: 24h
+        - name: app
+          in: query
+          schema:
+            type: string
+            enum: [backend, customer, business, admin]
+      responses:
+        '200':
+          description: Performance metrics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  timeframe:
+                    type: string
+                  metrics:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PerformanceMetric'
+                  sla_compliance:
+                    type: object
+                    properties:
+                      target_response_time_ms:
+                        type: number
+                        default: 2000
+                      current_avg_response_time_ms:
+                        type: number
+                      p95_response_time_ms:
+                        type: number
+                      meets_sla:
+                        type: boolean
+                  alerts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PerformanceAlert'
+
+  /api/admin/monitoring/backups:
+    get:
+      summary: Get backup status
+      description: Returns backup health and schedule information
+      operationId: getBackupStatus
+      security:
+        - adminAuth: []
+      responses:
+        '200':
+          description: Backup status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  last_backup:
+                    $ref: '#/components/schemas/BackupInfo'
+                  schedule:
+                    type: object
+                    properties:
+                      daily_backup_time:
+                        type: string
+                        description: UTC time for daily backups
+                      next_backup:
+                        type: string
+                        format: date-time
+                      retention_policy:
+                        type: object
+                        properties:
+                          daily_retention_days:
+                            type: integer
+                            default: 30
+                          weekly_retention_months:
+                            type: integer
+                            default: 6
+                          monthly_retention_years:
+                            type: integer
+                            default: 2
+                  recent_backups:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BackupInfo'
+                  health_status:
+                    type: string
+                    enum: [healthy, warning, critical]
+                  alerts:
+                    type: array
+                    items:
+                      type: string
+
+  /api/admin/monitoring/backup/restore:
+    post:
+      summary: Initiate backup restore
+      description: Triggers database restore from backup (emergency use)
+      operationId: initiateBackupRestore
+      security:
+        - adminAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                backup_id:
+                  type: string
+                target_environment:
+                  type: string
+                  enum: [staging, production]
+                  description: Production restores require additional confirmation
+                confirmation_token:
+                  type: string
+                  description: Required for production restores
+                reason:
+                  type: string
+              required: [backup_id, target_environment, reason]
+      responses:
+        '202':
+          description: Restore initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  restore_id:
+                    type: string
+                  status:
+                    type: string
+                    enum: [initiated]
+                  estimated_duration_minutes:
+                    type: integer
+                required: [restore_id, status]
+
+  /api/admin/monitoring/alerts:
+    get:
+      summary: Get active alerts
+      description: Returns current system alerts and their severity
+      operationId: getActiveAlerts
+      security:
+        - adminAuth: []
+      parameters:
+        - name: severity
+          in: query
+          schema:
+            type: string
+            enum: [info, warning, critical]
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [uptime, performance, security, backup]
+      responses:
+        '200':
+          description: Active alerts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  alerts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Alert'
+                  summary:
+                    type: object
+                    properties:
+                      total_alerts:
+                        type: integer
+                      critical_count:
+                        type: integer
+                      warning_count:
+                        type: integer
+                      info_count:
+                        type: integer
+
+  /api/admin/monitoring/ssl:
+    get:
+      summary: Get SSL certificate status
+      description: Returns SSL certificate health for all domains
+      operationId: getSSLStatus
+      security:
+        - adminAuth: []
+      responses:
+        '200':
+          description: SSL certificate status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  certificates:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SSLCertificate'
+                  overall_status:
+                    type: string
+                    enum: [healthy, warning, critical]
+                  expiring_soon:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        domain:
+                          type: string
+                        expires_in_days:
+                          type: integer
+
+components:
+  securitySchemes:
+    adminAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UptimeIncident:
+      type: object
+      properties:
+        incident_id:
+          type: string
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        duration_minutes:
+          type: number
+        affected_services:
+          type: array
+          items:
+            type: string
+        severity:
+          type: string
+          enum: [minor, major, critical]
+        description:
+          type: string
+        root_cause:
+          type: string
+        resolution:
+          type: string
+      required: [incident_id, start_time, duration_minutes, severity]
+
+    PerformanceMetric:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        app_name:
+          type: string
+          enum: [backend, customer, business, admin]
+        endpoint:
+          type: string
+        avg_response_time_ms:
+          type: number
+        p95_response_time_ms:
+          type: number
+        p99_response_time_ms:
+          type: number
+        request_count:
+          type: integer
+        error_rate_percent:
+          type: number
+        throughput_per_minute:
+          type: number
+      required: [timestamp, app_name, avg_response_time_ms]
+
+    PerformanceAlert:
+      type: object
+      properties:
+        alert_id:
+          type: string
+        triggered_at:
+          type: string
+          format: date-time
+        metric:
+          type: string
+          enum: [response_time, error_rate, throughput]
+        current_value:
+          type: number
+        threshold:
+          type: number
+        severity:
+          type: string
+          enum: [warning, critical]
+        app_name:
+          type: string
+        endpoint:
+          type: string
+      required: [alert_id, triggered_at, metric, current_value, threshold, severity]
+
+    BackupInfo:
+      type: object
+      properties:
+        backup_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        backup_type:
+          type: string
+          enum: [daily, weekly, monthly, manual]
+        size_bytes:
+          type: integer
+        status:
+          type: string
+          enum: [completed, failed, in_progress]
+        retention_expires_at:
+          type: string
+          format: date-time
+        database_name:
+          type: string
+        checksum:
+          type: string
+        restore_tested:
+          type: boolean
+          description: Whether backup restore has been tested
+      required: [backup_id, created_at, backup_type, status]
+
+    Alert:
+      type: object
+      properties:
+        alert_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        severity:
+          type: string
+          enum: [info, warning, critical]
+        category:
+          type: string
+          enum: [uptime, performance, security, backup, ssl]
+        title:
+          type: string
+        description:
+          type: string
+        affected_service:
+          type: string
+        status:
+          type: string
+          enum: [active, acknowledged, resolved]
+        acknowledged_by:
+          type: string
+        resolved_at:
+          type: string
+          format: date-time
+        resolution_notes:
+          type: string
+      required: [alert_id, created_at, severity, category, title, status]
+
+    SSLCertificate:
+      type: object
+      properties:
+        domain:
+          type: string
+        platform:
+          type: string
+          enum: [railway, vercel]
+        issuer:
+          type: string
+        status:
+          type: string
+          enum: [active, pending, expired, failed, renewing]
+        issued_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+        auto_renewal_enabled:
+          type: boolean
+        days_until_expiry:
+          type: integer
+        last_renewal_attempt:
+          type: string
+          format: date-time
+        certificate_hash:
+          type: string
+      required: [domain, platform, status, expires_at]

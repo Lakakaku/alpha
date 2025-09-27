@@ -1,0 +1,175 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "name": "vocilia-business",
+  "builds": [
+    {
+      "src": "apps/business/package.json",
+      "use": "@vercel/next",
+      "config": {
+        "distDir": ".next",
+        "buildCommand": "cd ../.. && pnpm --filter @vocilia/business build",
+        "installCommand": "cd ../.. && pnpm install --frozen-lockfile"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "apps/business/$1"
+    }
+  ],
+  "functions": {
+    "apps/business/src/app/api/*/route.ts": {
+      "runtime": "nodejs18.x",
+      "maxDuration": 30
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/analytics",
+      "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/cron/reports",
+      "schedule": "0 6 * * 1"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "NEXT_PUBLIC_SUPABASE_URL": "@supabase-url",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase-anon-key",
+    "NEXT_PUBLIC_API_URL": "https://api.vocilia.com",
+    "NEXT_PUBLIC_APP_URL": "https://vocilia.com",
+    "NEXT_PUBLIC_BUSINESS_URL": "https://business.vocilia.com",
+    "NEXT_PUBLIC_ADMIN_URL": "https://admin.vocilia.com",
+    "SUPABASE_SERVICE_ROLE_KEY": "@supabase-service-role-key",
+    "JWT_SECRET": "@jwt-secret",
+    "WEBHOOK_SECRET": "@webhook-secret",
+    "SENTRY_DSN": "@sentry-dsn",
+    "ANALYTICS_ID": "@analytics-id",
+    "STRIPE_PUBLISHABLE_KEY": "@stripe-publishable-key",
+    "STRIPE_SECRET_KEY": "@stripe-secret-key",
+    "STRIPE_WEBHOOK_SECRET": "@stripe-webhook-secret"
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(self)"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.vocilia.com https://api.stripe.com; frame-src https://js.stripe.com"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/login",
+      "destination": "/auth/login",
+      "permanent": false
+    },
+    {
+      "source": "/signup",
+      "destination": "/auth/signup",
+      "permanent": false
+    },
+    {
+      "source": "/register",
+      "destination": "/auth/signup",
+      "permanent": true
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://api.vocilia.com/api/:path*"
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/dashboard/overview"
+    }
+  ],
+  "regions": [
+    "fra1",
+    "arn1"
+  ],
+  "github": {
+    "enabled": true,
+    "autoJobCancelation": true,
+    "autoAlias": true,
+    "silent": false
+  },
+  "outputDirectory": "apps/business/.next",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm --filter @vocilia/business build",
+  "devCommand": "pnpm --filter @vocilia/business dev",
+  "framework": "nextjs",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "domains": [
+    {
+      "name": "business.vocilia.com",
+      "redirect": false
+    }
+  ],
+  "monitoring": {
+    "analytics": {
+      "enabled": true
+    },
+    "speedInsights": {
+      "enabled": true
+    },
+    "webVitals": {
+      "enabled": true
+    }
+  },
+  "images": {
+    "domains": [
+      "supabase.co",
+      "vocilia.com",
+      "business.vocilia.com"
+    ],
+    "formats": [
+      "image/avif",
+      "image/webp"
+    ],
+    "minimumCacheTTL": 3600
+  },
+  "preview": {
+    "allowlist": [
+      "development",
+      "staging"
+    ]
+  },
+  "middleware": [
+    {
+      "source": "/dashboard/:path*",
+      "middleware": "middleware"
+    },
+    {
+      "source": "/api/protected/:path*",
+      "middleware": "middleware"
+    }
+  ]
+}

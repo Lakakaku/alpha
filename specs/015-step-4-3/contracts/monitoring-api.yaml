@@ -1,0 +1,939 @@
+openapi: 3.0.3
+info:
+  title: Vocilia Monitoring API
+  description: System monitoring and analytics API for admin dashboard
+  version: 1.0.0
+  contact:
+    name: Vocilia Admin Team
+    email: admin@vocilia.com
+
+servers:
+  - url: https://alpha-backend.railway.app/api
+    description: Production Railway deployment
+  - url: http://localhost:3001/api
+    description: Local development
+
+paths:
+  # System Health Monitoring Endpoints
+  /monitoring/metrics:
+    get:
+      summary: Get system performance metrics
+      description: Retrieve real-time system metrics with 1-minute granularity
+      tags:
+        - System Health
+      security:
+        - AdminAuth: []
+      parameters:
+        - name: service
+          in: query
+          description: Service name to filter metrics
+          schema:
+            type: string
+            enum: [backend, customer_app, business_app, admin_app]
+        - name: metric_type
+          in: query
+          description: Type of metric to retrieve
+          schema:
+            type: string
+            enum: [api_response_time, cpu_usage, memory_usage, error_rate]
+        - name: start_time
+          in: query
+          description: Start time for metrics range (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: end_time
+          in: query
+          description: End time for metrics range (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: granularity
+          in: query
+          description: Data aggregation granularity
+          schema:
+            type: string
+            enum: [minute, hour, day]
+            default: minute
+      responses:
+        '200':
+          description: Metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  metrics:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SystemMetric'
+                  summary:
+                    $ref: '#/components/schemas/MetricsSummary'
+        '403':
+          description: Insufficient permissions
+        '422':
+          description: Invalid query parameters
+
+  /monitoring/errors:
+    get:
+      summary: Get application error logs
+      description: Retrieve searchable error logs with severity filtering
+      tags:
+        - System Health
+      security:
+        - AdminAuth: []
+      parameters:
+        - name: severity
+          in: query
+          description: Filter by error severity
+          schema:
+            type: string
+            enum: [critical, warning, info]
+        - name: service
+          in: query
+          description: Service name to filter errors
+          schema:
+            type: string
+        - name: search
+          in: query
+          description: Search in error messages
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filter by resolution status
+          schema:
+            type: string
+            enum: [open, investigating, resolved]
+        - name: limit
+          in: query
+          description: Maximum number of results
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: offset
+          in: query
+          description: Number of results to skip
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Error logs retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ErrorLog'
+                  pagination:
+                    $ref: '#/components/schemas/PaginationInfo'
+
+    patch:
+      summary: Update error resolution status
+      description: Update the resolution status of an error log entry
+      tags:
+        - System Health
+      security:
+        - AdminAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                error_id:
+                  type: string
+                  format: uuid
+                resolution_status:
+                  type: string
+                  enum: [open, investigating, resolved]
+              required:
+                - error_id
+                - resolution_status
+      responses:
+        '200':
+          description: Error status updated successfully
+        '404':
+          description: Error log not found
+        '403':
+          description: Insufficient permissions
+
+  /monitoring/usage:
+    get:
+      summary: Get usage analytics
+      description: Retrieve usage analytics including daily active users and API call volumes
+      tags:
+        - System Health
+      security:
+        - AdminAuth: []
+      parameters:
+        - name: service
+          in: query
+          description: Service name to filter analytics
+          schema:
+            type: string
+        - name: start_date
+          in: query
+          description: Start date for analytics range (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          description: End date for analytics range (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Usage analytics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  analytics:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UsageAnalytics'
+
+  /monitoring/alerts/rules:
+    get:
+      summary: Get alert rules
+      description: Retrieve configured alert rules and thresholds
+      tags:
+        - Alerting
+      security:
+        - AdminAuth: []
+      responses:
+        '200':
+          description: Alert rules retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rules:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AlertRule'
+
+    post:
+      summary: Create alert rule
+      description: Create a new alert rule with thresholds and notification preferences
+      tags:
+        - Alerting
+      security:
+        - AdminAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAlertRuleRequest'
+      responses:
+        '201':
+          description: Alert rule created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertRule'
+        '422':
+          description: Invalid alert rule configuration
+
+  /monitoring/alerts/rules/{rule_id}:
+    put:
+      summary: Update alert rule
+      description: Update an existing alert rule configuration
+      tags:
+        - Alerting
+      security:
+        - AdminAuth: []
+      parameters:
+        - name: rule_id
+          in: path
+          required: true
+          description: Alert rule ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAlertRuleRequest'
+      responses:
+        '200':
+          description: Alert rule updated successfully
+        '404':
+          description: Alert rule not found
+        '403':
+          description: Insufficient permissions
+
+    delete:
+      summary: Delete alert rule
+      description: Delete an alert rule (marks as inactive)
+      tags:
+        - Alerting
+      security:
+        - AdminAuth: []
+      parameters:
+        - name: rule_id
+          in: path
+          required: true
+          description: Alert rule ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Alert rule deleted successfully
+        '404':
+          description: Alert rule not found
+
+  # Business Intelligence Endpoints
+  /monitoring/fraud-reports:
+    get:
+      summary: Get fraud detection reports
+      description: Retrieve fraud detection analytics by store and time period
+      tags:
+        - Business Intelligence
+      security:
+        - AdminAuth: []
+      parameters:
+        - name: store_id
+          in: query
+          description: Filter by specific store
+          schema:
+            type: string
+            format: uuid
+        - name: start_date
+          in: query
+          description: Start date for report range
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          description: End date for report range
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Fraud reports retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reports:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FraudDetectionReport'
+
+  /monitoring/revenue-analytics:
+    get:
+      summary: Get revenue analytics
+      description: Retrieve revenue metrics including rewards paid and admin fees
+      tags:
+        - Business Intelligence
+      security:
+        - AdminAuth: []
+      parameters:
+        - name: store_id
+          in: query
+          description: Filter by specific store
+          schema:
+            type: string
+            format: uuid
+        - name: business_type
+          in: query
+          description: Filter by business type
+          schema:
+            type: string
+        - name: start_date
+          in: query
+          description: Start date for analytics range
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          description: End date for analytics range
+          schema:
+            type: string
+            format: date
+        - name: group_by
+          in: query
+          description: Group results by time period
+          schema:
+            type: string
+            enum: [day, week, month]
+            default: day
+      responses:
+        '200':
+          description: Revenue analytics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  analytics:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RevenueAnalytics'
+                  summary:
+                    $ref: '#/components/schemas/RevenueSummary'
+
+  /monitoring/business-performance:
+    get:
+      summary: Get business performance metrics
+      description: Retrieve comparative business performance analytics
+      tags:
+        - Business Intelligence
+      security:
+        - AdminAuth: []
+      parameters:
+        - name: store_id
+          in: query
+          description: Filter by specific store
+          schema:
+            type: string
+            format: uuid
+        - name: region
+          in: query
+          description: Filter by region
+          schema:
+            type: string
+        - name: comparison_period
+          in: query
+          description: Period for trend comparison
+          schema:
+            type: string
+            enum: [week, month, quarter]
+            default: month
+      responses:
+        '200':
+          description: Business performance metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  metrics:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BusinessPerformanceMetrics'
+
+  # Data Export Endpoints
+  /monitoring/export:
+    post:
+      summary: Export analytics data
+      description: Generate and download analytics data in specified format
+      tags:
+        - Data Export
+      security:
+        - AdminAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportRequest'
+      responses:
+        '200':
+          description: Export generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  download_url:
+                    type: string
+                    format: uri
+                  expires_at:
+                    type: string
+                    format: date-time
+                  file_size:
+                    type: integer
+        '202':
+          description: Export queued for processing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  export_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    enum: [queued, processing]
+
+  # Health Check Endpoints
+  /monitoring/health:
+    get:
+      summary: System health check
+      description: Health check endpoint for external monitoring services
+      tags:
+        - Health Check
+      responses:
+        '200':
+          description: System is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+        '503':
+          description: System is unhealthy
+
+components:
+  securitySchemes:
+    AdminAuth:
+      type: http
+      scheme: bearer
+      description: Admin authentication token
+
+  schemas:
+    SystemMetric:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        timestamp:
+          type: string
+          format: date-time
+        metric_type:
+          type: string
+          enum: [api_response_time, cpu_usage, memory_usage, error_rate]
+        metric_value:
+          type: number
+        service_name:
+          type: string
+        additional_data:
+          type: object
+      required:
+        - id
+        - timestamp
+        - metric_type
+        - metric_value
+        - service_name
+
+    MetricsSummary:
+      type: object
+      properties:
+        total_data_points:
+          type: integer
+        average_value:
+          type: number
+        min_value:
+          type: number
+        max_value:
+          type: number
+        trend_direction:
+          type: string
+          enum: [up, down, stable]
+
+    ErrorLog:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        timestamp:
+          type: string
+          format: date-time
+        severity:
+          type: string
+          enum: [critical, warning, info]
+        error_message:
+          type: string
+        stack_trace:
+          type: string
+        service_name:
+          type: string
+        endpoint:
+          type: string
+        user_context:
+          type: object
+        resolution_status:
+          type: string
+          enum: [open, investigating, resolved]
+      required:
+        - id
+        - timestamp
+        - severity
+        - error_message
+        - service_name
+        - resolution_status
+
+    UsageAnalytics:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        service_name:
+          type: string
+        daily_active_users:
+          type: integer
+        api_call_volume:
+          type: integer
+        feature_usage:
+          type: object
+      required:
+        - date
+        - service_name
+        - daily_active_users
+        - api_call_volume
+
+    AlertRule:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        rule_name:
+          type: string
+        metric_type:
+          type: string
+        threshold_value:
+          type: number
+        comparison_operator:
+          type: string
+          enum: ['>', '<', '>=', '<=', '=']
+        notification_channels:
+          type: array
+          items:
+            type: string
+            enum: [email, dashboard, sms]
+        is_active:
+          type: boolean
+        created_by:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - rule_name
+        - metric_type
+        - threshold_value
+        - comparison_operator
+        - notification_channels
+
+    CreateAlertRuleRequest:
+      type: object
+      properties:
+        rule_name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        metric_type:
+          type: string
+        threshold_value:
+          type: number
+        comparison_operator:
+          type: string
+          enum: ['>', '<', '>=', '<=', '=']
+        notification_channels:
+          type: array
+          items:
+            type: string
+            enum: [email, dashboard, sms]
+          minItems: 1
+      required:
+        - rule_name
+        - metric_type
+        - threshold_value
+        - comparison_operator
+        - notification_channels
+
+    UpdateAlertRuleRequest:
+      type: object
+      properties:
+        rule_name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        threshold_value:
+          type: number
+        comparison_operator:
+          type: string
+          enum: ['>', '<', '>=', '<=', '=']
+        notification_channels:
+          type: array
+          items:
+            type: string
+            enum: [email, dashboard, sms]
+        is_active:
+          type: boolean
+
+    FraudDetectionReport:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        report_date:
+          type: string
+          format: date
+        store_id:
+          type: string
+          format: uuid
+        verification_failure_rate:
+          type: number
+        suspicious_patterns:
+          type: object
+        blocked_transactions:
+          type: integer
+        false_positive_rate:
+          type: number
+        accuracy_metrics:
+          type: object
+      required:
+        - id
+        - report_date
+        - store_id
+        - verification_failure_rate
+        - blocked_transactions
+
+    RevenueAnalytics:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        report_date:
+          type: string
+          format: date
+        store_id:
+          type: string
+          format: uuid
+        total_rewards_paid:
+          type: number
+        admin_fees_collected:
+          type: number
+        net_revenue:
+          type: number
+        feedback_volume:
+          type: integer
+        customer_engagement_rate:
+          type: number
+        reward_distribution:
+          type: object
+      required:
+        - id
+        - report_date
+        - store_id
+        - total_rewards_paid
+        - admin_fees_collected
+        - net_revenue
+
+    RevenueSummary:
+      type: object
+      properties:
+        total_revenue:
+          type: number
+        period_growth:
+          type: number
+        top_performing_stores:
+          type: array
+          items:
+            type: object
+            properties:
+              store_id:
+                type: string
+                format: uuid
+              store_name:
+                type: string
+              revenue:
+                type: number
+
+    BusinessPerformanceMetrics:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        report_date:
+          type: string
+          format: date
+        store_id:
+          type: string
+          format: uuid
+        business_id:
+          type: string
+          format: uuid
+        feedback_volume_trend:
+          type: number
+        verification_rate:
+          type: number
+        customer_satisfaction_score:
+          type: number
+        operational_metrics:
+          type: object
+      required:
+        - id
+        - report_date
+        - store_id
+        - business_id
+
+    ExportRequest:
+      type: object
+      properties:
+        data_type:
+          type: string
+          enum: [system_metrics, fraud_reports, revenue_analytics, business_performance]
+        format:
+          type: string
+          enum: [csv, pdf, json]
+        date_range:
+          type: object
+          properties:
+            start_date:
+              type: string
+              format: date
+            end_date:
+              type: string
+              format: date
+          required:
+            - start_date
+            - end_date
+        filters:
+          type: object
+          properties:
+            store_ids:
+              type: array
+              items:
+                type: string
+                format: uuid
+            service_names:
+              type: array
+              items:
+                type: string
+      required:
+        - data_type
+        - format
+        - date_range
+
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        timestamp:
+          type: string
+          format: date-time
+        services:
+          type: object
+          properties:
+            database:
+              type: string
+              enum: [healthy, unhealthy]
+            api:
+              type: string
+              enum: [healthy, unhealthy]
+            monitoring:
+              type: string
+              enum: [healthy, unhealthy]
+        metrics:
+          type: object
+          properties:
+            uptime_seconds:
+              type: integer
+            response_time_ms:
+              type: number
+            error_rate:
+              type: number
+      required:
+        - status
+        - timestamp
+        - services
+
+    PaginationInfo:
+      type: object
+      properties:
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+        has_more:
+          type: boolean
+      required:
+        - total
+        - limit
+        - offset
+        - has_more
+
+  responses:
+    UnauthorizedError:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Authentication required"
+
+    ForbiddenError:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Insufficient permissions for monitoring access"
+
+    ValidationError:
+      description: Request validation failed
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    field:
+                      type: string
+                    message:
+                      type: string
+
+security:
+  - AdminAuth: []
+
+tags:
+  - name: System Health
+    description: System performance monitoring and error tracking
+  - name: Alerting
+    description: Alert rules and notification management
+  - name: Business Intelligence
+    description: Business analytics and fraud detection
+  - name: Data Export
+    description: Analytics data export functionality
+  - name: Health Check
+    description: System health endpoints for external monitoring

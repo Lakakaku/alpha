@@ -1,0 +1,589 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { 
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  ScatterChart,
+  Scatter
+} from 'recharts';
+import { 
+  Search,
+  Download,
+  RefreshCw,
+  TrendingUp,
+  TrendingDown,
+  Zap,
+  AlertTriangle,
+  CheckCircle,
+  BarChart3,
+  Loader2,
+  Filter
+} from 'lucide-react';
+import { toast } from 'sonner';
+
+interface TriggerEffectiveness {
+  trigger_id: string;
+  trigger_name: string;
+  trigger_type: 'purchase_based' | 'time_based' | 'amount_based';
+  business_name: string;
+  business_context_id: string;
+  total_activations: number;
+  successful_activations: number;
+  activation_rate: number;
+  effectiveness_score: number;
+  avg_response_quality: number;
+  avg_response_time: number;
+  customer_satisfaction: number;
+  revenue_impact?: number;
+  trend_direction: 'up' | 'down' | 'stable';
+  last_activated: string;
+  created_at: string;
+}
+
+interface EffectivenessAnalytics {
+  summary: {
+    total_triggers: number;
+    active_triggers: number;
+    avg_effectiveness: number;
+    top_performing_count: number;
+    underperforming_count: number;
+  };
+  triggers: TriggerEffectiveness[];
+  trends: Array<{
+    date: string;
+    effectiveness: number;
+    activations: number;
+  }>;
+  distribution: Array<{
+    score_range: string;
+    count: number;
+    percentage: number;
+  }>;
+}
+
+const EFFECTIVENESS_COLORS = {
+  excellent: '#22c55e',
+  good: '#3b82f6',
+  average: '#f59e0b', 
+  poor: '#ef4444'
+};
+
+const getEffectivenessColor = (score: number) => {
+  if (score >= 0.8) return EFFECTIVENESS_COLORS.excellent;
+  if (score >= 0.6) return EFFECTIVENESS_COLORS.good;
+  if (score >= 0.4) return EFFECTIVENESS_COLORS.average;
+  return EFFECTIVENESS_COLORS.poor;
+};
+
+const getEffectivenessLabel = (score: number) => {
+  if (score >= 0.8) return 'Excellent';
+  if (score >= 0.6) return 'Good';
+  if (score >= 0.4) return 'Average';
+  return 'Poor';
+};
+
+const getTrendIcon = (direction: string) => {
+  switch (direction) {
+    case 'up': return <TrendingUp className="h-4 w-4 text-green-600" />;
+    case 'down': return <TrendingDown className="h-4 w-4 text-red-600" />;
+    default: return <div className="h-4 w-4" />;
+  }
+};
+
+export default function TriggerEffectivenessPage() {
+  const [loading, setLoading] = useState(true);
+  const [analytics, setAnalytics] = useState<EffectivenessAnalytics | null>(null);
+  const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d');
+  const [businessFilter, setBusinessFilter] = useState<string>('all');
+  const [triggerTypeFilter, setTriggerTypeFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'effectiveness' | 'activations' | 'created'>('effectiveness');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadAnalytics();
+  }, [timeRange, businessFilter, triggerTypeFilter]);
+
+  const loadAnalytics = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const params = new URLSearchParams({
+        time_range: timeRange,
+        business_id: businessFilter,
+        trigger_type: triggerTypeFilter,
+      });
+
+      const response = await fetch(
+        `/api/admin/analytics/trigger-effectiveness?${params}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to load trigger effectiveness analytics');
+      }
+
+      const data = await response.json();
+      setAnalytics(data.analytics);
+    } catch (error) {
+      console.error('Error loading analytics:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load analytics');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const exportData = async () => {
+    try {
+      const params = new URLSearchParams({
+        time_range: timeRange,
+        business_id: businessFilter,
+        trigger_type: triggerTypeFilter,
+        format: 'csv',
+      });
+
+      const response = await fetch(
+        `/api/admin/analytics/trigger-effectiveness/export?${params}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to export data');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `trigger-effectiveness-${timeRange}-${Date.now()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success('Analytics data exported successfully');
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      toast.error('Failed to export data');
+    }
+  };
+
+  const filteredTriggers = analytics?.triggers.filter(trigger => {
+    const matchesSearch = searchQuery === '' || 
+      trigger.trigger_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      trigger.business_name.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    return matchesSearch;
+  }) || [];
+
+  const sortedTriggers = [...filteredTriggers].sort((a, b) => {
+    let aValue: number | string;
+    let bValue: number | string;
+
+    switch (sortBy) {
+      case 'effectiveness':
+        aValue = a.effectiveness_score;
+        bValue = b.effectiveness_score;
+        break;
+      case 'activations':
+        aValue = a.total_activations;
+        bValue = b.total_activations;
+        break;
+      case 'created':
+        aValue = new Date(a.created_at).getTime();
+        bValue = new Date(b.created_at).getTime();
+        break;
+      default:
+        return 0;
+    }
+
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+    }
+    
+    return sortDirection === 'asc' 
+      ? String(aValue).localeCompare(String(bValue))
+      : String(bValue).localeCompare(String(aValue));
+  });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="h-8 w-8 animate-spin mr-4" />
+        Loading trigger effectiveness analytics...
+      </div>
+    );
+  }
+
+  if (error || !analytics) {
+    return (
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>
+          {error || 'Failed to load analytics data'}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={loadAnalytics}
+            className="ml-2"
+          >
+            Retry
+          </Button>
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Trigger Effectiveness Analytics</h1>
+          <p className="text-muted-foreground">
+            Monitor and analyze the performance of dynamic triggers across all businesses
+          </p>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Button variant="outline" onClick={exportData}>
+            <Download className="h-4 w-4 mr-2" />
+            Export CSV
+          </Button>
+          <Button variant="outline" onClick={loadAnalytics}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Triggers</CardTitle>
+            <Zap className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{analytics.summary.total_triggers}</div>
+            <p className="text-xs text-muted-foreground">
+              {analytics.summary.active_triggers} active
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Avg Effectiveness</CardTitle>
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {(analytics.summary.avg_effectiveness * 100).toFixed(1)}%
+            </div>
+            <Badge 
+              variant={analytics.summary.avg_effectiveness > 0.7 ? "default" : "secondary"}
+              className="text-xs"
+            >
+              {getEffectivenessLabel(analytics.summary.avg_effectiveness)}
+            </Badge>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Top Performers</CardTitle>
+            <CheckCircle className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{analytics.summary.top_performing_count}</div>
+            <p className="text-xs text-muted-foreground">≥80% effectiveness</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Underperforming</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-orange-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">
+              {analytics.summary.underperforming_count}
+            </div>
+            <p className="text-xs text-muted-foreground"><40% effectiveness</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Performance Ratio</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {analytics.summary.top_performing_count > 0 && analytics.summary.underperforming_count > 0
+                ? (analytics.summary.top_performing_count / analytics.summary.underperforming_count).toFixed(1)
+                : '∞'}
+            </div>
+            <p className="text-xs text-muted-foreground">Top:Poor ratio</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Effectiveness Trends</CardTitle>
+            <CardDescription>Average effectiveness over time</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={analytics.trends}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis domain={[0, 1]} tickFormatter={(value) => `${(value * 100).toFixed(0)}%`} />
+                <Tooltip formatter={(value: number) => [`${(value * 100).toFixed(1)}%`, 'Effectiveness']} />
+                <Line 
+                  type="monotone" 
+                  dataKey="effectiveness" 
+                  stroke="#3b82f6" 
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Score Distribution</CardTitle>
+            <CardDescription>How triggers are performing across score ranges</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={analytics.distribution}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={100}
+                  dataKey="count"
+                  nameKey="score_range"
+                  label={({ score_range, percentage }) => `${score_range}: ${percentage}%`}
+                >
+                  {analytics.distribution.map((entry, index) => (
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={Object.values(EFFECTIVENESS_COLORS)[index % Object.values(EFFECTIVENESS_COLORS).length]} 
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center">
+            <Filter className="h-4 w-4 mr-2" />
+            Filters & Search
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-4 items-end">
+            <div className="flex-1 min-w-64">
+              <Label htmlFor="search">Search Triggers</Label>
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="search"
+                  placeholder="Search by trigger name or business..."
+                  className="pl-8"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label>Time Range</Label>
+              <Select value={timeRange} onValueChange={(value: '7d' | '30d' | '90d') => setTimeRange(value)}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7d">Last 7 days</SelectItem>
+                  <SelectItem value="30d">Last 30 days</SelectItem>
+                  <SelectItem value="90d">Last 90 days</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Trigger Type</Label>
+              <Select value={triggerTypeFilter} onValueChange={setTriggerTypeFilter}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="purchase_based">Purchase Based</SelectItem>
+                  <SelectItem value="time_based">Time Based</SelectItem>
+                  <SelectItem value="amount_based">Amount Based</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Sort By</Label>
+              <Select value={sortBy} onValueChange={(value: 'effectiveness' | 'activations' | 'created') => setSortBy(value)}>
+                <SelectTrigger className="w-36">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="effectiveness">Effectiveness</SelectItem>
+                  <SelectItem value="activations">Activations</SelectItem>
+                  <SelectItem value="created">Created Date</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button 
+              variant="outline"
+              onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+            >
+              {sortDirection === 'asc' ? 'Ascending' : 'Descending'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Triggers Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">
+            Detailed Trigger Performance ({sortedTriggers.length} triggers)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Trigger</TableHead>
+                <TableHead>Business</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Effectiveness</TableHead>
+                <TableHead>Activations</TableHead>
+                <TableHead>Success Rate</TableHead>
+                <TableHead>Avg Response</TableHead>
+                <TableHead>Trend</TableHead>
+                <TableHead>Last Active</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sortedTriggers.map((trigger) => (
+                <TableRow key={trigger.trigger_id}>
+                  <TableCell className="font-medium">
+                    {trigger.trigger_name}
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {trigger.business_name}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">
+                      {trigger.trigger_type.replace('_', ' ')}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center space-x-2">
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ backgroundColor: getEffectivenessColor(trigger.effectiveness_score) }}
+                      />
+                      <span className="font-medium">
+                        {(trigger.effectiveness_score * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{trigger.total_activations}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {trigger.successful_activations} successful
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {(trigger.activation_rate * 100).toFixed(1)}%
+                  </TableCell>
+                  <TableCell>
+                    <div>
+                      <div>{trigger.avg_response_time.toFixed(1)}s</div>
+                      <div className="text-xs text-muted-foreground">
+                        Quality: {(trigger.avg_response_quality * 100).toFixed(0)}%
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {getTrendIcon(trigger.trend_direction)}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {new Date(trigger.last_activated).toLocaleDateString()}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+
+          {sortedTriggers.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              <Zap className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No triggers found matching your criteria</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

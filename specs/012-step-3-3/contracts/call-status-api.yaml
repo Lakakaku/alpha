@@ -1,0 +1,246 @@
+openapi: 3.0.3
+info:
+  title: Call Status API
+  description: Enhanced API for real-time call status tracking and confirmation
+  version: 1.0.0
+
+paths:
+  /api/calls/{sessionId}/status:
+    get:
+      summary: Get current call status
+      description: Real-time polling endpoint for call status updates
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Current call status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallStatusResponse'
+        '404':
+          description: Call session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/calls/{sessionId}/confirm-completion:
+    post:
+      summary: Confirm call completion
+      description: Customer confirms they received and completed the feedback call
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CallCompletionConfirmation'
+      responses:
+        '200':
+          description: Call completion confirmed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallCompletionResponse'
+        '400':
+          description: Invalid confirmation data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/calls/{sessionId}/quality-feedback:
+    post:
+      summary: Submit call quality feedback
+      description: Optional feedback about the call experience
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CallQualityFeedback'
+      responses:
+        '200':
+          description: Quality feedback recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+components:
+  schemas:
+    CallStatusResponse:
+      type: object
+      required:
+        - session_id
+        - status
+        - status_updated_at
+      properties:
+        session_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: 
+            - verification_pending
+            - call_scheduled
+            - call_in_progress
+            - call_completed
+            - completion_confirmed
+            - reward_calculated
+            - reward_displayed
+        status_updated_at:
+          type: string
+          format: date-time
+        call_duration:
+          type: integer
+          description: Call duration in seconds (when available)
+        expected_reward_range:
+          type: object
+          properties:
+            min_percent:
+              type: number
+              minimum: 2
+              maximum: 15
+            max_percent:
+              type: number
+              minimum: 2
+              maximum: 15
+        reward_timeline:
+          type: object
+          properties:
+            verification_date:
+              type: string
+              format: date
+            payment_date:
+              type: string
+              format: date
+        next_poll_interval:
+          type: integer
+          description: Recommended polling interval in seconds
+
+    CallCompletionConfirmation:
+      type: object
+      required:
+        - confirmed
+      properties:
+        confirmed:
+          type: boolean
+        call_quality_rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        feedback_text:
+          type: string
+          maxLength: 500
+        device_info:
+          type: object
+          properties:
+            user_agent:
+              type: string
+            screen_width:
+              type: integer
+            screen_height:
+              type: integer
+
+    CallCompletionResponse:
+      type: object
+      required:
+        - session_id
+        - confirmed_at
+        - reward_info
+      properties:
+        session_id:
+          type: string
+          format: uuid
+        confirmed_at:
+          type: string
+          format: date-time
+        reward_info:
+          type: object
+          properties:
+            estimated_amount:
+              type: string
+              description: "Estimated reward amount in SEK"
+            payment_method:
+              type: string
+              enum: ["swish"]
+            timeline:
+              type: object
+              properties:
+                verification_by:
+                  type: string
+                  format: date
+                payment_by:
+                  type: string
+                  format: date
+        next_steps:
+          type: array
+          items:
+            type: string
+
+    CallQualityFeedback:
+      type: object
+      required:
+        - rating
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        issues:
+          type: array
+          items:
+            type: string
+            enum:
+              - audio_quality
+              - connection_drops
+              - ai_understanding
+              - call_duration
+              - language_clarity
+        comments:
+          type: string
+          maxLength: 500
+
+    SuccessResponse:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object

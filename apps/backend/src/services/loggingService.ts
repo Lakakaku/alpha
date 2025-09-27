@@ -1,5 +1,5 @@
 import winston from 'winston';
-import { createClient } from '@alpha/database';
+import { database } from '@vocilia/database';
 
 export interface LogEntry {
   level: 'error' | 'warn' | 'info' | 'debug';
@@ -34,7 +34,7 @@ export interface SecurityEvent {
 
 export class LoggingService {
   private logger: winston.Logger;
-  private supabase = createClient();
+  private supabase = database.createClient();
 
   constructor() {
     this.logger = winston.createLogger({

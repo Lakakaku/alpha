@@ -14,6 +14,13 @@ export type UserRole = 'business_account' | 'admin_account'
 export type SubscriptionStatus = 'active' | 'inactive' | 'suspended'
 export type PermissionCategory = 'business' | 'customer' | 'admin'
 
+// QR Verification System enums
+export type VerificationSessionStatus = 'pending' | 'completed' | 'expired' | 'failed'
+export type ValidationStatus = 'valid' | 'out_of_tolerance' | 'invalid'
+export type PhoneValidationStatus = 'valid' | 'invalid_format' | 'not_swedish'
+export type FraudDetectionType = 'rate_limit' | 'invalid_qr' | 'suspicious_pattern' | 'duplicate_attempt'
+export type FraudActionTaken = 'none' | 'warning' | 'block' | 'flag_for_review'
+
 // Core entity interfaces
 export interface UserProfile {
   id: string // UUID linking to auth.users.id
@@ -46,8 +53,55 @@ export interface Store {
   store_code: string | null
   qr_code_data: string | null
   active: boolean
+  // QR verification extensions
+  current_qr_version: number | null
+  qr_generation_date: string | null // ISO timestamp
+  verification_enabled: boolean
+  fraud_detection_threshold: number | null
   created_at: string // ISO timestamp
   updated_at: string // ISO timestamp
+}
+
+// QR Verification System entities
+export interface VerificationSession {
+  id: string // UUID primary key
+  store_id: string // UUID foreign key to stores
+  qr_version: number
+  scan_timestamp: string // ISO timestamp
+  session_token: string // Secure session identifier
+  status: VerificationSessionStatus
+  ip_address: string | null
+  user_agent: string | null
+  created_at: string // ISO timestamp
+  updated_at: string // ISO timestamp
+}
+
+export interface CustomerVerification {
+  id: string // UUID primary key
+  session_id: string // UUID foreign key to verification_sessions
+  transaction_time: string // Time format (HH:MM)
+  transaction_amount: number // Decimal
+  phone_number_e164: string // E.164 format (+46XXXXXXXXX)
+  phone_number_national: string // National format (070-XXX XX XX)
+  time_validation_status: ValidationStatus
+  amount_validation_status: ValidationStatus
+  phone_validation_status: PhoneValidationStatus
+  tolerance_check_time_diff: number | null // Minutes difference
+  tolerance_check_amount_diff: number | null // SEK difference
+  submitted_at: string // ISO timestamp
+  verified_at: string | null // ISO timestamp
+}
+
+export interface FraudDetectionLog {
+  id: string // UUID primary key
+  session_id: string | null // UUID foreign key to verification_sessions
+  detection_type: FraudDetectionType
+  risk_score: number // 1-100
+  ip_address: string | null
+  user_agent: string | null
+  detection_details: Json | null // JSONB fraud indicators
+  action_taken: FraudActionTaken
+  detected_at: string // ISO timestamp
 }
 
 export interface Permission {
@@ -143,6 +197,33 @@ export interface Database {
           last_used_at?: string
         }
       }
+      verification_sessions: {
+        Row: VerificationSession
+        Insert: Omit<VerificationSession, 'id' | 'created_at' | 'updated_at'> & {
+          id?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<Omit<VerificationSession, 'id' | 'created_at'>> & {
+          updated_at?: string
+        }
+      }
+      customer_verifications: {
+        Row: CustomerVerification
+        Insert: Omit<CustomerVerification, 'id' | 'submitted_at'> & {
+          id?: string
+          submitted_at?: string
+        }
+        Update: Partial<Omit<CustomerVerification, 'id' | 'submitted_at'>>
+      }
+      fraud_detection_logs: {
+        Row: FraudDetectionLog
+        Insert: Omit<FraudDetectionLog, 'id' | 'detected_at'> & {
+          id?: string
+          detected_at?: string
+        }
+        Update: Partial<Omit<FraudDetectionLog, 'id' | 'detected_at'>>
+      }
     }
     Views: {
       [_ in never]: never
@@ -154,6 +235,11 @@ export interface Database {
       user_role: UserRole
       subscription_status: SubscriptionStatus
       permission_category: PermissionCategory
+      verification_session_status: VerificationSessionStatus
+      validation_status: ValidationStatus
+      phone_validation_status: PhoneValidationStatus
+      fraud_detection_type: FraudDetectionType
+      fraud_action_taken: FraudActionTaken
     }
   }
 }
@@ -324,5 +410,155 @@ export interface BusinessStoreRouteParams {
   businessId: string
   storeId?: string
 }
+
+// QR Verification API types
+export interface QRVerificationRequest {
+  ip_address: string
+  user_agent: string
+}
+
+export interface QRVerificationResponse {
+  success: boolean
+  session_token: string
+  store_info: {
+    store_id: string
+    store_name: string
+    business_name: string
+    logo_url?: string
+  }
+  fraud_warning: boolean
+}
+
+export interface VerificationSubmissionRequest {
+  transaction_time: string // HH:MM format
+  transaction_amount: number
+  phone_number: string // User input format
+}
+
+export interface ValidationResult {
+  status: ValidationStatus | PhoneValidationStatus
+  difference_minutes?: number
+  difference_sek?: number
+  tolerance_range?: string
+  e164_format?: string
+  national_format?: string
+}
+
+export interface VerificationSubmissionResponse {
+  success: boolean
+  verification_id: string
+  validation_results: {
+    time_validation: ValidationResult
+    amount_validation: ValidationResult
+    phone_validation: ValidationResult
+    overall_valid: boolean
+  }
+  next_steps: string
+}
+
+export interface SessionDetailsResponse {
+  session_id: string
+  store_info: {
+    store_id: string
+    store_name: string
+    business_name: string
+    logo_url?: string
+  }
+  status: VerificationSessionStatus
+  qr_version: number
+  created_at: string
+  expires_at: string
+}
+
+export interface QRVerificationRouteParams {
+  storeId: string
+}
+
+export interface SessionRouteParams {
+  sessionToken: string
+}
+
+// Admin Dashboard API types
+export interface VerificationStatsResponse {
+  success: boolean
+  store_id: string
+  period: {
+    days: number
+    start_date: string
+    end_date: string
+  }
+  statistics: {
+    total_sessions: number
+    completed_verifications: number
+    success_rate: number
+    fraud_detections: number
+    average_completion_time_seconds: number
+    most_common_failure_reasons: string[]
+    hourly_distribution: Array<{ hour: number; count: number }>
+    daily_trend: Array<{ date: string; successful: number; failed: number }>
+  }
+}
+
+export interface VerificationDetailsResponse {
+  success: boolean
+  store_id: string
+  pagination: {
+    limit: number
+    offset: number
+    total: number
+    has_more: boolean
+  }
+  filters: {
+    status?: string
+    start_date?: string
+    end_date?: string
+  }
+  verifications: Array<{
+    verification_id: string
+    session_token: string
+    phone_number: string
+    transaction_amount: number
+    transaction_time: string
+    status: string
+    validation_results: any
+    created_at: string
+    completed_at?: string
+    ip_address: string
+    user_agent: string
+    fraud_score?: number
+  }>
+}
 // Auto-generated database types
 export * from './database';
+
+// Calls types
+export * from './calls';
+
+// Custom Questions types
+export * from './questions';
+
+// Feedback Analysis types
+export * from './feedback-analysis';
+
+// AI Assistant types
+export * from './ai-assistant';
+
+// PWA and Offline types
+export * from './pwa';
+export * from './offline';
+
+// Customer Support types
+export * from './support';
+
+// Admin Dashboard types
+export * from './admin';
+
+// AI Call System types
+export * from './ai-call-system';
+
+// Payment types
+export * from './payment';
+
+// Testing and Test Management types
+export * from './testing';
+export * from './test-management';

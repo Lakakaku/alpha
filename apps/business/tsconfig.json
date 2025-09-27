@@ -2,12 +2,29 @@
   "extends": "../../packages/tsconfig/nextjs.json",
   "compilerOptions": {
     "paths": {
-      "@/*": ["./src/*"],
-      "@alpha/ui": ["../../packages/ui/src"],
-      "@alpha/ui/*": ["../../packages/ui/src/*"],
-      "@alpha/shared": ["../../packages/shared/src"],
-      "@alpha/shared/*": ["../../packages/shared/src/*"]
-    }
+      "@/*": [
+        "./src/*"
+      ],
+      "@alpha/ui": [
+        "../../packages/ui/src"
+      ],
+      "@alpha/ui/*": [
+        "../../packages/ui/src/*"
+      ],
+      "@alpha/shared": [
+        "../../packages/shared/src"
+      ],
+      "@alpha/shared/*": [
+        "../../packages/shared/src/*"
+      ],
+      "@/context/*": [
+        "./src/components/context/*"
+      ],
+      "@/types/context": [
+        "../../packages/types/src/context"
+      ]
+    },
+    "strictNullChecks": true
   },
   "include": [
     "next-env.d.ts",

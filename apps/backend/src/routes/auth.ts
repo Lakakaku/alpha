@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { createClient } from '@alpha/database';
+import { database } from '@vocilia/database';
 import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
@@ -53,7 +53,7 @@ router.post('/login', async (req: Request, res: Response, next: NextFunction) =>
       });
     }
 
-    const supabase = createClient();
+    const supabase = database.createClient();
 
     // Authenticate with Supabase
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -115,7 +115,7 @@ router.post('/login', async (req: Request, res: Response, next: NextFunction) =>
 // POST /auth/logout
 router.post('/logout', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const supabase = createClient();
+    const supabase = database.createClient();
 
     const { error } = await supabase.auth.signOut();
 
@@ -146,7 +146,7 @@ router.post('/refresh', async (req: Request, res: Response, next: NextFunction) 
       });
     }
 
-    const supabase = createClient();
+    const supabase = database.createClient();
 
     const { data, error } = await supabase.auth.refreshSession({
       refresh_token,
@@ -215,7 +215,7 @@ router.get('/profile', authMiddleware, async (req: Request, res: Response, next:
       });
     }
 
-    const supabase = createClient();
+    const supabase = database.createClient();
 
     const { data: profile, error } = await supabase
       .from('user_profiles')
@@ -288,7 +288,7 @@ router.patch('/profile', authMiddleware, async (req: Request, res: Response, nex
       });
     }
 
-    const supabase = createClient();
+    const supabase = database.createClient();
 
     // Update profile
     const updateData: Partial<UpdateProfileRequest> = {};
@@ -341,7 +341,7 @@ router.get('/permissions', authMiddleware, async (req: Request, res: Response, n
       });
     }
 
-    const supabase = createClient();
+    const supabase = database.createClient();
 
     // Get user profile with role and business_id
     const { data: profile, error: profileError } = await supabase

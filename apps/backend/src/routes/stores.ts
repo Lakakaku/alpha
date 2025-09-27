@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { createClient } from '@alpha/database';
+import { database } from '@vocilia/database';
 
 const router = Router();
 
@@ -67,7 +67,7 @@ router.get('/businesses/:businessId/stores', async (req: Request, res: Response,
       });
     }
 
-    const supabase = createClient();
+    const supabase = database.createClient();
 
     // Verify business exists
     const { data: business, error: businessError } = await supabase
@@ -157,7 +157,7 @@ router.post('/businesses/:businessId/stores', async (req: Request, res: Response
       });
     }
 
-    const supabase = createClient();
+    const supabase = database.createClient();
 
     // Verify business exists
     const { data: business, error: businessError } = await supabase
@@ -225,7 +225,7 @@ router.get('/:storeId', async (req: Request, res: Response, next: NextFunction) 
       });
     }
 
-    const supabase = createClient();
+    const supabase = database.createClient();
 
     const { data: store, error } = await supabase
       .from('stores')
@@ -285,7 +285,7 @@ router.patch('/:storeId', async (req: Request, res: Response, next: NextFunction
       });
     }
 
-    const supabase = createClient();
+    const supabase = database.createClient();
 
     // First, get the store to check permissions
     const { data: existingStore, error: fetchError } = await supabase

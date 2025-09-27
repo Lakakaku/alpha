@@ -1,4 +1,4 @@
-import { createClient } from '@alpha/database';
+import { database } from '@vocilia/database';
 import { ValidationError, NotFoundError, ConflictError } from '../middleware/errorHandler';
 
 export interface Store {
@@ -57,7 +57,7 @@ export interface StoreListResult {
 }
 
 export class StoreService {
-  private supabase = createClient();
+  private supabase = database.createClient();
 
   async getStoreById(id: string): Promise<Store> {
     if (!id) {

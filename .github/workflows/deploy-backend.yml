@@ -1,0 +1,475 @@
+name: Deploy Backend to Railway
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+    paths:
+      - 'apps/backend/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/deploy-backend.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'apps/backend/**'
+      - 'packages/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      skip_tests:
+        description: 'Skip tests (use with caution)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  NODE_VERSION: '18'
+  PNPM_VERSION: '8'
+
+jobs:
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      backend-changed: ${{ steps.changes.outputs.backend }}
+      should-deploy: ${{ steps.should-deploy.outputs.result }}
+      target-environment: ${{ steps.environment.outputs.result }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect file changes
+        uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            backend:
+              - 'apps/backend/**'
+              - 'packages/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+
+      - name: Determine if deployment should proceed
+        id: should-deploy
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "result=true" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "push" && "${{ steps.changes.outputs.backend }}" == "true" ]]; then
+            echo "result=true" >> $GITHUB_OUTPUT
+          else
+            echo "result=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Determine target environment
+        id: environment
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "result=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "result=production" >> $GITHUB_OUTPUT
+          else
+            echo "result=staging" >> $GITHUB_OUTPUT
+          fi
+
+  test:
+    name: Test Backend
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.should-deploy == 'true' && github.event.inputs.skip_tests != 'true'
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: vocilia_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm build --filter @vocilia/types --filter @vocilia/database
+
+      - name: Lint backend
+        run: pnpm --filter @vocilia/backend lint
+
+      - name: Type check backend
+        run: pnpm --filter @vocilia/backend type-check
+
+      - name: Setup test environment
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/vocilia_test
+        run: |
+          echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/vocilia_test" > apps/backend/.env.test
+          echo "NODE_ENV=test" >> apps/backend/.env.test
+          echo "JWT_SECRET=test-secret-key-for-ci" >> apps/backend/.env.test
+
+      - name: Run unit tests
+        run: pnpm --filter @vocilia/backend test:unit
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/vocilia_test
+
+      - name: Run integration tests
+        run: pnpm --filter @vocilia/backend test:integration
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/vocilia_test
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.should-deploy == 'true'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run security audit
+        run: pnpm audit --audit-level moderate
+
+      - name: Check for vulnerable dependencies
+        run: pnpm --filter @vocilia/backend exec npm audit --audit-level high
+
+  build:
+    name: Build Backend
+    runs-on: ubuntu-latest
+    needs: [detect-changes, test, security-scan]
+    if: always() && needs.detect-changes.outputs.should-deploy == 'true' && (needs.test.result == 'success' || needs.test.result == 'skipped') && needs.security-scan.result == 'success'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared packages
+        run: pnpm build --filter @vocilia/types --filter @vocilia/database --filter @vocilia/ui
+
+      - name: Build backend
+        run: pnpm --filter @vocilia/backend build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-build-${{ github.sha }}
+          path: |
+            apps/backend/dist/
+            apps/backend/package.json
+            packages/*/dist/
+          retention-days: 30
+
+  deploy-staging:
+    name: Deploy to Railway Staging
+    runs-on: ubuntu-latest
+    needs: [detect-changes, build]
+    if: needs.detect-changes.outputs.target-environment == 'staging' && needs.build.result == 'success'
+    environment:
+      name: staging
+      url: https://api-staging.vocilia.com/health
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-build-${{ github.sha }}
+
+      - name: Setup Railway CLI
+        run: |
+          curl -fsSL https://railway.app/install.sh | sh
+          echo "$HOME/.railway/bin" >> $GITHUB_PATH
+
+      - name: Deploy to Railway Staging
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway login --token $RAILWAY_TOKEN
+          railway environment --name staging
+          railway up --service backend --detach
+          
+      - name: Wait for deployment
+        timeout-minutes: 10
+        run: |
+          echo "Waiting for staging deployment to be ready..."
+          for i in {1..30}; do
+            if railway status --environment staging | grep -q "SUCCESS\|ACTIVE"; then
+              echo "✅ Staging deployment successful"
+              break
+            fi
+            if railway status --environment staging | grep -q "FAILED\|ERROR"; then
+              echo "❌ Staging deployment failed"
+              exit 1
+            fi
+            echo "⏳ Deployment in progress... (attempt $i/30)"
+            sleep 20
+          done
+
+      - name: Health check
+        run: |
+          echo "Performing health check..."
+          for i in {1..12}; do
+            if curl -f -s https://api-staging.vocilia.com/health > /dev/null; then
+              echo "✅ Health check passed"
+              break
+            fi
+            if [ $i -eq 12 ]; then
+              echo "❌ Health check failed after 12 attempts"
+              exit 1
+            fi
+            echo "⏳ Health check attempt $i/12..."
+            sleep 10
+          done
+
+      - name: Run smoke tests
+        run: |
+          echo "Running smoke tests against staging..."
+          curl -f -s https://api-staging.vocilia.com/health/detailed || exit 1
+          curl -f -s https://api-staging.vocilia.com/health/database || exit 1
+          echo "✅ Smoke tests passed"
+
+      - name: Record deployment
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway login --token $RAILWAY_TOKEN
+          deployment_id=$(railway status --environment staging --json | jq -r '.deployment.id // "unknown"')
+          echo "📝 Deployment recorded: $deployment_id"
+          # This could integrate with your deployment tracking system
+
+  deploy-production:
+    name: Deploy to Railway Production
+    runs-on: ubuntu-latest
+    needs: [detect-changes, build, deploy-staging]
+    if: needs.detect-changes.outputs.target-environment == 'production' && needs.build.result == 'success' && (needs.deploy-staging.result == 'success' || needs.deploy-staging.result == 'skipped')
+    environment:
+      name: production
+      url: https://api.vocilia.com/health
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-build-${{ github.sha }}
+
+      - name: Setup Railway CLI
+        run: |
+          curl -fsSL https://railway.app/install.sh | sh
+          echo "$HOME/.railway/bin" >> $GITHUB_PATH
+
+      - name: Deploy to Railway Production
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PROD }}
+        run: |
+          railway login --token $RAILWAY_TOKEN_PROD
+          railway environment --name production
+          railway up --service backend --detach
+
+      - name: Wait for deployment
+        timeout-minutes: 15
+        run: |
+          echo "Waiting for production deployment to be ready..."
+          for i in {1..45}; do
+            if railway status --environment production | grep -q "SUCCESS\|ACTIVE"; then
+              echo "✅ Production deployment successful"
+              break
+            fi
+            if railway status --environment production | grep -q "FAILED\|ERROR"; then
+              echo "❌ Production deployment failed"
+              exit 1
+            fi
+            echo "⏳ Deployment in progress... (attempt $i/45)"
+            sleep 20
+          done
+
+      - name: Health check
+        run: |
+          echo "Performing production health check..."
+          for i in {1..20}; do
+            if curl -f -s https://api.vocilia.com/health > /dev/null; then
+              echo "✅ Production health check passed"
+              break
+            fi
+            if [ $i -eq 20 ]; then
+              echo "❌ Production health check failed after 20 attempts"
+              exit 1
+            fi
+            echo "⏳ Health check attempt $i/20..."
+            sleep 15
+          done
+
+      - name: Run production smoke tests
+        run: |
+          echo "Running smoke tests against production..."
+          curl -f -s https://api.vocilia.com/health/detailed || exit 1
+          curl -f -s https://api.vocilia.com/health/database || exit 1
+          echo "✅ Production smoke tests passed"
+
+      - name: Record production deployment
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PROD }}
+        run: |
+          railway login --token $RAILWAY_TOKEN_PROD
+          deployment_id=$(railway status --environment production --json | jq -r '.deployment.id // "unknown"')
+          echo "📝 Production deployment recorded: $deployment_id"
+
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "🚀 Production deployment completed successfully!"
+          echo "Backend API: https://api.vocilia.com"
+          echo "Health Check: https://api.vocilia.com/health"
+
+  rollback:
+    name: Rollback on Failure
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, deploy-production]
+    if: failure() && (needs.deploy-staging.result == 'failure' || needs.deploy-production.result == 'failure')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Railway CLI
+        run: |
+          curl -fsSL https://railway.app/install.sh | sh
+          echo "$HOME/.railway/bin" >> $GITHUB_PATH
+
+      - name: Rollback staging
+        if: needs.deploy-staging.result == 'failure'
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          echo "🔄 Rolling back staging deployment..."
+          railway login --token $RAILWAY_TOKEN
+          railway environment --name staging
+          # Get previous deployment and rollback
+          railway rollback --previous || echo "⚠️ Rollback may have failed"
+
+      - name: Rollback production
+        if: needs.deploy-production.result == 'failure'
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PROD }}
+        run: |
+          echo "🔄 Rolling back production deployment..."
+          railway login --token $RAILWAY_TOKEN_PROD
+          railway environment --name production
+          # Get previous deployment and rollback
+          railway rollback --previous || echo "⚠️ Rollback may have failed"
+
+  notify:
+    name: Notify Results
+    runs-on: ubuntu-latest
+    needs: [detect-changes, test, security-scan, build, deploy-staging, deploy-production, rollback]
+    if: always() && needs.detect-changes.outputs.should-deploy == 'true'
+    
+    steps:
+      - name: Determine overall status
+        id: status
+        run: |
+          if [[ "${{ needs.deploy-production.result }}" == "success" ]] || [[ "${{ needs.deploy-staging.result }}" == "success" ]]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "message=✅ Backend deployment completed successfully" >> $GITHUB_OUTPUT
+          elif [[ "${{ needs.rollback.result }}" == "success" ]]; then
+            echo "status=rolled_back" >> $GITHUB_OUTPUT
+            echo "message=🔄 Deployment failed but rollback succeeded" >> $GITHUB_OUTPUT
+          else
+            echo "status=failed" >> $GITHUB_OUTPUT
+            echo "message=❌ Backend deployment failed" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create deployment summary
+        run: |
+          echo "## 🚂 Backend Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ steps.status.outputs.message }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ needs.detect-changes.outputs.target-environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Job Results" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tests:** ${{ needs.test.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Security Scan:** ${{ needs.security-scan.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build:** ${{ needs.build.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Staging Deploy:** ${{ needs.deploy-staging.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Production Deploy:** ${{ needs.deploy-production.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Rollback:** ${{ needs.rollback.result || 'not_needed' }}" >> $GITHUB_STEP_SUMMARY
+
+      # Optional: Add webhook notification for external services
+      # - name: Webhook notification
+      #   if: env.DEPLOYMENT_WEBHOOK_URL
+      #   run: |
+      #     curl -X POST ${{ env.DEPLOYMENT_WEBHOOK_URL }} \
+      #       -H "Content-Type: application/json" \
+      #       -d '{
+      #         "status": "${{ steps.status.outputs.status }}",
+      #         "message": "${{ steps.status.outputs.message }}",
+      #         "environment": "${{ needs.detect-changes.outputs.target-environment }}",
+      #         "commit": "${{ github.sha }}",
+      #         "repository": "${{ github.repository }}"
+      #       }'

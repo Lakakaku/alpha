@@ -78,3 +78,9 @@ export class SupabaseClientManager {
     SupabaseClientManager.instance = null as any
   }
 }
+
+/**
+ * Default supabase client instance
+ * Uses the singleton pattern to ensure consistent client across the application
+ */
+export const supabase = SupabaseClientManager.getInstance().getClient();

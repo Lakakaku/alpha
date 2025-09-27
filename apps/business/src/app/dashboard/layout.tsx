@@ -53,6 +53,8 @@ function DashboardContent({ children }: { children: ReactNode }) {
   const navigation = [
     { name: 'Overview', href: '/dashboard', icon: '📊' },
     { name: 'Feedback', href: '/dashboard/feedback', icon: '💬' },
+    { name: 'Questions', href: '/questions', icon: '❓' },
+    { name: 'Store Context', href: '/context', icon: '🏪' },
     ...((canAccessAnalytics as any)() ? [{ name: 'Analytics', href: '/dashboard/analytics', icon: '📈' }] : []),
     ...((canManageQR as any)() ? [{ name: 'QR Codes', href: '/dashboard/qr-codes', icon: '📱' }] : []),
     ...((isAdmin as any)() ? [{ name: 'Settings', href: '/dashboard/settings', icon: '⚙️' }] : []),

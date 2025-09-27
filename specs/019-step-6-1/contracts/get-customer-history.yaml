@@ -1,0 +1,230 @@
+openapi: 3.0.0
+info:
+  title: Get Customer Payment History API
+  version: 1.0.0
+  description: Get payment history for a specific customer
+
+paths:
+  /api/admin/payments/customer/{phone}:
+    get:
+      summary: Get customer payment history
+      description: |
+        Retrieves complete payment history for a customer including all transactions,
+        rewards earned, feedback quality scores, and store associations.
+      operationId: getCustomerPaymentHistory
+      tags:
+        - Payments
+      security:
+        - AdminAuth: []
+      parameters:
+        - name: phone
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^467\d{8}$'
+          description: Customer phone number
+          example: "467012345678"
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+          description: Number of results to return
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Pagination offset
+      responses:
+        '200':
+          description: Customer payment history retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - customerPhone
+                  - summary
+                  - transactions
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  customerPhone:
+                    type: string
+                    example: "467012345678"
+                  summary:
+                    type: object
+                    required:
+                      - totalPaymentsReceived
+                      - totalAmountSek
+                      - successfulPayments
+                      - failedPayments
+                      - totalFeedbackSubmissions
+                      - avgQualityScore
+                    properties:
+                      totalPaymentsReceived:
+                        type: integer
+                        example: 12
+                      totalAmountSek:
+                        type: number
+                        format: decimal
+                        example: 528.40
+                      successfulPayments:
+                        type: integer
+                        example: 11
+                      failedPayments:
+                        type: integer
+                        example: 1
+                      totalFeedbackSubmissions:
+                        type: integer
+                        example: 37
+                      avgQualityScore:
+                        type: number
+                        format: decimal
+                        example: 76.8
+                      uniqueStoresVisited:
+                        type: integer
+                        example: 8
+                  transactions:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - id
+                        - batchWeek
+                        - amountSek
+                        - status
+                        - rewardCount
+                        - createdAt
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          example: "d0e1f2a3-b4c5-6789-d123-456789012345"
+                        batchWeek:
+                          type: string
+                          example: "2025-W09"
+                        amountSek:
+                          type: number
+                          format: decimal
+                          example: 44.00
+                        status:
+                          type: string
+                          enum: [pending, processing, successful, failed]
+                          example: "successful"
+                        retryCount:
+                          type: integer
+                          example: 0
+                        swishTransactionId:
+                          type: string
+                          nullable: true
+                          example: "SWISH-ABC123XYZ789"
+                        rewardCount:
+                          type: integer
+                          description: Number of feedback submissions aggregated in this payment
+                          example: 3
+                        storeNames:
+                          type: array
+                          items:
+                            type: string
+                          example: ["Store A", "Store B", "Store C"]
+                        createdAt:
+                          type: string
+                          format: date-time
+                          example: "2025-09-25T00:02:00Z"
+                        processedAt:
+                          type: string
+                          format: date-time
+                          nullable: true
+                          example: "2025-09-25T00:02:15Z"
+                  total:
+                    type: integer
+                    description: Total count of transactions
+                    example: 12
+                  limit:
+                    type: integer
+                    example: 50
+                  offset:
+                    type: integer
+                    example: 0
+        '400':
+          description: Invalid phone number format
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Invalid phone number format"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Admin authentication required"
+        '404':
+          description: No payment history found
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "No payment history found for this customer"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Failed to retrieve customer payment history"
+
+components:
+  securitySchemes:
+    AdminAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Admin session token from /api/admin/auth/login

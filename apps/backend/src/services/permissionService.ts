@@ -1,4 +1,4 @@
-import { createClient } from '@alpha/database';
+import { database } from '@vocilia/database';
 import { ValidationError, NotFoundError, ConflictError } from '../middleware/errorHandler';
 
 export interface Permission {
@@ -42,7 +42,7 @@ export interface UserPermissionAssignment {
 }
 
 export class PermissionService {
-  private supabase = createClient();
+  private supabase = database.createClient();
 
   async getPermissionById(id: string): Promise<Permission> {
     if (!id) {

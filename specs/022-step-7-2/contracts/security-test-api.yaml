@@ -1,0 +1,400 @@
+openapi: 3.0.3
+info:
+  title: Security Testing API
+  description: API endpoints for security and privacy testing framework
+  version: 1.0.0
+  contact:
+    name: Security Testing Team
+    email: security@vocilia.com
+
+servers:
+  - url: https://api.alpha.vocilia.com
+    description: Production API
+  - url: https://staging-api.alpha.vocilia.com
+    description: Staging API
+
+security:
+  - BearerAuth: []
+
+paths:
+  /api/security/test-suites:
+    get:
+      summary: List all security test suites
+      description: Retrieve available security test suites for execution
+      tags: [Security Tests]
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [authentication, authorization, privacy, gdpr, vulnerability, fraud]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, maintenance, deprecated]
+      responses:
+        200:
+          description: List of security test suites
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  test_suites:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SecurityTestSuite'
+                  total_count:
+                    type: integer
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        403:
+          $ref: '#/components/responses/Forbidden'
+
+  /api/security/test-suites/{suiteId}/execute:
+    post:
+      summary: Execute security test suite
+      description: Run a specific security test suite with optional configuration
+      tags: [Security Tests]
+      parameters:
+        - name: suiteId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                performance_limit:
+                  type: number
+                  maximum: 10
+                  description: Maximum performance degradation percentage (≤10%)
+                target_environment:
+                  type: string
+                  enum: [staging, production]
+                notification_settings:
+                  type: object
+                  properties:
+                    email_alerts:
+                      type: boolean
+                    slack_webhook:
+                      type: string
+              required: [performance_limit]
+      responses:
+        202:
+          description: Test suite execution started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  execution_id:
+                    type: string
+                    format: uuid
+                  estimated_duration:
+                    type: integer
+                    description: Estimated execution time in minutes
+                  status:
+                    type: string
+                    enum: [queued, running]
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/security/executions/{executionId}:
+    get:
+      summary: Get test execution status
+      description: Retrieve current status and results of test execution
+      tags: [Security Tests]
+      parameters:
+        - name: executionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Test execution details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestExecution'
+        404:
+          $ref: '#/components/responses/NotFound'
+
+  /api/security/vulnerabilities:
+    get:
+      summary: List discovered vulnerabilities
+      description: Retrieve vulnerabilities found by security testing
+      tags: [Vulnerabilities]
+      parameters:
+        - name: severity
+          in: query
+          schema:
+            type: string
+            enum: [critical, high, medium, low, info]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, in_progress, fixed, accepted, wont_fix]
+        - name: component
+          in: query
+          schema:
+            type: string
+      responses:
+        200:
+          description: List of vulnerabilities
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  vulnerabilities:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Vulnerability'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/security/vulnerabilities/{vulnerabilityId}/remediate:
+    post:
+      summary: Update vulnerability remediation status
+      description: Update the remediation progress for a vulnerability
+      tags: [Vulnerabilities]
+      parameters:
+        - name: vulnerabilityId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [in_progress, fixed, accepted, wont_fix]
+                remediation_notes:
+                  type: string
+                estimated_completion:
+                  type: string
+                  format: date-time
+              required: [status]
+      responses:
+        200:
+          description: Vulnerability updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vulnerability'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    SecurityTestSuite:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+          enum: [authentication, authorization, privacy, gdpr, vulnerability, fraud]
+        test_count:
+          type: integer
+        estimated_duration:
+          type: integer
+          description: Estimated duration in minutes
+        last_execution:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [active, maintenance, deprecated]
+
+    TestExecution:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        suite_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [queued, running, completed, failed, cancelled]
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+        performance_impact:
+          type: number
+          description: Actual performance impact percentage
+        test_results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TestResult'
+        summary:
+          type: object
+          properties:
+            total_tests:
+              type: integer
+            passed:
+              type: integer
+            failed:
+              type: integer
+            skipped:
+              type: integer
+
+    TestResult:
+      type: object
+      properties:
+        test_id:
+          type: string
+          format: uuid
+        test_name:
+          type: string
+        status:
+          type: string
+          enum: [pass, fail, skip, error]
+        execution_time:
+          type: number
+          description: Execution time in milliseconds
+        attack_vector:
+          type: string
+        expected_defense:
+          type: string
+        actual_result:
+          type: string
+        error_message:
+          type: string
+        artifacts:
+          type: array
+          items:
+            type: string
+            description: URLs to test artifacts (logs, screenshots)
+
+    Vulnerability:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+        severity:
+          type: string
+          enum: [critical, high, medium, low, info]
+        cve_reference:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        affected_component:
+          type: string
+        discovery_date:
+          type: string
+          format: date-time
+        remediation_status:
+          type: string
+          enum: [open, in_progress, fixed, accepted, wont_fix]
+        remediation_deadline:
+          type: string
+          format: date-time
+        risk_score:
+          type: number
+          minimum: 0
+          maximum: 10
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        has_next:
+          type: boolean
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              details:
+                type: array
+                items:
+                  type: string
+
+    Unauthorized:
+      description: Unauthorized access
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Unauthorized: Invalid or missing authentication token"
+
+    Forbidden:
+      description: Forbidden access
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Forbidden: Insufficient permissions for this operation"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              resource_id:
+                type: string

@@ -1,0 +1,528 @@
+export type UserRole = 'admin' | 'business_owner' | 'business_staff';
+export type FeedbackStatus = 'initiated' | 'in_progress' | 'completed' | 'failed';
+export type VerificationStatus = 'pending' | 'verified' | 'rejected';
+export type WeeklyVerificationStatus = 'pending' | 'submitted' | 'completed';
+export interface Business {
+    id: string;
+    name: string;
+    email: string;
+    phone: string | null;
+    settings: Record<string, any>;
+    created_at: string;
+    updated_at: string;
+}
+export interface UserAccount {
+    id: string;
+    business_id: string | null;
+    email: string;
+    role: UserRole;
+    permissions: Record<string, any>;
+    last_login: string | null;
+    created_at: string;
+    updated_at: string;
+}
+export interface Store {
+    id: string;
+    business_id: string;
+    name: string;
+    location_address: string | null;
+    qr_code_data: string;
+    store_profile: Record<string, any>;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+}
+export interface ContextWindow {
+    id: string;
+    store_id: string;
+    store_profile: Record<string, any>;
+    custom_questions: CustomQuestion[];
+    ai_configuration: Record<string, any>;
+    fraud_detection_settings: Record<string, any>;
+    context_score: number;
+    last_updated: string;
+}
+export interface Transaction {
+    id: string;
+    store_id: string;
+    customer_time_range: string;
+    customer_amount_range: string;
+    actual_amount: number | null;
+    actual_time: string | null;
+    verification_status: VerificationStatus;
+    is_verified: boolean;
+    created_at: string;
+}
+export interface FeedbackSession {
+    id: string;
+    store_id: string;
+    transaction_id: string;
+    customer_phone_hash: string;
+    status: FeedbackStatus;
+    quality_grade: number | null;
+    reward_percentage: number | null;
+    feedback_summary: Record<string, any>;
+    call_started_at: string | null;
+    call_completed_at: string | null;
+    created_at: string;
+}
+export interface VerificationRecord {
+    id: string;
+    business_id: string;
+    week_identifier: string;
+    status: WeeklyVerificationStatus;
+    transaction_summary: Record<string, any>;
+    submitted_at: string | null;
+    verified_at: string | null;
+    created_at: string;
+}
+export interface BusinessWithStores extends Business {
+    stores: Store[];
+}
+export interface BusinessWithUsers extends Business {
+    user_accounts: UserAccount[];
+}
+export interface StoreWithContext extends Store {
+    context_window: ContextWindow | null;
+}
+export interface StoreWithFeedback extends Store {
+    feedback_sessions: FeedbackSession[];
+}
+export interface FeedbackSessionWithTransaction extends FeedbackSession {
+    transaction: Transaction;
+}
+export interface FeedbackSessionWithStore extends FeedbackSession {
+    store: Store;
+}
+export interface TransactionWithFeedback extends Transaction {
+    feedback_session: FeedbackSession | null;
+}
+export interface VerificationRecordWithBusiness extends VerificationRecord {
+    business: Business;
+}
+export interface CustomQuestion {
+    id: string;
+    text: string;
+    frequency: number;
+    category: QuestionCategory;
+    priority: QuestionPriority;
+    department_tags: string[];
+    active_period?: {
+        start_date: string;
+        end_date: string;
+    };
+    triggers?: QuestionTrigger[];
+}
+export type QuestionCategory = 'product_feedback' | 'service_quality' | 'store_environment' | 'specific_campaigns' | 'problem_identification';
+export type QuestionPriority = 'high' | 'medium' | 'low';
+export interface QuestionTrigger {
+    type: 'purchase_based' | 'time_based' | 'amount_based';
+    condition: string;
+    value: string | number;
+}
+export interface StoreProfile {
+    store_type: {
+        category: string;
+        subcategory: string;
+    };
+    size: {
+        square_footage: number;
+        departments: number;
+    };
+    operating_hours: {
+        [day: string]: {
+            open: string;
+            close: string;
+        } | null;
+    };
+    location: {
+        address: string;
+        parking_available: boolean;
+        accessibility_features: string[];
+    };
+    personnel: {
+        staff_count: number;
+        departments: Record<string, number>;
+        key_personnel: {
+            role: string;
+            name: string;
+        }[];
+        customer_service_points: string[];
+    };
+    layout: {
+        departments: Record<string, {
+            location: string;
+            size: string;
+        }>;
+        recent_changes: {
+            date: string;
+            description: string;
+        }[];
+        navigation_flow: string;
+    };
+    inventory: {
+        product_categories: string[];
+        special_services: string[];
+        payment_methods: string[];
+        loyalty_programs: string[];
+    };
+}
+export interface AIConfiguration {
+    conversation_style: 'friendly' | 'professional' | 'casual';
+    language_preferences: {
+        primary: 'swedish';
+        formality_level: 'formal' | 'informal';
+    };
+    call_duration_target: {
+        min_seconds: number;
+        max_seconds: number;
+    };
+    question_selection: {
+        max_questions_per_call: number;
+        priority_weighting: Record<QuestionPriority, number>;
+    };
+    fraud_detection: {
+        sensitivity_level: 'low' | 'medium' | 'high';
+        red_flag_keywords: string[];
+        verification_thresholds: {
+            min_response_length: number;
+            coherence_threshold: number;
+        };
+    };
+}
+export type BusinessInsert = Omit<Business, 'id' | 'created_at' | 'updated_at'>;
+export type UserAccountInsert = Omit<UserAccount, 'id' | 'created_at' | 'updated_at'>;
+export type StoreInsert = Omit<Store, 'id' | 'created_at' | 'updated_at'>;
+export type ContextWindowInsert = Omit<ContextWindow, 'id' | 'last_updated'>;
+export type TransactionInsert = Omit<Transaction, 'id' | 'created_at'>;
+export type FeedbackSessionInsert = Omit<FeedbackSession, 'id' | 'created_at'>;
+export type VerificationRecordInsert = Omit<VerificationRecord, 'id' | 'created_at'>;
+export type BusinessUpdate = Partial<Omit<Business, 'id' | 'created_at'>>;
+export type UserAccountUpdate = Partial<Omit<UserAccount, 'id' | 'created_at'>>;
+export type StoreUpdate = Partial<Omit<Store, 'id' | 'business_id' | 'created_at'>>;
+export type ContextWindowUpdate = Partial<Omit<ContextWindow, 'id' | 'store_id'>>;
+export type TransactionUpdate = Partial<Omit<Transaction, 'id' | 'store_id' | 'created_at'>>;
+export type FeedbackSessionUpdate = Partial<Omit<FeedbackSession, 'id' | 'store_id' | 'transaction_id' | 'created_at'>>;
+export type VerificationRecordUpdate = Partial<Omit<VerificationRecord, 'id' | 'business_id' | 'week_identifier' | 'created_at'>>;
+export interface BusinessFilters {
+    name?: string;
+    email?: string;
+    created_after?: string;
+    created_before?: string;
+}
+export interface StoreFilters {
+    business_id?: string;
+    name?: string;
+    is_active?: boolean;
+    location_address?: string;
+}
+export interface FeedbackSessionFilters {
+    store_id?: string;
+    status?: FeedbackStatus;
+    quality_grade_min?: number;
+    quality_grade_max?: number;
+    created_after?: string;
+    created_before?: string;
+}
+export interface TransactionFilters {
+    store_id?: string;
+    verification_status?: VerificationStatus;
+    is_verified?: boolean;
+    created_after?: string;
+    created_before?: string;
+}
+export interface TransactionToleranceInput {
+    customer_time: string;
+    customer_amount: number;
+}
+export interface TransactionVerificationResult {
+    transaction_id: string;
+    is_match: boolean;
+    time_difference_minutes: number;
+    amount_difference_sek: number;
+    confidence_score: number;
+}
+export interface WeeklyVerificationData {
+    week_identifier: string;
+    business_id: string;
+    transactions: {
+        transaction_id: string;
+        customer_time_range: string;
+        customer_amount_range: string;
+        feedback_quality_grade: number | null;
+        reward_percentage: number | null;
+    }[];
+    total_feedback_sessions: number;
+    total_rewards_sek: number;
+}
+export interface WeeklyVerificationSubmission {
+    verification_record_id: string;
+    verified_transactions: {
+        transaction_id: string;
+        is_legitimate: boolean;
+        pos_match_found: boolean;
+        actual_amount?: number;
+        actual_time?: string;
+        notes?: string;
+    }[];
+    business_signature: string;
+    submitted_at: string;
+}
+export interface Database {
+    public: {
+        Tables: {
+            businesses: {
+                Row: Business;
+                Insert: BusinessInsert;
+                Update: BusinessUpdate;
+                Relationships: [
+                    {
+                        foreignKeyName: "businesses_stores_fkey";
+                        columns: ["id"];
+                        isOneToOne: false;
+                        referencedRelation: "stores";
+                        referencedColumns: ["business_id"];
+                    },
+                    {
+                        foreignKeyName: "businesses_user_accounts_fkey";
+                        columns: ["id"];
+                        isOneToOne: false;
+                        referencedRelation: "user_accounts";
+                        referencedColumns: ["business_id"];
+                    },
+                    {
+                        foreignKeyName: "businesses_verification_records_fkey";
+                        columns: ["id"];
+                        isOneToOne: false;
+                        referencedRelation: "verification_records";
+                        referencedColumns: ["business_id"];
+                    }
+                ];
+            };
+            user_accounts: {
+                Row: UserAccount;
+                Insert: UserAccountInsert;
+                Update: UserAccountUpdate;
+                Relationships: [
+                    {
+                        foreignKeyName: "user_accounts_business_id_fkey";
+                        columns: ["business_id"];
+                        isOneToOne: false;
+                        referencedRelation: "businesses";
+                        referencedColumns: ["id"];
+                    }
+                ];
+            };
+            stores: {
+                Row: Store;
+                Insert: StoreInsert;
+                Update: StoreUpdate;
+                Relationships: [
+                    {
+                        foreignKeyName: "stores_business_id_fkey";
+                        columns: ["business_id"];
+                        isOneToOne: false;
+                        referencedRelation: "businesses";
+                        referencedColumns: ["id"];
+                    },
+                    {
+                        foreignKeyName: "stores_context_windows_fkey";
+                        columns: ["id"];
+                        isOneToOne: true;
+                        referencedRelation: "context_windows";
+                        referencedColumns: ["store_id"];
+                    },
+                    {
+                        foreignKeyName: "stores_transactions_fkey";
+                        columns: ["id"];
+                        isOneToOne: false;
+                        referencedRelation: "transactions";
+                        referencedColumns: ["store_id"];
+                    },
+                    {
+                        foreignKeyName: "stores_feedback_sessions_fkey";
+                        columns: ["id"];
+                        isOneToOne: false;
+                        referencedRelation: "feedback_sessions";
+                        referencedColumns: ["store_id"];
+                    }
+                ];
+            };
+            context_windows: {
+                Row: ContextWindow;
+                Insert: ContextWindowInsert;
+                Update: ContextWindowUpdate;
+                Relationships: [
+                    {
+                        foreignKeyName: "context_windows_store_id_fkey";
+                        columns: ["store_id"];
+                        isOneToOne: true;
+                        referencedRelation: "stores";
+                        referencedColumns: ["id"];
+                    }
+                ];
+            };
+            transactions: {
+                Row: Transaction;
+                Insert: TransactionInsert;
+                Update: TransactionUpdate;
+                Relationships: [
+                    {
+                        foreignKeyName: "transactions_store_id_fkey";
+                        columns: ["store_id"];
+                        isOneToOne: false;
+                        referencedRelation: "stores";
+                        referencedColumns: ["id"];
+                    },
+                    {
+                        foreignKeyName: "transactions_feedback_sessions_fkey";
+                        columns: ["id"];
+                        isOneToOne: true;
+                        referencedRelation: "feedback_sessions";
+                        referencedColumns: ["transaction_id"];
+                    }
+                ];
+            };
+            feedback_sessions: {
+                Row: FeedbackSession;
+                Insert: FeedbackSessionInsert;
+                Update: FeedbackSessionUpdate;
+                Relationships: [
+                    {
+                        foreignKeyName: "feedback_sessions_store_id_fkey";
+                        columns: ["store_id"];
+                        isOneToOne: false;
+                        referencedRelation: "stores";
+                        referencedColumns: ["id"];
+                    },
+                    {
+                        foreignKeyName: "feedback_sessions_transaction_id_fkey";
+                        columns: ["transaction_id"];
+                        isOneToOne: true;
+                        referencedRelation: "transactions";
+                        referencedColumns: ["id"];
+                    }
+                ];
+            };
+            verification_records: {
+                Row: VerificationRecord;
+                Insert: VerificationRecordInsert;
+                Update: VerificationRecordUpdate;
+                Relationships: [
+                    {
+                        foreignKeyName: "verification_records_business_id_fkey";
+                        columns: ["business_id"];
+                        isOneToOne: false;
+                        referencedRelation: "businesses";
+                        referencedColumns: ["id"];
+                    }
+                ];
+            };
+        };
+        Views: {
+            [_ in never]: never;
+        };
+        Functions: {
+            create_time_range: {
+                Args: {
+                    customer_time: string;
+                    tolerance_minutes?: number;
+                };
+                Returns: string;
+            };
+            create_amount_range: {
+                Args: {
+                    customer_amount: number;
+                    tolerance_sek?: number;
+                };
+                Returns: string;
+            };
+            verify_transaction_match: {
+                Args: {
+                    transaction_id: string;
+                    actual_time: string;
+                    actual_amount: number;
+                };
+                Returns: TransactionVerificationResult;
+            };
+            calculate_context_completeness: {
+                Args: {
+                    store_profile: Record<string, any>;
+                    custom_questions: CustomQuestion[];
+                    ai_configuration: Record<string, any>;
+                    fraud_detection_settings: Record<string, any>;
+                };
+                Returns: number;
+            };
+            generate_week_identifier: {
+                Args: {
+                    date_input: string;
+                };
+                Returns: string;
+            };
+        };
+        Enums: {
+            user_role: UserRole;
+            feedback_status: FeedbackStatus;
+            verification_status: VerificationStatus;
+            weekly_verification_status: WeeklyVerificationStatus;
+            question_category: QuestionCategory;
+            question_priority: QuestionPriority;
+        };
+        CompositeTypes: {
+            [_ in never]: never;
+        };
+    };
+}
+export interface RealtimePayload<T = any> {
+    commit_timestamp: string;
+    eventType: 'INSERT' | 'UPDATE' | 'DELETE';
+    new: T;
+    old: T;
+    schema: string;
+    table: string;
+}
+export type FeedbackSessionRealtimePayload = RealtimePayload<FeedbackSession>;
+export type TransactionRealtimePayload = RealtimePayload<Transaction>;
+export type VerificationRecordRealtimePayload = RealtimePayload<VerificationRecord>;
+export interface DatabaseError {
+    code: string;
+    message: string;
+    details?: string;
+    hint?: string;
+}
+export interface ValidationError {
+    field: string;
+    message: string;
+    value: any;
+}
+export interface PaginationParams {
+    page: number;
+    limit: number;
+    order_by?: string;
+    order_direction?: 'asc' | 'desc';
+}
+export interface PaginatedResponse<T> {
+    data: T[];
+    pagination: {
+        page: number;
+        limit: number;
+        total_count: number;
+        total_pages: number;
+        has_next: boolean;
+        has_previous: boolean;
+    };
+}
+export interface AuthContext {
+    user_id: string;
+    business_id: string | null;
+    role: UserRole;
+    permissions: string[];
+    email: string;
+}
+export interface RLSContext {
+    business_id: string | null;
+    role: UserRole;
+    user_id: string;
+}
+//# sourceMappingURL=index.d.ts.map

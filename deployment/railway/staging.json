@@ -1,0 +1,150 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "pnpm install --frozen-lockfile && pnpm --filter @vocilia/backend build",
+    "watchPatterns": [
+      "apps/backend/**/*",
+      "packages/**/*",
+      "package.json",
+      "pnpm-lock.yaml"
+    ]
+  },
+  "deploy": {
+    "numReplicas": 1,
+    "sleepApplication": false,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 3
+  },
+  "environments": {
+    "staging": {
+      "variables": {
+        "NODE_ENV": "staging",
+        "PORT": "${{RAILWAY_STATIC_PORT}}",
+        "DATABASE_URL": "${{STAGING_DATABASE_URL}}",
+        "SUPABASE_URL": "${{STAGING_SUPABASE_URL}}",
+        "SUPABASE_ANON_KEY": "${{STAGING_SUPABASE_ANON_KEY}}",
+        "SUPABASE_SERVICE_ROLE_KEY": "${{STAGING_SUPABASE_SERVICE_ROLE_KEY}}",
+        "JWT_SECRET": "${{STAGING_JWT_SECRET}}",
+        "OPENAI_API_KEY": "${{STAGING_OPENAI_API_KEY}}",
+        "SWISH_MERCHANT_ID": "${{STAGING_SWISH_MERCHANT_ID}}",
+        "SWISH_API_KEY": "${{STAGING_SWISH_API_KEY}}",
+        "SWISH_CERTIFICATE": "${{STAGING_SWISH_CERTIFICATE}}",
+        "CORS_ORIGIN": "https://staging.vocilia.com,https://business-staging.vocilia.com,https://admin-staging.vocilia.com",
+        "API_RATE_LIMIT": "500",
+        "REDIS_URL": "${{STAGING_REDIS_URL}}",
+        "WEBHOOK_SECRET": "${{STAGING_WEBHOOK_SECRET}}",
+        "ENCRYPTION_KEY": "${{STAGING_ENCRYPTION_KEY}}",
+        "BACKUP_ENCRYPTION_KEY": "${{STAGING_BACKUP_ENCRYPTION_KEY}}"
+      },
+      "plugins": [
+        {
+          "type": "postgresql",
+          "config": {
+            "connectionPooling": true,
+            "maxConnections": 10,
+            "sslMode": "require"
+          }
+        },
+        {
+          "type": "redis",
+          "config": {
+            "maxMemory": "128mb",
+            "evictionPolicy": "allkeys-lru"
+          }
+        }
+      ]
+    }
+  },
+  "regions": [
+    "europe-west1"
+  ],
+  "runtime": {
+    "type": "nodejs",
+    "version": "18",
+    "packageManager": "pnpm"
+  },
+  "healthcheck": {
+    "path": "/health",
+    "port": "${{PORT}}",
+    "timeout": 30,
+    "interval": 60,
+    "retries": 3,
+    "startPeriod": 60
+  },
+  "networking": {
+    "allowPublic": true,
+    "internalPort": "${{PORT}}",
+    "customDomain": {
+      "domain": "api-staging.vocilia.com",
+      "subdomain": "api-staging"
+    }
+  },
+  "logging": {
+    "level": "debug",
+    "format": "json",
+    "retention": "3d"
+  },
+  "monitoring": {
+    "metrics": {
+      "enabled": true,
+      "retention": "7d"
+    },
+    "alerts": [
+      {
+        "type": "cpu",
+        "threshold": 85,
+        "duration": "10m"
+      },
+      {
+        "type": "memory",
+        "threshold": 90,
+        "duration": "10m"
+      },
+      {
+        "type": "response_time",
+        "threshold": 5000,
+        "duration": "5m"
+      },
+      {
+        "type": "error_rate",
+        "threshold": 10,
+        "duration": "10m"
+      }
+    ]
+  },
+  "backup": {
+    "enabled": true,
+    "schedule": "0 3 * * *",
+    "retention": "7d",
+    "encryption": true
+  },
+  "security": {
+    "headers": {
+      "strictTransportSecurity": true,
+      "contentSecurityPolicy": true,
+      "xFrameOptions": "DENY",
+      "xContentTypeOptions": true
+    },
+    "rateLimiting": {
+      "enabled": true,
+      "requests": 500,
+      "window": "15m"
+    }
+  },
+  "scaling": {
+    "autoscaling": {
+      "enabled": false
+    },
+    "resources": {
+      "memory": "256Mi",
+      "cpu": "250m",
+      "storage": "5Gi"
+    }
+  },
+  "deployment": {
+    "strategy": "recreate",
+    "progressDeadlineSeconds": 300,
+    "revisionHistoryLimit": 5
+  }
+}

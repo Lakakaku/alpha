@@ -1,0 +1,617 @@
+openapi: 3.0.3
+info:
+  title: AI Call Integration API
+  description: API for managing AI-powered customer feedback calls
+  version: 1.0.0
+  contact:
+    name: Vocilia Alpha Team
+servers:
+  - url: https://api.vocilia.com/v1
+    description: Production server
+  - url: https://api-staging.vocilia.com/v1
+    description: Staging server
+
+paths:
+  /calls/initiate:
+    post:
+      summary: Initiate AI call for verified customer
+      description: Starts the AI call process after customer verification is complete
+      operationId: initiateCall
+      tags:
+        - Calls
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InitiateCallRequest'
+      responses:
+        '201':
+          description: Call initiated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallSessionResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Verification not complete or invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /calls/{sessionId}/status:
+    get:
+      summary: Get call session status
+      description: Monitor the progress and status of an active or completed call
+      operationId: getCallStatus
+      tags:
+        - Calls
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Call session identifier
+      responses:
+        '200':
+          description: Call status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallSessionResponse'
+        '404':
+          description: Call session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /calls/{sessionId}/complete:
+    post:
+      summary: Mark call as completed
+      description: Manually complete a call session and process results
+      operationId: completeCall
+      tags:
+        - Calls
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Call session identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteCallRequest'
+      responses:
+        '200':
+          description: Call completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallSessionResponse'
+        '404':
+          description: Call session not found
+        '409':
+          description: Call already completed or in invalid state
+
+  /calls/{sessionId}/events:
+    get:
+      summary: Get call events
+      description: Retrieve timeline of events for a call session
+      operationId: getCallEvents
+      tags:
+        - Calls
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        '200':
+          description: Call events retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallEventsResponse'
+
+  /questions/select:
+    post:
+      summary: Select questions for business context
+      description: Get appropriate questions for a customer based on business configuration
+      operationId: selectQuestions
+      tags:
+        - Questions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuestionSelectionRequest'
+      responses:
+        '200':
+          description: Questions selected successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuestionSelectionResponse'
+        '400':
+          description: Invalid selection criteria
+
+  /questions/configurations:
+    get:
+      summary: List question configurations
+      description: Get all active question configurations for a business
+      operationId: listQuestionConfigurations
+      tags:
+        - Questions
+      parameters:
+        - name: businessId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: active
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Question configurations retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuestionConfigurationsResponse'
+
+    post:
+      summary: Create question configuration
+      description: Create a new question configuration for a business
+      operationId: createQuestionConfiguration
+      tags:
+        - Questions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateQuestionConfigurationRequest'
+      responses:
+        '201':
+          description: Question configuration created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuestionConfiguration'
+
+  /calls/webhooks/telephony:
+    post:
+      summary: Telephony provider webhook
+      description: Receive events from telephony providers (46elks, Twilio)
+      operationId: handleTelephonyWebhook
+      tags:
+        - Webhooks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TelephonyWebhookEvent'
+      responses:
+        '200':
+          description: Webhook processed successfully
+        '400':
+          description: Invalid webhook payload
+
+  /calls/webhooks/ai:
+    post:
+      summary: AI service webhook
+      description: Receive events from OpenAI real-time API
+      operationId: handleAiWebhook
+      tags:
+        - Webhooks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiWebhookEvent'
+      responses:
+        '200':
+          description: Webhook processed successfully
+
+components:
+  schemas:
+    InitiateCallRequest:
+      type: object
+      required:
+        - verificationId
+        - businessId
+        - customerPhone
+      properties:
+        verificationId:
+          type: string
+          format: uuid
+          description: Customer verification identifier
+        businessId:
+          type: string
+          format: uuid
+          description: Business identifier
+        customerPhone:
+          type: string
+          pattern: '^\+46[0-9]{7,9}$'
+          description: Swedish phone number format
+        priority:
+          type: string
+          enum: [normal, high]
+          default: normal
+          description: Call priority level
+
+    CallSessionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        businessId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [initiated, connecting, in_progress, completed, failed, timeout]
+        startedAt:
+          type: string
+          format: date-time
+        connectedAt:
+          type: string
+          format: date-time
+          nullable: true
+        endedAt:
+          type: string
+          format: date-time
+          nullable: true
+        durationSeconds:
+          type: integer
+          minimum: 0
+          maximum: 120
+        questionsAsked:
+          type: array
+          items:
+            type: string
+            format: uuid
+        costEstimate:
+          type: number
+          format: decimal
+          minimum: 0
+        recordingUrl:
+          type: string
+          format: uri
+          nullable: true
+
+    CompleteCallRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          enum: [completed, timeout, technical_failure, customer_hangup]
+        transcript:
+          type: string
+          description: Full conversation transcript
+        responses:
+          type: array
+          items:
+            $ref: '#/components/schemas/CallResponse'
+
+    CallResponse:
+      type: object
+      required:
+        - questionId
+        - responseText
+        - askedAt
+      properties:
+        questionId:
+          type: string
+          format: uuid
+        questionText:
+          type: string
+        responseText:
+          type: string
+        responseDuration:
+          type: integer
+          minimum: 0
+          maximum: 60
+        confidenceScore:
+          type: number
+          minimum: 0
+          maximum: 1
+        sentimentScore:
+          type: number
+          minimum: -1
+          maximum: 1
+        askedAt:
+          type: string
+          format: date-time
+        respondedAt:
+          type: string
+          format: date-time
+
+    CallEventsResponse:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/CallEvent'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    CallEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          enum: [initiated, connecting, answered, ai_connected, question_asked, response_received, warning_sent, timeout, completed, failed]
+        eventData:
+          type: object
+        timestamp:
+          type: string
+          format: date-time
+        source:
+          type: string
+          enum: [system, telephony, ai, customer]
+
+    QuestionSelectionRequest:
+      type: object
+      required:
+        - businessId
+        - customerCount
+      properties:
+        businessId:
+          type: string
+          format: uuid
+        customerCount:
+          type: integer
+          minimum: 1
+        timeBudgetSeconds:
+          type: integer
+          minimum: 60
+          maximum: 120
+          default: 90
+        customerContext:
+          type: object
+          description: Additional context about the customer
+
+    QuestionSelectionResponse:
+      type: object
+      properties:
+        selectedQuestions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SelectedQuestion'
+        estimatedDuration:
+          type: integer
+          description: Estimated time needed for all questions
+        selectionCriteria:
+          type: object
+          description: Criteria used for selection
+
+    SelectedQuestion:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        questionText:
+          type: string
+        priority:
+          type: string
+          enum: [high, medium, low]
+        maxResponseTime:
+          type: integer
+        followUpPrompts:
+          type: array
+          items:
+            type: string
+
+    QuestionConfigurationsResponse:
+      type: object
+      properties:
+        configurations:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuestionConfiguration'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    QuestionConfiguration:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        businessId:
+          type: string
+          format: uuid
+        questionText:
+          type: string
+          minLength: 10
+          maxLength: 500
+        frequency:
+          type: integer
+          minimum: 1
+          maximum: 100
+        priority:
+          type: string
+          enum: [high, medium, low]
+        departmentTags:
+          type: array
+          items:
+            type: string
+        activeFrom:
+          type: string
+          format: date
+        activeUntil:
+          type: string
+          format: date
+        isActive:
+          type: boolean
+        maxResponseTime:
+          type: integer
+          minimum: 10
+          maximum: 60
+          default: 30
+
+    CreateQuestionConfigurationRequest:
+      type: object
+      required:
+        - businessId
+        - questionText
+        - frequency
+        - priority
+      properties:
+        businessId:
+          type: string
+          format: uuid
+        questionText:
+          type: string
+          minLength: 10
+          maxLength: 500
+        frequency:
+          type: integer
+          minimum: 1
+          maximum: 100
+        priority:
+          type: string
+          enum: [high, medium, low]
+        departmentTags:
+          type: array
+          items:
+            type: string
+        activeFrom:
+          type: string
+          format: date
+        activeUntil:
+          type: string
+          format: date
+        maxResponseTime:
+          type: integer
+          minimum: 10
+          maximum: 60
+          default: 30
+
+    TelephonyWebhookEvent:
+      type: object
+      required:
+        - eventType
+        - callId
+        - timestamp
+      properties:
+        eventType:
+          type: string
+          enum: [call_initiated, call_answered, call_completed, call_failed, recording_available]
+        callId:
+          type: string
+        sessionId:
+          type: string
+          format: uuid
+        timestamp:
+          type: string
+          format: date-time
+        data:
+          type: object
+          description: Provider-specific event data
+
+    AiWebhookEvent:
+      type: object
+      required:
+        - eventType
+        - sessionId
+        - timestamp
+      properties:
+        eventType:
+          type: string
+          enum: [session_started, response_generated, session_ended, error_occurred]
+        sessionId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        data:
+          type: object
+          description: AI-specific event data
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        perPage:
+          type: integer
+          minimum: 1
+          maximum: 100
+        total:
+          type: integer
+          minimum: 0
+        hasNext:
+          type: boolean
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+        details:
+          type: object
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Calls
+    description: Call session management
+  - name: Questions
+    description: Question configuration and selection
+  - name: Webhooks
+    description: External service event handling

@@ -1,0 +1,714 @@
+openapi: 3.0.3
+info:
+  title: Custom Questions API
+  description: API for managing custom feedback questions in Vocilia business dashboard
+  version: 1.0.0
+  contact:
+    name: Vocilia Development Team
+
+servers:
+  - url: http://localhost:3001/api
+    description: Development server
+  - url: https://alpha-production.up.railway.app/api
+    description: Production server
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase JWT token from authentication
+
+  schemas:
+    CustomQuestion:
+      type: object
+      required:
+        - id
+        - business_id
+        - question_text
+        - question_type
+        - priority
+        - status
+        - frequency_target
+        - frequency_window
+        - is_active
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique question identifier
+        business_id:
+          type: string
+          format: uuid
+          description: Associated business ID
+        store_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Optional store-specific association
+        question_text:
+          type: string
+          minLength: 10
+          maxLength: 500
+          description: The question text displayed to customers
+        question_type:
+          type: string
+          enum: [text, rating, multiple_choice, yes_no]
+          description: Type of question response expected
+        formatting_options:
+          type: object
+          description: Rich text formatting metadata
+        category_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Question category for organization
+        department:
+          type: string
+          maxLength: 100
+          nullable: true
+          description: Store department or area tag
+        priority:
+          type: string
+          enum: [high, medium, low]
+          description: Question priority level
+        status:
+          type: string
+          enum: [draft, active, inactive, archived]
+          description: Current question status
+        is_active:
+          type: boolean
+          description: Whether question is currently active
+        frequency_target:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: Target presentations per frequency window
+        frequency_window:
+          type: string
+          enum: [hourly, daily, weekly]
+          description: Frequency reset window
+        frequency_current:
+          type: integer
+          minimum: 0
+          description: Current presentations in window
+        active_start_date:
+          type: string
+          format: date
+          nullable: true
+          description: Question activation start date
+        active_end_date:
+          type: string
+          format: date
+          nullable: true
+          description: Question deactivation date
+        active_hours_start:
+          type: string
+          format: time
+          nullable: true
+          description: Daily activation time
+        active_hours_end:
+          type: string
+          format: time
+          nullable: true
+          description: Daily deactivation time
+        active_days_of_week:
+          type: array
+          items:
+            type: integer
+            minimum: 0
+            maximum: 6
+          description: Active days (0=Sunday, 6=Saturday)
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+
+    QuestionCategory:
+      type: object
+      required:
+        - id
+        - business_id
+        - name
+        - sort_order
+        - is_default
+      properties:
+        id:
+          type: string
+          format: uuid
+        business_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          nullable: true
+        color:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+          nullable: true
+        icon:
+          type: string
+          maxLength: 50
+          nullable: true
+        sort_order:
+          type: integer
+        is_default:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    QuestionTrigger:
+      type: object
+      required:
+        - id
+        - question_id
+        - trigger_type
+        - trigger_config
+        - operator
+        - is_enabled
+      properties:
+        id:
+          type: string
+          format: uuid
+        question_id:
+          type: string
+          format: uuid
+        trigger_type:
+          type: string
+          enum: [purchase_amount, time_based, customer_visit, product_category, combination]
+        trigger_config:
+          type: object
+          description: Flexible trigger configuration JSON
+        operator:
+          type: string
+          enum: [and, or]
+        is_enabled:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    QuestionPreview:
+      type: object
+      required:
+        - html
+        - estimated_completion_time
+      properties:
+        html:
+          type: string
+          description: Rendered HTML preview of question
+        estimated_completion_time:
+          type: integer
+          description: Estimated seconds to complete
+        trigger_examples:
+          type: array
+          items:
+            type: object
+            properties:
+              scenario:
+                type: string
+              would_trigger:
+                type: boolean
+
+    CreateQuestionRequest:
+      type: object
+      required:
+        - question_text
+        - question_type
+        - priority
+        - frequency_target
+      properties:
+        question_text:
+          type: string
+          minLength: 10
+          maxLength: 500
+        question_type:
+          type: string
+          enum: [text, rating, multiple_choice, yes_no]
+        formatting_options:
+          type: object
+        category_id:
+          type: string
+          format: uuid
+          nullable: true
+        department:
+          type: string
+          maxLength: 100
+          nullable: true
+        priority:
+          type: string
+          enum: [high, medium, low]
+        frequency_target:
+          type: integer
+          minimum: 1
+          maximum: 100
+        frequency_window:
+          type: string
+          enum: [hourly, daily, weekly]
+        active_start_date:
+          type: string
+          format: date
+          nullable: true
+        active_end_date:
+          type: string
+          format: date
+          nullable: true
+        active_hours_start:
+          type: string
+          format: time
+          nullable: true
+        active_hours_end:
+          type: string
+          format: time
+          nullable: true
+        active_days_of_week:
+          type: array
+          items:
+            type: integer
+            minimum: 0
+            maximum: 6
+        store_id:
+          type: string
+          format: uuid
+          nullable: true
+
+    UpdateQuestionRequest:
+      type: object
+      properties:
+        question_text:
+          type: string
+          minLength: 10
+          maxLength: 500
+        formatting_options:
+          type: object
+        category_id:
+          type: string
+          format: uuid
+          nullable: true
+        department:
+          type: string
+          maxLength: 100
+          nullable: true
+        priority:
+          type: string
+          enum: [high, medium, low]
+        status:
+          type: string
+          enum: [draft, active, inactive, archived]
+        frequency_target:
+          type: integer
+          minimum: 1
+          maximum: 100
+        frequency_window:
+          type: string
+          enum: [hourly, daily, weekly]
+        active_start_date:
+          type: string
+          format: date
+          nullable: true
+        active_end_date:
+          type: string
+          format: date
+          nullable: true
+        active_hours_start:
+          type: string
+          format: time
+          nullable: true
+        active_hours_end:
+          type: string
+          format: time
+          nullable: true
+        active_days_of_week:
+          type: array
+          items:
+            type: integer
+            minimum: 0
+            maximum: 6
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+paths:
+  /questions:
+    get:
+      summary: List custom questions
+      description: Retrieve paginated list of questions for authenticated business
+      parameters:
+        - name: store_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by specific store
+        - name: category_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by category
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, active, inactive, archived]
+          description: Filter by status
+        - name: priority
+          in: query
+          schema:
+            type: string
+            enum: [high, medium, low]
+          description: Filter by priority
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+          description: Filter by active status
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+            enum: [created_at, updated_at, priority, question_text]
+            default: created_at
+        - name: sort_order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CustomQuestion'
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      total:
+                        type: integer
+                      pages:
+                        type: integer
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Create new question
+      description: Create a new custom feedback question
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateQuestionRequest'
+      responses:
+        '201':
+          description: Question created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomQuestion'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /questions/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      summary: Get question by ID
+      description: Retrieve specific question details
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomQuestion'
+        '404':
+          description: Question not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      summary: Update question
+      description: Update existing question configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateQuestionRequest'
+      responses:
+        '200':
+          description: Question updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomQuestion'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Question not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Delete question
+      description: Soft delete question (sets status to archived)
+      responses:
+        '204':
+          description: Question deleted successfully
+        '404':
+          description: Question not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /questions/{id}/preview:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    post:
+      summary: Generate question preview
+      description: Generate preview of how question will appear to customers
+      responses:
+        '200':
+          description: Preview generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuestionPreview'
+        '404':
+          description: Question not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /questions/{id}/activate:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    post:
+      summary: Activate question
+      description: Set question status to active and enable presentation
+      responses:
+        '200':
+          description: Question activated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomQuestion'
+        '400':
+          description: Cannot activate question (missing requirements)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /questions/{id}/deactivate:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    post:
+      summary: Deactivate question
+      description: Set question status to inactive and stop presentation
+      responses:
+        '200':
+          description: Question deactivated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomQuestion'
+
+  /questions/categories:
+    get:
+      summary: List question categories
+      description: Retrieve categories for question organization
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/QuestionCategory'
+
+    post:
+      summary: Create question category
+      description: Create new category for organizing questions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  maxLength: 100
+                description:
+                  type: string
+                color:
+                  type: string
+                  pattern: '^#[0-9A-Fa-f]{6}$'
+                icon:
+                  type: string
+                  maxLength: 50
+      responses:
+        '201':
+          description: Category created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuestionCategory'
+
+  /questions/{id}/triggers:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      summary: List question triggers
+      description: Get all triggers for a specific question
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/QuestionTrigger'
+
+    post:
+      summary: Create question trigger
+      description: Add new trigger condition to question
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - trigger_type
+                - trigger_config
+              properties:
+                trigger_type:
+                  type: string
+                  enum: [purchase_amount, time_based, customer_visit, product_category, combination]
+                trigger_config:
+                  type: object
+                operator:
+                  type: string
+                  enum: [and, or]
+                  default: and
+      responses:
+        '201':
+          description: Trigger created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuestionTrigger'

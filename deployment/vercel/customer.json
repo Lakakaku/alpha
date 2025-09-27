@@ -1,0 +1,174 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "name": "vocilia-customer",
+  "builds": [
+    {
+      "src": "apps/customer/package.json",
+      "use": "@vercel/next",
+      "config": {
+        "distDir": ".next",
+        "buildCommand": "cd ../.. && pnpm --filter @vocilia/customer build",
+        "installCommand": "cd ../.. && pnpm install --frozen-lockfile"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "apps/customer/$1"
+    }
+  ],
+  "functions": {
+    "apps/customer/src/app/api/*/route.ts": {
+      "runtime": "nodejs18.x",
+      "maxDuration": 30
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/cleanup",
+      "schedule": "0 2 * * *"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "NEXT_PUBLIC_SUPABASE_URL": "@supabase-url",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase-anon-key",
+    "NEXT_PUBLIC_API_URL": "https://api.vocilia.com",
+    "NEXT_PUBLIC_APP_URL": "https://vocilia.com",
+    "NEXT_PUBLIC_BUSINESS_URL": "https://business.vocilia.com",
+    "NEXT_PUBLIC_ADMIN_URL": "https://admin.vocilia.com",
+    "SUPABASE_SERVICE_ROLE_KEY": "@supabase-service-role-key",
+    "JWT_SECRET": "@jwt-secret",
+    "WEBHOOK_SECRET": "@webhook-secret",
+    "SENTRY_DSN": "@sentry-dsn",
+    "ANALYTICS_ID": "@analytics-id"
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(self)"
+        }
+      ]
+    },
+    {
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        },
+        {
+          "key": "Service-Worker-Allowed",
+          "value": "/"
+        }
+      ]
+    },
+    {
+      "source": "/manifest.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/feedback",
+      "destination": "/qr/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/qr",
+      "destination": "/qr/start",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://api.vocilia.com/api/:path*"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    }
+  ],
+  "regions": [
+    "fra1",
+    "arn1"
+  ],
+  "github": {
+    "enabled": true,
+    "autoJobCancelation": true,
+    "autoAlias": true,
+    "silent": false
+  },
+  "outputDirectory": "apps/customer/.next",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm --filter @vocilia/customer build",
+  "devCommand": "pnpm --filter @vocilia/customer dev",
+  "framework": "nextjs",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "domains": [
+    {
+      "name": "vocilia.com",
+      "redirect": false
+    },
+    {
+      "name": "www.vocilia.com",
+      "redirect": "vocilia.com"
+    }
+  ],
+  "monitoring": {
+    "analytics": {
+      "enabled": true
+    },
+    "speedInsights": {
+      "enabled": true
+    },
+    "webVitals": {
+      "enabled": true
+    }
+  },
+  "images": {
+    "domains": [
+      "supabase.co",
+      "vocilia.com"
+    ],
+    "formats": [
+      "image/avif",
+      "image/webp"
+    ],
+    "minimumCacheTTL": 3600
+  },
+  "preview": {
+    "allowlist": [
+      "development",
+      "staging"
+    ]
+  }
+}

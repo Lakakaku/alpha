@@ -8,13 +8,13 @@
 // Type Definitions and Interfaces
 // =============================================================================
 
-export * from './types/index.js';
+export * from './types';
 
 // =============================================================================
 // Database Client and Configuration
 // =============================================================================
 
-export { SupabaseClientManager } from './client/supabase.js';
+export { SupabaseClientManager } from './client/supabase';
 export {
   testDatabaseConnection,
   formatDatabaseError,
@@ -26,31 +26,52 @@ export {
   type ConnectionTestResult,
   type DatabaseError,
   type FormattedDatabaseError
-} from './client/utils.js';
+} from './client/utils';
 
 // =============================================================================
 // Query Classes - Entity Operations
 // =============================================================================
 
-export { BusinessQueries } from './queries/business.js';
-export { StoreQueries } from './queries/store.js';
-export { UserAccountQueries } from './queries/user-account.js';
-export { ContextWindowQueries } from './queries/context-window.js';
-export { TransactionQueries } from './queries/transaction.js';
-export { FeedbackSessionQueries } from './queries/feedback-session.js';
-export { VerificationRecordQueries } from './queries/verification-record.js';
+export { BusinessQueries } from './queries/business';
+export { StoreQueries } from './queries/store';
+export { UserAccountQueries } from './queries/user-account';
+export { ContextWindowQueries } from './queries/context-window';
+export { TransactionQueries } from './queries/transaction';
+export { FeedbackSessionQueries } from './queries/feedback-session';
+export { VerificationRecordQueries } from './queries/verification-record';
+
+// =============================================================================
+// Payment Models - Swish Payment Integration
+// =============================================================================
+
+export { PaymentBatchQueries } from './payment/payment-batch';
+export { PaymentTransactionQueries } from './payment/payment-transaction';
+export { RewardCalculationQueries } from './payment/reward-calculation';
+export { PaymentFailureQueries } from './payment/payment-failure';
+export { ReconciliationReportQueries } from './payment/reconciliation-report';
+export { BusinessInvoiceQueries } from './payment/business-invoice';
+
+// =============================================================================
+// Verification Models - Weekly Verification Workflow
+// =============================================================================
+
+export { WeeklyVerificationCycleModel } from './verification/weekly-verification-cycles';
+export { VerificationDatabaseModel } from './verification/verification-databases';
+export { VerificationRecordModel } from './verification/verification-records';
+export { PaymentInvoiceModel } from './verification/payment-invoices';
+export { CustomerRewardBatchModel } from './verification/customer-reward-batches';
 
 // =============================================================================
 // Query Factory Functions
 // =============================================================================
 
-export { createBusinessQueries } from './queries/business.js';
-export { createStoreQueries } from './queries/store.js';
-export { createUserAccountQueries } from './queries/user-account.js';
-export { createContextWindowQueries } from './queries/context-window.js';
-export { createTransactionQueries } from './queries/transaction.js';
-export { createFeedbackSessionQueries } from './queries/feedback-session.js';
-export { createVerificationRecordQueries } from './queries/verification-record.js';
+export { createBusinessQueries } from './queries/business';
+export { createStoreQueries } from './queries/store';
+export { createUserAccountQueries } from './queries/user-account';
+export { createContextWindowQueries } from './queries/context-window';
+export { createTransactionQueries } from './queries/transaction';
+export { createFeedbackSessionQueries } from './queries/feedback-session';
+export { createVerificationRecordQueries } from './queries/verification-record';
 
 // =============================================================================
 // Authentication and Authorization
@@ -61,7 +82,7 @@ export {
   createAuthHelper,
   type JWTClaims,
   type AuthTokenValidation
-} from './auth/auth-helper.js';
+} from './auth/auth-helper';
 
 // =============================================================================
 // Real-time Subscriptions
@@ -76,7 +97,7 @@ export {
   type SubscriptionCallback,
   type ErrorCallback,
   type SubscriptionOptions
-} from './realtime/subscription-manager.js';
+} from './realtime/subscription-manager';
 
 // =============================================================================
 // Migration and Schema Management
@@ -89,24 +110,41 @@ export {
   type MigrationResult,
   type MigrationStatus,
   type RollbackResult
-} from './migrations/migration-runner.js';
+} from './migrations/migration-runner';
+
+// =============================================================================
+// Monitoring and Analytics Models
+// =============================================================================
+
+export * from './monitoring';
 
 // =============================================================================
 // Convenience Factory Functions
 // =============================================================================
 
 import { SupabaseClient } from '@supabase/supabase-js';
-import { Database } from './types/index.js';
-import { BusinessQueries } from './queries/business.js';
-import { StoreQueries } from './queries/store.js';
-import { UserAccountQueries } from './queries/user-account.js';
-import { ContextWindowQueries } from './queries/context-window.js';
-import { TransactionQueries } from './queries/transaction.js';
-import { FeedbackSessionQueries } from './queries/feedback-session.js';
-import { VerificationRecordQueries } from './queries/verification-record.js';
-import { AuthHelper } from './auth/auth-helper.js';
-import { RealtimeSubscriptionManager } from './realtime/subscription-manager.js';
-import { MigrationRunner } from './migrations/migration-runner.js';
+import { Database } from './types/index';
+import { BusinessQueries } from './queries/business';
+import { StoreQueries } from './queries/store';
+import { UserAccountQueries } from './queries/user-account';
+import { ContextWindowQueries } from './queries/context-window';
+import { TransactionQueries } from './queries/transaction';
+import { FeedbackSessionQueries } from './queries/feedback-session';
+import { VerificationRecordQueries } from './queries/verification-record';
+import { PaymentBatchQueries } from './payment/payment-batch';
+import { PaymentTransactionQueries } from './payment/payment-transaction';
+import { RewardCalculationQueries } from './payment/reward-calculation';
+import { PaymentFailureQueries } from './payment/payment-failure';
+import { ReconciliationReportQueries } from './payment/reconciliation-report';
+import { BusinessInvoiceQueries } from './payment/business-invoice';
+import { WeeklyVerificationCycleModel } from './verification/weekly-verification-cycles';
+import { VerificationDatabaseModel } from './verification/verification-databases';
+import { VerificationRecordModel } from './verification/verification-records';
+import { PaymentInvoiceModel } from './verification/payment-invoices';
+import { CustomerRewardBatchModel } from './verification/customer-reward-batches';
+import { AuthHelper } from './auth/auth-helper';
+import { RealtimeSubscriptionManager } from './realtime/subscription-manager';
+import { MigrationRunner } from './migrations/migration-runner';
 
 /**
  * Database Operations Bundle
@@ -121,6 +159,21 @@ export interface DatabaseOperations {
   transaction: TransactionQueries;
   feedbackSession: FeedbackSessionQueries;
   verificationRecord: VerificationRecordQueries;
+
+  // Payment models
+  paymentBatch: PaymentBatchQueries;
+  paymentTransaction: PaymentTransactionQueries;
+  rewardCalculation: RewardCalculationQueries;
+  paymentFailure: PaymentFailureQueries;
+  reconciliationReport: ReconciliationReportQueries;
+  businessInvoice: BusinessInvoiceQueries;
+
+  // Verification models
+  weeklyVerificationCycle: typeof WeeklyVerificationCycleModel;
+  verificationDatabase: typeof VerificationDatabaseModel;
+  verificationRecordModel: typeof VerificationRecordModel;
+  paymentInvoice: typeof PaymentInvoiceModel;
+  customerRewardBatch: typeof CustomerRewardBatchModel;
 
   // Utility classes
   auth: AuthHelper;
@@ -148,6 +201,21 @@ export function createDatabaseOperations(
     transaction: new TransactionQueries(client),
     feedbackSession: new FeedbackSessionQueries(client),
     verificationRecord: new VerificationRecordQueries(client),
+
+    // Payment models
+    paymentBatch: new PaymentBatchQueries(client),
+    paymentTransaction: new PaymentTransactionQueries(client),
+    rewardCalculation: new RewardCalculationQueries(client),
+    paymentFailure: new PaymentFailureQueries(client),
+    reconciliationReport: new ReconciliationReportQueries(client),
+    businessInvoice: new BusinessInvoiceQueries(client),
+
+    // Verification models
+    weeklyVerificationCycle: WeeklyVerificationCycleModel,
+    verificationDatabase: VerificationDatabaseModel,
+    verificationRecordModel: VerificationRecordModel,
+    paymentInvoice: PaymentInvoiceModel,
+    customerRewardBatch: CustomerRewardBatchModel,
 
     // Utility classes
     auth: new AuthHelper(client),
@@ -196,7 +264,7 @@ export function createDatabaseClientFactory(config?: {
   supabaseUrl?: string;
   supabaseAnonKey?: string;
 }): DatabaseClientFactory {
-  const { SupabaseClientManager } = require('./client/supabase.js');
+  const { SupabaseClientManager } = require('./client/supabase');
   const clientManager = SupabaseClientManager.getInstance(config);
 
   return {
@@ -211,7 +279,7 @@ export function createDatabaseClientFactory(config?: {
 
     async testConnection() {
       const client = clientManager.getClient();
-      const { testDatabaseConnection } = await import('./client/utils.js');
+      const { testDatabaseConnection } = await import('./client/utils');
       const result = await testDatabaseConnection(client);
       return result.isConnected;
     },

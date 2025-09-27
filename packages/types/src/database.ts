@@ -1,10 +1,6 @@
 /**
- * Database Types - Auto-generated from Supabase migrations
- * 
- * Generated on: 2025-09-20T15:39:58.587Z
- * 
- * DO NOT EDIT MANUALLY - This file is auto-generated
- * Run 'npm run generate:types' to regenerate
+ * Database types generated for Supabase
+ * Updated: 2025-09-21 for Feedback Analysis Dashboard
  */
 
 export type Json =
@@ -15,496 +11,292 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
-  }
+export interface Database {
   public: {
     Tables: {
       businesses: {
         Row: {
-          created_at: string | null
-          email: string
           id: string
           name: string
-          phone: string | null
-          settings: Json | null
-          updated_at: string | null
+          email: string
+          verification_status: 'pending' | 'approved' | 'rejected'
+          created_at: string
+          updated_at: string
         }
         Insert: {
-          created_at?: string | null
-          email: string
           id?: string
           name: string
-          phone?: string | null
-          settings?: Json | null
-          updated_at?: string | null
+          email: string
+          verification_status?: 'pending' | 'approved' | 'rejected'
+          created_at?: string
+          updated_at?: string
         }
         Update: {
-          created_at?: string | null
-          email?: string
           id?: string
           name?: string
-          phone?: string | null
-          settings?: Json | null
-          updated_at?: string | null
+          email?: string
+          verification_status?: 'pending' | 'approved' | 'rejected'
+          created_at?: string
+          updated_at?: string
         }
-        Relationships: []
-      }
-      context_window: {
-        Row: {
-          ai_configuration: Json | null
-          context_score: number | null
-          custom_questions: Json | null
-          fraud_detection_settings: Json | null
-          id: string
-          last_updated: string | null
-          store_id: string
-          store_profile: Json | null
-        }
-        Insert: {
-          ai_configuration?: Json | null
-          context_score?: number | null
-          custom_questions?: Json | null
-          fraud_detection_settings?: Json | null
-          id?: string
-          last_updated?: string | null
-          store_id: string
-          store_profile?: Json | null
-        }
-        Update: {
-          ai_configuration?: Json | null
-          context_score?: number | null
-          custom_questions?: Json | null
-          fraud_detection_settings?: Json | null
-          id?: string
-          last_updated?: string | null
-          store_id?: string
-          store_profile?: Json | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "context_window_store_id_fkey"
-            columns: ["store_id"]
-            isOneToOne: true
-            referencedRelation: "stores"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      feedback_sessions: {
-        Row: {
-          call_completed_at: string | null
-          call_started_at: string | null
-          created_at: string | null
-          customer_phone_hash: string
-          feedback_summary: Json | null
-          id: string
-          quality_grade: number | null
-          reward_percentage: number | null
-          status: Database["public"]["Enums"]["feedback_status"] | null
-          store_id: string
-          transaction_id: string
-        }
-        Insert: {
-          call_completed_at?: string | null
-          call_started_at?: string | null
-          created_at?: string | null
-          customer_phone_hash: string
-          feedback_summary?: Json | null
-          id?: string
-          quality_grade?: number | null
-          reward_percentage?: number | null
-          status?: Database["public"]["Enums"]["feedback_status"] | null
-          store_id: string
-          transaction_id: string
-        }
-        Update: {
-          call_completed_at?: string | null
-          call_started_at?: string | null
-          created_at?: string | null
-          customer_phone_hash?: string
-          feedback_summary?: Json | null
-          id?: string
-          quality_grade?: number | null
-          reward_percentage?: number | null
-          status?: Database["public"]["Enums"]["feedback_status"] | null
-          store_id?: string
-          transaction_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "feedback_sessions_store_id_fkey"
-            columns: ["store_id"]
-            isOneToOne: false
-            referencedRelation: "stores"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "feedback_sessions_transaction_id_fkey"
-            columns: ["transaction_id"]
-            isOneToOne: true
-            referencedRelation: "transactions"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       stores: {
         Row: {
-          business_id: string
-          created_at: string | null
           id: string
-          is_active: boolean | null
-          location_address: string | null
+          business_id: string
           name: string
-          qr_code_data: string
-          store_profile: Json | null
-          updated_at: string | null
+          address: string
+          qr_code_url: string | null
+          created_at: string
+          updated_at: string
         }
         Insert: {
-          business_id: string
-          created_at?: string | null
           id?: string
-          is_active?: boolean | null
-          location_address?: string | null
+          business_id: string
           name: string
-          qr_code_data: string
-          store_profile?: Json | null
-          updated_at?: string | null
+          address: string
+          qr_code_url?: string | null
+          created_at?: string
+          updated_at?: string
         }
         Update: {
-          business_id?: string
-          created_at?: string | null
           id?: string
-          is_active?: boolean | null
-          location_address?: string | null
+          business_id?: string
           name?: string
-          qr_code_data?: string
-          store_profile?: Json | null
-          updated_at?: string | null
+          address?: string
+          qr_code_url?: string | null
+          created_at?: string
+          updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "stores_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "businesses"
-            referencedColumns: ["id"]
-          },
-        ]
       }
-      transactions: {
+      feedback: {
         Row: {
-          actual_amount: number | null
-          actual_time: string | null
-          created_at: string | null
-          customer_amount_range: unknown
-          customer_time_range: unknown
           id: string
-          is_verified: boolean | null
           store_id: string
-          verification_status:
-            | Database["public"]["Enums"]["verification_status"]
-            | null
+          business_id: string
+          content: string
+          transaction_time: string
+          transaction_value: number
+          phone_hash: string
+          created_at: string
+          week_number: number | null
+          year: number | null
+          sentiment: 'positive' | 'negative' | 'neutral' | 'mixed' | null
+          department_tags: string[] | null
+          ai_summary: string | null
+          priority_score: number | null
+          analysis_status: 'pending' | 'processing' | 'completed' | 'failed' | null
+          processed_at: string | null
         }
         Insert: {
-          actual_amount?: number | null
-          actual_time?: string | null
-          created_at?: string | null
-          customer_amount_range: unknown
-          customer_time_range: unknown
           id?: string
-          is_verified?: boolean | null
           store_id: string
-          verification_status?:
-            | Database["public"]["Enums"]["verification_status"]
-            | null
+          business_id: string
+          content: string
+          transaction_time: string
+          transaction_value: number
+          phone_hash: string
+          created_at?: string
+          week_number?: number | null
+          year?: number | null
+          sentiment?: 'positive' | 'negative' | 'neutral' | 'mixed' | null
+          department_tags?: string[] | null
+          ai_summary?: string | null
+          priority_score?: number | null
+          analysis_status?: 'pending' | 'processing' | 'completed' | 'failed' | null
+          processed_at?: string | null
         }
         Update: {
-          actual_amount?: number | null
-          actual_time?: string | null
-          created_at?: string | null
-          customer_amount_range?: unknown
-          customer_time_range?: unknown
           id?: string
-          is_verified?: boolean | null
           store_id?: string
-          verification_status?:
-            | Database["public"]["Enums"]["verification_status"]
-            | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "transactions_store_id_fkey"
-            columns: ["store_id"]
-            isOneToOne: false
-            referencedRelation: "stores"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_accounts: {
-        Row: {
-          business_id: string | null
-          created_at: string | null
-          email: string
-          id: string
-          last_login: string | null
-          permissions: Json | null
-          role: Database["public"]["Enums"]["user_role"]
-          updated_at: string | null
-        }
-        Insert: {
-          business_id?: string | null
-          created_at?: string | null
-          email: string
-          id?: string
-          last_login?: string | null
-          permissions?: Json | null
-          role: Database["public"]["Enums"]["user_role"]
-          updated_at?: string | null
-        }
-        Update: {
-          business_id?: string | null
-          created_at?: string | null
-          email?: string
-          id?: string
-          last_login?: string | null
-          permissions?: Json | null
-          role?: Database["public"]["Enums"]["user_role"]
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_accounts_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "businesses"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      verification_record: {
-        Row: {
-          business_id: string
-          created_at: string | null
-          id: string
-          status:
-            | Database["public"]["Enums"]["weekly_verification_status"]
-            | null
-          submitted_at: string | null
-          transaction_summary: Json | null
-          verified_at: string | null
-          week_identifier: string
-        }
-        Insert: {
-          business_id: string
-          created_at?: string | null
-          id?: string
-          status?:
-            | Database["public"]["Enums"]["weekly_verification_status"]
-            | null
-          submitted_at?: string | null
-          transaction_summary?: Json | null
-          verified_at?: string | null
-          week_identifier: string
-        }
-        Update: {
           business_id?: string
-          created_at?: string | null
-          id?: string
-          status?:
-            | Database["public"]["Enums"]["weekly_verification_status"]
-            | null
-          submitted_at?: string | null
-          transaction_summary?: Json | null
-          verified_at?: string | null
-          week_identifier?: string
+          content?: string
+          transaction_time?: string
+          transaction_value?: number
+          phone_hash?: string
+          created_at?: string
+          week_number?: number | null
+          year?: number | null
+          sentiment?: 'positive' | 'negative' | 'neutral' | 'mixed' | null
+          department_tags?: string[] | null
+          ai_summary?: string | null
+          priority_score?: number | null
+          analysis_status?: 'pending' | 'processing' | 'completed' | 'failed' | null
+          processed_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "verification_record_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "businesses"
-            referencedColumns: ["id"]
-          },
-        ]
+      }
+      analysis_reports: {
+        Row: {
+          id: string
+          store_id: string
+          business_id: string
+          week_number: number
+          year: number
+          positive_summary: string | null
+          negative_summary: string | null
+          general_opinions: string | null
+          new_critiques: string[]
+          actionable_insights: Json
+          total_feedback_count: number
+          sentiment_breakdown: Json
+          department_breakdown: Json
+          trend_comparison: Json
+          generated_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          store_id: string
+          business_id: string
+          week_number: number
+          year: number
+          positive_summary?: string | null
+          negative_summary?: string | null
+          general_opinions?: string | null
+          new_critiques?: string[]
+          actionable_insights?: Json
+          total_feedback_count?: number
+          sentiment_breakdown?: Json
+          department_breakdown?: Json
+          trend_comparison?: Json
+          generated_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          store_id?: string
+          business_id?: string
+          week_number?: number
+          year?: number
+          positive_summary?: string | null
+          negative_summary?: string | null
+          general_opinions?: string | null
+          new_critiques?: string[]
+          actionable_insights?: Json
+          total_feedback_count?: number
+          sentiment_breakdown?: Json
+          department_breakdown?: Json
+          trend_comparison?: Json
+          generated_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      search_queries: {
+        Row: {
+          id: string
+          user_id: string
+          store_id: string
+          business_id: string
+          query_text: string
+          processed_query: Json
+          results_count: number
+          execution_time_ms: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          store_id: string
+          business_id: string
+          query_text: string
+          processed_query?: Json
+          results_count?: number
+          execution_time_ms?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          store_id?: string
+          business_id?: string
+          query_text?: string
+          processed_query?: Json
+          results_count?: number
+          execution_time_ms?: number
+          created_at?: string
+        }
+      }
+      feedback_insights: {
+        Row: {
+          id: string
+          store_id: string
+          business_id: string
+          feedback_id: string | null
+          insight_type: 'improvement' | 'issue' | 'opportunity' | 'trend'
+          title: string
+          description: string
+          priority_level: 'low' | 'medium' | 'high' | 'critical'
+          department: string | null
+          suggested_actions: string[]
+          confidence_score: number | null
+          status: 'new' | 'acknowledged' | 'in_progress' | 'resolved' | 'dismissed'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          store_id: string
+          business_id: string
+          feedback_id?: string | null
+          insight_type: 'improvement' | 'issue' | 'opportunity' | 'trend'
+          title: string
+          description: string
+          priority_level: 'low' | 'medium' | 'high' | 'critical'
+          department?: string | null
+          suggested_actions?: string[]
+          confidence_score?: number | null
+          status?: 'new' | 'acknowledged' | 'in_progress' | 'resolved' | 'dismissed'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          store_id?: string
+          business_id?: string
+          feedback_id?: string | null
+          insight_type?: 'improvement' | 'issue' | 'opportunity' | 'trend'
+          title?: string
+          description?: string
+          priority_level?: 'low' | 'medium' | 'high' | 'critical'
+          department?: string | null
+          suggested_actions?: string[]
+          confidence_score?: number | null
+          status?: 'new' | 'acknowledged' | 'in_progress' | 'resolved' | 'dismissed'
+          created_at?: string
+          updated_at?: string
+        }
       }
     }
     Views: {
-      [_ in never]: never
+      temporal_comparisons: {
+        Row: {
+          store_id: string
+          business_id: string
+          current_week: number
+          current_year: number
+          previous_week: number | null
+          previous_year: number | null
+          current_sentiment: Json | null
+          previous_sentiment: Json | null
+          computed_at: string
+        }
+      }
     }
     Functions: {
-      calculate_context_score: {
-        Args: {
-          ai_config_data: Json
-          custom_questions_data: Json
-          fraud_settings_data: Json
-          store_profile_data: Json
-        }
-        Returns: number
-      }
-      create_amount_tolerance: {
-        Args: { customer_amount: number }
-        Returns: unknown
-      }
-      create_time_tolerance: {
-        Args: { customer_time: string }
-        Returns: unknown
-      }
-      get_table_columns: {
-        Args: { table_name_param: string }
-        Returns: {
-          column_default: string
-          column_name: string
-          data_type: string
-          foreign_column: string
-          foreign_table: string
-          is_foreign_key: boolean
-          is_nullable: string
-          is_primary_key: boolean
-        }[]
-      }
+      [_ in never]: never
     }
     Enums: {
-      feedback_status: "initiated" | "in_progress" | "completed" | "failed"
-      user_role: "admin" | "business_owner" | "business_staff"
-      verification_status: "pending" | "verified" | "rejected"
-      weekly_verification_status: "pending" | "submitted" | "completed"
+      sentiment_enum: 'positive' | 'negative' | 'neutral' | 'mixed'
+      analysis_status_enum: 'pending' | 'processing' | 'completed' | 'failed'
+      insight_type_enum: 'improvement' | 'issue' | 'opportunity' | 'trend'
+      priority_level_enum: 'low' | 'medium' | 'high' | 'critical'
+      insight_status_enum: 'new' | 'acknowledged' | 'in_progress' | 'resolved' | 'dismissed'
     }
     CompositeTypes: {
       [_ in never]: never
     }
   }
 }
-
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
-
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
-
-export type Tables<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
-    }
-    ? R
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
-    : never
-
-export type TablesInsert<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
-    : never
-
-export type TablesUpdate<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
-    : never
-
-export type Enums<
-  DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
-
-export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
-
-export const Constants = {
-  public: {
-    Enums: {
-      feedback_status: ["initiated", "in_progress", "completed", "failed"],
-      user_role: ["admin", "business_owner", "business_staff"],
-      verification_status: ["pending", "verified", "rejected"],
-      weekly_verification_status: ["pending", "submitted", "completed"],
-    },
-  },
-} as const

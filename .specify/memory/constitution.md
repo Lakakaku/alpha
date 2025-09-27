@@ -2,46 +2,61 @@
 
 ## Core Principles
 
-### I. Production from Day One (NON-NEGOTIABLE)
-No mock data, prototypes, or placeholder integrations. Every component must use real external services and production-ready implementations from the first commit. All integrations (Supabase, Swish, GPT-4o-mini) must be functional and tested.
+### I. Production from Day One
+Every feature must be production-ready from initial implementation. No mock data, placeholder implementations, or temporary solutions. All features deploy to real environments with real data from day one.
 
 ### II. Security & Privacy First
-Customer phone numbers are never shared with businesses during verification. All feedback is anonymized before delivery to businesses. Row Level Security (RLS) policies are mandatory for all database operations. All secrets and API keys must be properly secured.
+Security is mandatory, not optional. All data access requires proper authentication and authorization. Row Level Security (RLS) policies are required for all database operations. No security shortcuts or "we'll add it later" approaches.
 
 ### III. TypeScript Strict Mode (NON-NEGOTIABLE)
-All code must pass TypeScript strict mode compilation. No `any` types except for well-documented external API responses. Type safety is enforced throughout the entire stack from database to frontend.
+All code must be written in TypeScript with strict mode enabled. No `any` types, no loose typing, no JavaScript files in TypeScript projects. Type safety is enforced at compile time.
 
 ### IV. Real Data Only
-All development and testing must use actual Supabase database with proper RLS policies. No local databases, mock data, or fake implementations. Weekly verification workflows must process real transaction data.
+Features must work with real production data from existing systems. No local databases, no seed data, no mock APIs. Integration with existing Supabase database and real business workflows required.
 
 ### V. Monorepo Architecture
-Three applications (Customer, Business, Admin) share common packages and utilities. Deployment separation: frontend applications to Vercel, backend services to Railway. Clear separation of concerns between frontend and backend.
+All code follows the established monorepo structure with three apps (customer, business, admin) and shared packages. No breaking changes to existing architecture. New features extend the existing structure.
 
-## Technology Constraints
+## Technical Standards
 
-### Stack Requirements
-- **Frontend**: Next.js 14 with TypeScript (deployed on Vercel)
-- **Backend**: Node.js APIs and services (deployed on Railway)
-- **Database**: Supabase PostgreSQL with RLS
-- **Styling**: Tailwind CSS only
-- **AI**: GPT-4o-mini for voice calls and feedback analysis
-- **Payments**: Swish integration for Swedish market
+### Testing Requirements
+- Test-Driven Development (TDD) mandatory: Tests written → Tests fail → Then implement
+- Contract tests for all API endpoints
+- Integration tests for all user workflows
+- Unit tests for business logic components
 
-### Deployment Architecture
-Frontend applications must deploy to Vercel with automatic GitHub integration. Backend services must deploy to Railway. Database operations through Supabase with proper authentication and RLS policies.
+### Performance Standards
+- Page loads: <3s initial, <1s cached (measured on mobile 3G)
+- API operations: <500ms for CRUD, <2s for complex operations
+- Lighthouse scores: >90 for Performance, Accessibility, PWA
+
+### Deployment Standards
+- Backend services deploy to Railway
+- Frontend applications deploy to Vercel
+- Database hosted on Supabase with RLS policies
+- All deployments use existing CI/CD pipelines
 
 ## Development Workflow
 
-### Weekly Verification Cycle
-All transaction data must be cross-referenced with POS systems weekly. Fraud detection and legitimacy analysis are mandatory. Context-based verification ensures system integrity.
+### Feature Development Process
+1. Specification via `/specify` command
+2. Planning via `/plan` command  
+3. Task generation via `/tasks` command
+4. Implementation following TDD principles
+5. Integration testing with real data
+6. Performance validation before merge
 
-### AI Integration Standards
-Voice calls must use GPT-4o-mini with Swedish language support. Business Context Window system guides AI interactions. Feedback analysis and grading algorithms must be consistently applied.
+### Quality Gates
+- All tests must pass before merge
+- TypeScript compilation with zero errors
+- ESLint and Prettier compliance
+- Security review for data access patterns
+- Performance benchmarks met
 
 ## Governance
 
-This constitution supersedes all other development practices. Any deviation must be documented and approved. The weekly verification workflow and production-ready requirement are non-negotiable core principles.
+This constitution supersedes all other development practices. Feature implementations that violate these principles must be rejected regardless of functionality. 
 
-All code reviews must verify compliance with RLS policies, TypeScript strict mode, and production-ready implementations.
+Constitution changes require explicit documentation and approval process outside of normal feature development.
 
-**Version**: 1.0.0 | **Ratified**: 2025-01-18 | **Last Amended**: 2025-01-18
+**Version**: 1.0.0 | **Ratified**: 2025-09-23 | **Last Amended**: 2025-09-23

@@ -1,0 +1,394 @@
+openapi: 3.0.3
+info:
+  title: Customer Support API
+  description: API for customer support requests and help system
+  version: 1.0.0
+
+paths:
+  /api/support/request:
+    post:
+      summary: Submit customer support request
+      description: Create a new customer support request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupportRequest'
+      responses:
+        '201':
+          description: Support request created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportRequestResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/support/faq:
+    get:
+      summary: Get contextual FAQ
+      description: Get FAQ entries based on current user context
+      parameters:
+        - name: context
+          in: query
+          schema:
+            type: string
+            enum: [verification, call_in_progress, call_completed, reward_pending]
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: FAQ entries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FAQResponse'
+
+  /api/support/contact-info:
+    get:
+      summary: Get support contact information
+      description: Get available support channels and contact methods
+      responses:
+        '200':
+          description: Support contact information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportContactInfo'
+
+  /api/support/diagnostics:
+    post:
+      summary: Submit diagnostic information
+      description: Submit technical diagnostics for troubleshooting
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiagnosticData'
+      responses:
+        '200':
+          description: Diagnostics submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiagnosticResponse'
+
+components:
+  schemas:
+    SupportRequest:
+      type: object
+      required:
+        - customer_phone_hash
+        - request_type
+        - subject
+        - description
+      properties:
+        customer_phone_hash:
+          type: string
+        store_id:
+          type: string
+          format: uuid
+        call_session_id:
+          type: string
+          format: uuid
+        request_type:
+          type: string
+          enum:
+            - verification_issue
+            - call_quality
+            - reward_question
+            - technical_problem
+            - accessibility_issue
+            - general_inquiry
+        subject:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 2000
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+          default: medium
+        customer_context:
+          type: object
+          properties:
+            user_agent:
+              type: string
+            device_type:
+              type: string
+            accessibility_enabled:
+              type: boolean
+            pwa_installed:
+              type: boolean
+            offline_mode:
+              type: boolean
+            current_page:
+              type: string
+            error_details:
+              type: object
+
+    SupportRequestResponse:
+      type: object
+      required:
+        - request_id
+        - created_at
+        - estimated_response_time
+      properties:
+        request_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        ticket_number:
+          type: string
+        estimated_response_time:
+          type: string
+          description: Human-readable response time estimate
+        support_channels:
+          type: object
+          properties:
+            email:
+              type: string
+            phone:
+              type: string
+            chat_available:
+              type: boolean
+
+    FAQResponse:
+      type: object
+      required:
+        - entries
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/FAQEntry'
+        total_count:
+          type: integer
+        context:
+          type: string
+
+    FAQEntry:
+      type: object
+      required:
+        - id
+        - question
+        - answer
+        - category
+      properties:
+        id:
+          type: string
+        question:
+          type: string
+        answer:
+          type: string
+        category:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        helpful_count:
+          type: integer
+        related_links:
+          type: array
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+              url:
+                type: string
+
+    SupportContactInfo:
+      type: object
+      required:
+        - channels
+        - business_hours
+      properties:
+        channels:
+          type: object
+          properties:
+            email:
+              type: object
+              properties:
+                address:
+                  type: string
+                response_time:
+                  type: string
+                available:
+                  type: boolean
+            phone:
+              type: object
+              properties:
+                number:
+                  type: string
+                country_code:
+                  type: string
+                available:
+                  type: boolean
+                hours:
+                  type: string
+            chat:
+              type: object
+              properties:
+                available:
+                  type: boolean
+                estimated_wait:
+                  type: string
+                queue_position:
+                  type: integer
+        business_hours:
+          type: object
+          properties:
+            timezone:
+              type: string
+            weekdays:
+              type: string
+            weekends:
+              type: string
+        emergency_contact:
+          type: object
+          properties:
+            available:
+              type: boolean
+            criteria:
+              type: array
+              items:
+                type: string
+
+    DiagnosticData:
+      type: object
+      required:
+        - customer_phone_hash
+        - diagnostic_type
+      properties:
+        customer_phone_hash:
+          type: string
+        diagnostic_type:
+          type: string
+          enum: [connectivity, browser, pwa, accessibility, performance]
+        system_info:
+          type: object
+          properties:
+            user_agent:
+              type: string
+            screen_resolution:
+              type: string
+            viewport_size:
+              type: string
+            color_depth:
+              type: integer
+            timezone:
+              type: string
+            language:
+              type: string
+        browser_info:
+          type: object
+          properties:
+            cookies_enabled:
+              type: boolean
+            local_storage_available:
+              type: boolean
+            service_worker_supported:
+              type: boolean
+            notification_permission:
+              type: string
+        network_info:
+          type: object
+          properties:
+            connection_type:
+              type: string
+            effective_type:
+              type: string
+            downlink:
+              type: number
+            rtt:
+              type: number
+        accessibility_info:
+          type: object
+          properties:
+            screen_reader_detected:
+              type: boolean
+            high_contrast_enabled:
+              type: boolean
+            reduced_motion_enabled:
+              type: boolean
+            voice_control_detected:
+              type: boolean
+        error_logs:
+          type: array
+          items:
+            type: object
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+              level:
+                type: string
+              message:
+                type: string
+              stack:
+                type: string
+
+    DiagnosticResponse:
+      type: object
+      required:
+        - diagnostic_id
+        - issues_detected
+        - recommendations
+      properties:
+        diagnostic_id:
+          type: string
+          format: uuid
+        issues_detected:
+          type: array
+          items:
+            type: object
+            properties:
+              category:
+                type: string
+              severity:
+                type: string
+                enum: [low, medium, high, critical]
+              description:
+                type: string
+              suggested_fix:
+                type: string
+        recommendations:
+          type: array
+          items:
+            type: string
+        support_needed:
+          type: boolean
+        auto_support_request:
+          type: object
+          properties:
+            created:
+              type: boolean
+            request_id:
+              type: string
+              format: uuid
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object

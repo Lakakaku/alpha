@@ -1,0 +1,223 @@
+# Artillery Performance Testing Configuration
+# Tests API response times, page load times, and QR scan workflow loads
+
+config:
+  # Target configuration
+  target: "{{ $environment.API_BASE_URL || 'http://localhost:3333' }}"
+  
+  # Load testing phases
+  phases:
+    # Warm-up phase
+    - duration: 60
+      arrivalRate: 1
+      name: "Warm up"
+    
+    # Ramp up phase
+    - duration: 120
+      arrivalRate: 1
+      rampTo: 10
+      name: "Ramp up load"
+    
+    # Sustained load phase
+    - duration: 300
+      arrivalRate: 10
+      name: "Sustained load"
+    
+    # Peak load phase
+    - duration: 60
+      arrivalRate: 10
+      rampTo: 50
+      name: "Peak load"
+    
+    # Cool down phase
+    - duration: 60
+      arrivalRate: 50
+      rampTo: 1
+      name: "Cool down"
+
+  # HTTP configuration
+  http:
+    timeout: 10
+    pool: 10
+    
+  # Performance thresholds (fail test if exceeded)
+  ensure:
+    # API response time targets
+    - http.response_time.p95: 1000  # 95th percentile < 1s
+    - http.response_time.p99: 2000  # 99th percentile < 2s
+    
+    # Error rate targets
+    - http.response_time.max: 5000  # Max response < 5s
+    - http.codes.200: 95           # 95% success rate
+    - http.codes.4xx: 2            # < 2% client errors
+    - http.codes.5xx: 1            # < 1% server errors
+
+  # Payload configuration for synthetic Swedish data
+  payload:
+    - path: "./tests/performance/data/swedish-customers.csv"
+      fields:
+        - phone
+        - firstName
+        - lastName
+        - email
+    - path: "./tests/performance/data/swedish-stores.csv"
+      fields:
+        - storeId
+        - storeName
+        - businessId
+        - location
+
+  # Custom variables
+  variables:
+    baseUrl: "{{ $environment.API_BASE_URL || 'http://localhost:3333' }}"
+    customerAppUrl: "{{ $environment.CUSTOMER_APP_URL || 'http://localhost:3000' }}"
+    businessAppUrl: "{{ $environment.BUSINESS_APP_URL || 'http://localhost:3001' }}"
+    adminAppUrl: "{{ $environment.ADMIN_APP_URL || 'http://localhost:3002' }}"
+
+# Test scenarios
+scenarios:
+  # Core QR scan workflow performance test
+  - name: "QR Scan to Verification Workflow"
+    weight: 40
+    flow:
+      # 1. Generate QR code
+      - post:
+          url: "/api/qr/generate"
+          headers:
+            Content-Type: "application/json"
+          json:
+            storeId: "{{ storeId }}"
+            businessId: "{{ businessId }}"
+          capture:
+            - json: "$.qrId"
+              as: "qrId"
+            - json: "$.verificationUrl"
+              as: "verificationUrl"
+          expect:
+            - statusCode: 201
+            - contentType: json
+            - hasProperty: qrId
+      
+      # 2. Customer scans QR (simulate mobile device)
+      - get:
+          url: "{{ verificationUrl }}"
+          headers:
+            User-Agent: "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)"
+          expect:
+            - statusCode: 200
+      
+      # 3. Submit verification
+      - post:
+          url: "/api/verification/submit"
+          headers:
+            Content-Type: "application/json"
+          json:
+            qrId: "{{ qrId }}"
+            customerPhone: "{{ phone }}"
+            customerName: "{{ firstName }} {{ lastName }}"
+            verificationMethod: "sms"
+          expect:
+            - statusCode: 201
+
+  # AI-powered feedback call simulation
+  - name: "AI Feedback Call Processing"
+    weight: 30
+    flow:
+      # 1. Initiate AI call
+      - post:
+          url: "/api/calls/initiate"
+          headers:
+            Content-Type: "application/json"
+          json:
+            customerPhone: "{{ phone }}"
+            storeId: "{{ storeId }}"
+            language: "sv-SE"
+          capture:
+            - json: "$.callId"
+              as: "callId"
+          expect:
+            - statusCode: 201
+      
+      # 2. Simulate call processing (WebSocket would be real scenario)
+      - post:
+          url: "/api/calls/{{ callId }}/process"
+          headers:
+            Content-Type: "application/json"
+          json:
+            duration: 180
+            audioQuality: "good"
+            transcript: "Mycket bra service, snabb leverans, kommer tillbaka"
+          expect:
+            - statusCode: 200
+      
+      # 3. Generate feedback score
+      - get:
+          url: "/api/calls/{{ callId }}/analysis"
+          expect:
+            - statusCode: 200
+            - hasProperty: feedbackScore
+
+  # Admin dashboard data loading
+  - name: "Admin Dashboard Performance"
+    weight: 20
+    flow:
+      # 1. Admin authentication
+      - post:
+          url: "/api/admin/auth/login"
+          headers:
+            Content-Type: "application/json"
+          json:
+            email: "admin@vocilia.se"
+            password: "test-password"
+          capture:
+            - json: "$.token"
+              as: "adminToken"
+          expect:
+            - statusCode: 200
+      
+      # 2. Load dashboard metrics
+      - get:
+          url: "/api/admin/metrics/dashboard"
+          headers:
+            Authorization: "Bearer {{ adminToken }}"
+          expect:
+            - statusCode: 200
+            - hasProperty: totalStores
+            - hasProperty: totalCustomers
+      
+      # 3. Load recent activity
+      - get:
+          url: "/api/admin/activity/recent"
+          headers:
+            Authorization: "Bearer {{ adminToken }}"
+          expect:
+            - statusCode: 200
+
+  # Business app store management
+  - name: "Business Store Management"
+    weight: 10
+    flow:
+      # 1. Business login
+      - post:
+          url: "/api/auth/business/login"
+          headers:
+            Content-Type: "application/json"
+          json:
+            businessId: "{{ businessId }}"
+            email: "business@example.se"
+            password: "test-password"
+          capture:
+            - json: "$.token"
+              as: "businessToken"
+          expect:
+            - statusCode: 200
+      
+      # 2. Get store analytics
+      - get:
+          url: "/api/business/stores/{{ storeId }}/analytics"
+          headers:
+            Authorization: "Bearer {{ businessToken }}"
+          expect:
+            - statusCode: 200
+            - hasProperty: feedbackStats
+            - hasProperty: customerStats

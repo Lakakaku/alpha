@@ -1,0 +1,386 @@
+# Artillery Load Testing Configuration for Vocilia Production Deployment
+# Target: 500 concurrent users with <2s response time requirement
+# Usage: artillery run tests/performance/load-test-config.yml
+
+config:
+  target: "{{ $processEnvironment.LOAD_TEST_TARGET || 'https://staging-api.vocilia.com' }}"
+  phases:
+    # Warm-up phase: gradually increase load
+    - duration: 120 # 2 minutes
+      arrivalRate: 10 # 10 users per second
+      name: "Warm-up phase"
+    
+    # Ramp-up phase: increase to target load
+    - duration: 300 # 5 minutes
+      arrivalRate: 10
+      rampTo: 50 # Ramp to 50 users per second
+      name: "Ramp-up phase"
+    
+    # Sustained load phase: maintain target concurrency
+    - duration: 600 # 10 minutes
+      arrivalRate: 50 # 50 users per second (≈500 concurrent users with 10s scenarios)
+      name: "Sustained load phase"
+    
+    # Peak load phase: stress test beyond normal capacity
+    - duration: 180 # 3 minutes
+      arrivalRate: 75 # 75 users per second (≈750 concurrent users)
+      name: "Peak load phase"
+    
+    # Cool-down phase: gradually reduce load
+    - duration: 120 # 2 minutes
+      arrivalRate: 75
+      rampTo: 5 # Ramp down to 5 users per second
+      name: "Cool-down phase"
+
+  # Global configuration
+  timeout: 10000 # 10 second timeout for all requests
+  pool: 50 # Connection pool size
+  
+  # Environment variables for different test environments
+  environments:
+    staging:
+      target: "https://staging-api.vocilia.com"
+      variables:
+        adminEmail: "admin@staging.vocilia.com"
+        adminPassword: "staging-admin-password"
+    
+    production:
+      target: "https://api.vocilia.com"
+      variables:
+        adminEmail: "{{ $processEnvironment.PROD_ADMIN_EMAIL }}"
+        adminPassword: "{{ $processEnvironment.PROD_ADMIN_PASSWORD }}"
+
+  # Performance SLA thresholds
+  ensure:
+    # Response time thresholds (95th percentile)
+    p95: 2000 # 95% of requests must complete within 2 seconds
+    p99: 5000 # 99% of requests must complete within 5 seconds
+    
+    # Error rate thresholds
+    maxErrorRate: 1 # Maximum 1% error rate
+    
+    # Availability threshold
+    minSuccessRate: 99 # Minimum 99% success rate
+
+  # HTTP configuration
+  http:
+    # Connection settings
+    timeout: 10000
+    pool: 50
+    maxSockets: 100
+    
+    # Retry configuration
+    retry:
+      max: 2
+      delay: 1000
+
+  # Load test plugins
+  plugins:
+    # Metrics collection
+    publish-metrics:
+      - type: datadog
+        apiKey: "{{ $processEnvironment.DATADOG_API_KEY }}"
+        prefix: "vocilia.loadtest"
+      - type: statsd
+        host: localhost
+        port: 8125
+        prefix: "vocilia.loadtest"
+    
+    # Real-time monitoring
+    hdr:
+      # Track response time percentiles
+      - summary: true
+        
+
+# Test scenarios
+scenarios:
+  # Health check scenarios (high frequency)
+  - name: "Health Check Monitoring"
+    weight: 30 # 30% of traffic
+    flow:
+      - get:
+          url: "/health"
+          headers:
+            Accept: "application/json"
+          capture:
+            - json: "$.status"
+              as: "healthStatus"
+          expect:
+            - statusCode: 200
+            - contentType: "application/json"
+            - hasProperty: "status"
+      
+      - think: 1 # 1 second pause
+      
+      - get:
+          url: "/health/detailed"
+          headers:
+            Accept: "application/json"
+          expect:
+            - statusCode: 200
+            - hasProperty: "checks"
+
+  # Database health scenarios
+  - name: "Database Health Monitoring"
+    weight: 20 # 20% of traffic
+    flow:
+      - get:
+          url: "/health/database"
+          headers:
+            Accept: "application/json"
+          expect:
+            - statusCode: 200
+            - hasProperty: "connection_pool"
+      
+      - think: 2
+      
+      - get:
+          url: "/health/jobs"
+          headers:
+            Accept: "application/json"
+          expect:
+            - statusCode: 200
+            - hasProperty: "scheduler_running"
+
+  # Admin authentication and monitoring
+  - name: "Admin Monitoring Dashboard"
+    weight: 15 # 15% of traffic
+    flow:
+      # Authenticate admin user
+      - post:
+          url: "/api/admin/auth/login"
+          headers:
+            Content-Type: "application/json"
+          json:
+            email: "{{ adminEmail }}"
+            password: "{{ adminPassword }}"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+          expect:
+            - statusCode: 200
+            - hasProperty: "token"
+      
+      - think: 1
+      
+      # Check deployment status
+      - get:
+          url: "/api/admin/deployment/status"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+            Accept: "application/json"
+          expect:
+            - statusCode: 200
+            - hasProperty: "environments"
+      
+      - think: 2
+      
+      # Check monitoring metrics
+      - get:
+          url: "/api/admin/monitoring/uptime"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+            Accept: "application/json"
+          expect:
+            - statusCode: 200
+            - hasProperty: "uptime_percentage"
+      
+      - think: 1
+      
+      # Check performance metrics
+      - get:
+          url: "/api/admin/monitoring/performance"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+            Accept: "application/json"
+          expect:
+            - statusCode: 200
+            - hasProperty: "average_response_time"
+
+  # Backup monitoring scenarios
+  - name: "Backup System Monitoring"
+    weight: 10 # 10% of traffic
+    flow:
+      # Authenticate admin user
+      - post:
+          url: "/api/admin/auth/login"
+          headers:
+            Content-Type: "application/json"
+          json:
+            email: "{{ adminEmail }}"
+            password: "{{ adminPassword }}"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+          expect:
+            - statusCode: 200
+      
+      - think: 2
+      
+      # Check backup status
+      - get:
+          url: "/api/admin/monitoring/backups"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+            Accept: "application/json"
+          expect:
+            - statusCode: 200
+            - hasProperty: "last_backup"
+      
+      - think: 5 # Longer pause for backup checks
+
+  # Frontend application load testing
+  - name: "Frontend Application Load"
+    weight: 15 # 15% of traffic
+    flow:
+      # Customer app homepage
+      - get:
+          url: "{{ $processEnvironment.CUSTOMER_APP_URL || 'https://staging-customer.vocilia.com' }}/"
+          headers:
+            Accept: "text/html,application/xhtml+xml"
+            User-Agent: "Artillery Load Test"
+          expect:
+            - statusCode: 200
+      
+      - think: 3
+      
+      # Business app homepage
+      - get:
+          url: "{{ $processEnvironment.BUSINESS_APP_URL || 'https://staging-business.vocilia.com' }}/"
+          headers:
+            Accept: "text/html,application/xhtml+xml"
+            User-Agent: "Artillery Load Test"
+          expect:
+            - statusCode: 200
+      
+      - think: 2
+      
+      # Admin app homepage
+      - get:
+          url: "{{ $processEnvironment.ADMIN_APP_URL || 'https://staging-admin.vocilia.com' }}/"
+          headers:
+            Accept: "text/html,application/xhtml+xml"
+            User-Agent: "Artillery Load Test"
+          expect:
+            - statusCode: 200
+
+  # Deployment rollback simulation
+  - name: "Deployment Operations"
+    weight: 5 # 5% of traffic
+    flow:
+      # Authenticate admin user
+      - post:
+          url: "/api/admin/auth/login"
+          headers:
+            Content-Type: "application/json"
+          json:
+            email: "{{ adminEmail }}"
+            password: "{{ adminPassword }}"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+          expect:
+            - statusCode: 200
+      
+      - think: 2
+      
+      # Check deployment history
+      - get:
+          url: "/api/admin/deployment/status?include_history=true"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+            Accept: "application/json"
+          expect:
+            - statusCode: 200
+            - hasProperty: "deployment_history"
+      
+      - think: 10 # Longer pause for deployment operations
+
+  # Error injection for chaos testing (5% of traffic)
+  - name: "Chaos Testing - Error Scenarios"
+    weight: 5
+    flow:
+      # Test non-existent endpoint (should return 404)
+      - get:
+          url: "/api/nonexistent/endpoint"
+          headers:
+            Accept: "application/json"
+          expect:
+            - statusCode: 404
+      
+      - think: 1
+      
+      # Test invalid authentication (should return 401)
+      - get:
+          url: "/api/admin/deployment/status"
+          headers:
+            Authorization: "Bearer invalid-token"
+            Accept: "application/json"
+          expect:
+            - statusCode: 401
+
+# Custom functions for dynamic data
+functions:
+  # Generate random user agent strings
+  generateUserAgent: |
+    const userAgents = [
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36'
+    ];
+    return userAgents[Math.floor(Math.random() * userAgents.length)];
+  
+  # Generate random session IDs for tracking
+  generateSessionId: |
+    return 'load-test-' + Math.random().toString(36).substr(2, 9);
+
+# Report configuration
+reporting:
+  # Console output
+  console:
+    quiet: false
+    compact: false
+  
+  # JSON report for CI/CD integration
+  json:
+    output: "load-test-results-{{ $timestamp }}.json"
+  
+  # HTML report for human review
+  html:
+    output: "load-test-report-{{ $timestamp }}.html"
+  
+  # CSV export for analysis
+  csv:
+    output: "load-test-metrics-{{ $timestamp }}.csv"
+
+# Monitoring hooks
+hooks:
+  beforeRequest: |
+    // Add request timestamp
+    req.startTime = Date.now();
+  
+  afterResponse: |
+    // Calculate response time
+    const responseTime = Date.now() - req.startTime;
+    
+    // Log slow requests
+    if (responseTime > 2000) {
+      console.log(`Slow request: ${req.url} took ${responseTime}ms`);
+    }
+    
+    // Log errors
+    if (res.statusCode >= 400) {
+      console.log(`Error: ${req.url} returned ${res.statusCode}`);
+    }
+
+# Test execution metadata
+metadata:
+  name: "Vocilia Production Deployment Load Test"
+  version: "1.0.0"
+  description: "Load testing for 500 concurrent users with <2s response time SLA"
+  environment: "{{ $processEnvironment.NODE_ENV || 'staging' }}"
+  target_sla:
+    response_time_p95: "2000ms"
+    error_rate_max: "1%"
+    uptime_min: "99.5%"
+    concurrent_users: "500"

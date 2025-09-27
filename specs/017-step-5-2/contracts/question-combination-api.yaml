@@ -1,0 +1,925 @@
+openapi: 3.0.3
+info:
+  title: Question Combination API
+  description: API for managing advanced question logic and dynamic triggers
+  version: 1.0.0
+  contact:
+    name: Vocilia Alpha
+    url: https://vocilia.com
+
+servers:
+  - url: https://api.vocilia.com/v1
+    description: Production server
+  - url: https://staging-api.vocilia.com/v1
+    description: Staging server
+
+security:
+  - BearerAuth: []
+
+paths:
+  /questions/combinations/rules:
+    get:
+      summary: Get question combination rules for business
+      tags: [Question Combinations]
+      parameters:
+        - name: business_context_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Business context identifier
+      responses:
+        '200':
+          description: List of combination rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/QuestionCombinationRule'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      summary: Create new question combination rule
+      tags: [Question Combinations]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateQuestionCombinationRule'
+      responses:
+        '201':
+          description: Rule created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuestionCombinationRule'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /questions/combinations/rules/{ruleId}:
+    get:
+      summary: Get specific combination rule
+      tags: [Question Combinations]
+      parameters:
+        - name: ruleId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Combination rule details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuestionCombinationRuleDetails'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      summary: Update combination rule
+      tags: [Question Combinations]
+      parameters:
+        - name: ruleId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateQuestionCombinationRule'
+      responses:
+        '200':
+          description: Rule updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuestionCombinationRule'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      summary: Deactivate combination rule
+      tags: [Question Combinations]
+      parameters:
+        - name: ruleId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Rule deactivated successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /questions/triggers:
+    get:
+      summary: Get dynamic triggers for business
+      tags: [Dynamic Triggers]
+      parameters:
+        - name: business_context_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: trigger_type
+          in: query
+          schema:
+            type: string
+            enum: [purchase_based, time_based, amount_based]
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: List of dynamic triggers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DynamicTrigger'
+
+    post:
+      summary: Create new dynamic trigger
+      tags: [Dynamic Triggers]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDynamicTrigger'
+      responses:
+        '201':
+          description: Trigger created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DynamicTrigger'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /questions/triggers/{triggerId}:
+    get:
+      summary: Get specific dynamic trigger
+      tags: [Dynamic Triggers]
+      parameters:
+        - name: triggerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Dynamic trigger details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DynamicTriggerDetails'
+
+    put:
+      summary: Update dynamic trigger
+      tags: [Dynamic Triggers]
+      parameters:
+        - name: triggerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDynamicTrigger'
+      responses:
+        '200':
+          description: Trigger updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DynamicTrigger'
+
+    delete:
+      summary: Deactivate dynamic trigger
+      tags: [Dynamic Triggers]
+      parameters:
+        - name: triggerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Trigger deactivated successfully
+
+  /questions/combinations/evaluate:
+    post:
+      summary: Evaluate and combine questions for customer call
+      tags: [Question Processing]
+      description: Real-time question selection and combination based on customer data and triggers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuestionEvaluationRequest'
+      responses:
+        '200':
+          description: Optimized question combination
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuestionCombination'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          description: No questions could be combined within constraints
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No questions available within time constraints"
+                  constraints:
+                    $ref: '#/components/schemas/TimeConstraints'
+
+  /questions/harmonizers/{ruleId}:
+    get:
+      summary: Get frequency harmonizers for rule
+      tags: [Frequency Harmonization]
+      parameters:
+        - name: ruleId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of frequency harmonizers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FrequencyHarmonizer'
+
+    post:
+      summary: Configure frequency harmonizer
+      tags: [Frequency Harmonization]
+      parameters:
+        - name: ruleId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFrequencyHarmonizer'
+      responses:
+        '201':
+          description: Harmonizer configured successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FrequencyHarmonizer'
+
+  /admin/triggers/effectiveness:
+    get:
+      summary: Get trigger effectiveness analytics
+      tags: [Admin Analytics]
+      security:
+        - AdminAuth: []
+      parameters:
+        - name: business_context_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: from_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to_date
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Trigger effectiveness data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriggerEffectivenessReport'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    AdminAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    QuestionCombinationRule:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        business_context_id:
+          type: string
+          format: uuid
+        rule_name:
+          type: string
+          maxLength: 100
+        max_call_duration_seconds:
+          type: integer
+          minimum: 60
+          maximum: 180
+          default: 120
+        priority_thresholds:
+          type: object
+          properties:
+            critical:
+              type: integer
+              default: 0
+            high:
+              type: integer
+              default: 60
+            medium:
+              type: integer
+              default: 90
+            low:
+              type: integer
+              default: 120
+        is_active:
+          type: boolean
+          default: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - business_context_id
+        - rule_name
+
+    CreateQuestionCombinationRule:
+      type: object
+      properties:
+        business_context_id:
+          type: string
+          format: uuid
+        rule_name:
+          type: string
+          maxLength: 100
+        max_call_duration_seconds:
+          type: integer
+          minimum: 60
+          maximum: 180
+          default: 120
+        priority_thresholds:
+          type: object
+          properties:
+            critical:
+              type: integer
+              default: 0
+            high:
+              type: integer
+              default: 60
+            medium:
+              type: integer
+              default: 90
+            low:
+              type: integer
+              default: 120
+      required:
+        - business_context_id
+        - rule_name
+
+    UpdateQuestionCombinationRule:
+      type: object
+      properties:
+        rule_name:
+          type: string
+          maxLength: 100
+        max_call_duration_seconds:
+          type: integer
+          minimum: 60
+          maximum: 180
+        priority_thresholds:
+          type: object
+          properties:
+            critical:
+              type: integer
+            high:
+              type: integer
+            medium:
+              type: integer
+            low:
+              type: integer
+        is_active:
+          type: boolean
+
+    QuestionCombinationRuleDetails:
+      allOf:
+        - $ref: '#/components/schemas/QuestionCombinationRule'
+        - type: object
+          properties:
+            question_groups:
+              type: array
+              items:
+                $ref: '#/components/schemas/QuestionGroup'
+            active_triggers:
+              type: array
+              items:
+                $ref: '#/components/schemas/DynamicTrigger'
+
+    DynamicTrigger:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        business_context_id:
+          type: string
+          format: uuid
+        trigger_name:
+          type: string
+          maxLength: 100
+        trigger_type:
+          type: string
+          enum: [purchase_based, time_based, amount_based]
+        priority_level:
+          type: integer
+          minimum: 1
+          maximum: 5
+          default: 3
+        sensitivity_threshold:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 10
+        is_active:
+          type: boolean
+          default: true
+        trigger_config:
+          type: object
+          description: Type-specific configuration data
+        effectiveness_score:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - business_context_id
+        - trigger_name
+        - trigger_type
+
+    CreateDynamicTrigger:
+      type: object
+      properties:
+        business_context_id:
+          type: string
+          format: uuid
+        trigger_name:
+          type: string
+          maxLength: 100
+        trigger_type:
+          type: string
+          enum: [purchase_based, time_based, amount_based]
+        priority_level:
+          type: integer
+          minimum: 1
+          maximum: 5
+          default: 3
+        sensitivity_threshold:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 10
+        trigger_config:
+          type: object
+          description: Type-specific configuration data
+      required:
+        - business_context_id
+        - trigger_name
+        - trigger_type
+        - trigger_config
+
+    UpdateDynamicTrigger:
+      type: object
+      properties:
+        trigger_name:
+          type: string
+          maxLength: 100
+        priority_level:
+          type: integer
+          minimum: 1
+          maximum: 5
+        sensitivity_threshold:
+          type: integer
+          minimum: 1
+          maximum: 100
+        trigger_config:
+          type: object
+        is_active:
+          type: boolean
+
+    DynamicTriggerDetails:
+      allOf:
+        - $ref: '#/components/schemas/DynamicTrigger'
+        - type: object
+          properties:
+            conditions:
+              type: array
+              items:
+                $ref: '#/components/schemas/TriggerCondition'
+            recent_activations:
+              type: array
+              items:
+                $ref: '#/components/schemas/TriggerActivationSummary'
+
+    QuestionGroup:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        rule_id:
+          type: string
+          format: uuid
+        group_name:
+          type: string
+          maxLength: 100
+        topic_category:
+          type: string
+          maxLength: 50
+        estimated_tokens:
+          type: integer
+          minimum: 1
+        display_order:
+          type: integer
+          default: 0
+        is_active:
+          type: boolean
+          default: true
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuestionReference'
+
+    QuestionReference:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        question_text:
+          type: string
+        priority_level:
+          type: integer
+          minimum: 1
+          maximum: 5
+        estimated_tokens:
+          type: integer
+
+    TriggerCondition:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        trigger_id:
+          type: string
+          format: uuid
+        condition_key:
+          type: string
+          maxLength: 50
+        condition_operator:
+          type: string
+          maxLength: 10
+        condition_value:
+          type: string
+        is_required:
+          type: boolean
+          default: true
+
+    QuestionEvaluationRequest:
+      type: object
+      properties:
+        business_context_id:
+          type: string
+          format: uuid
+        customer_data:
+          type: object
+          properties:
+            verification_id:
+              type: string
+              format: uuid
+            transaction_time:
+              type: string
+              format: date-time
+            transaction_amount:
+              type: number
+              format: float
+            transaction_currency:
+              type: string
+              default: "SEK"
+            purchase_categories:
+              type: array
+              items:
+                type: string
+            purchase_items:
+              type: array
+              items:
+                type: string
+        time_constraints:
+          $ref: '#/components/schemas/TimeConstraints'
+      required:
+        - business_context_id
+        - customer_data
+
+    TimeConstraints:
+      type: object
+      properties:
+        max_call_duration_seconds:
+          type: integer
+          minimum: 60
+          maximum: 180
+          default: 120
+        target_question_count:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 5
+        priority_minimum:
+          type: integer
+          minimum: 1
+          maximum: 5
+          default: 1
+
+    QuestionCombination:
+      type: object
+      properties:
+        verification_id:
+          type: string
+          format: uuid
+        selected_questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SelectedQuestion'
+        total_estimated_duration:
+          type: integer
+          description: Total estimated call duration in seconds
+        total_estimated_tokens:
+          type: integer
+        triggered_rules:
+          type: array
+          items:
+            type: string
+            format: uuid
+        optimization_metadata:
+          type: object
+          properties:
+            algorithm_version:
+              type: string
+            selection_strategy:
+              type: string
+            confidence_score:
+              type: number
+              format: float
+
+    SelectedQuestion:
+      type: object
+      properties:
+        question_id:
+          type: string
+          format: uuid
+        question_text:
+          type: string
+        priority_level:
+          type: integer
+          minimum: 1
+          maximum: 5
+        estimated_tokens:
+          type: integer
+        topic_category:
+          type: string
+        trigger_source:
+          type: string
+          nullable: true
+          description: Trigger ID that caused selection
+        display_order:
+          type: integer
+        group_name:
+          type: string
+          nullable: true
+
+    FrequencyHarmonizer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        rule_id:
+          type: string
+          format: uuid
+        question_pair_hash:
+          type: string
+          maxLength: 64
+        question_id_1:
+          type: string
+          format: uuid
+        question_id_2:
+          type: string
+          format: uuid
+        resolution_strategy:
+          type: string
+          enum: [combine, priority, alternate, custom]
+        custom_frequency:
+          type: integer
+          nullable: true
+        priority_question_id:
+          type: string
+          format: uuid
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    CreateFrequencyHarmonizer:
+      type: object
+      properties:
+        question_id_1:
+          type: string
+          format: uuid
+        question_id_2:
+          type: string
+          format: uuid
+        resolution_strategy:
+          type: string
+          enum: [combine, priority, alternate, custom]
+        custom_frequency:
+          type: integer
+          nullable: true
+        priority_question_id:
+          type: string
+          format: uuid
+          nullable: true
+      required:
+        - question_id_1
+        - question_id_2
+        - resolution_strategy
+
+    TriggerActivationSummary:
+      type: object
+      properties:
+        activation_count:
+          type: integer
+        last_activation:
+          type: string
+          format: date-time
+        success_rate:
+          type: number
+          format: float
+
+    TriggerEffectivenessReport:
+      type: object
+      properties:
+        business_context_id:
+          type: string
+          format: uuid
+        report_period:
+          type: object
+          properties:
+            from_date:
+              type: string
+              format: date
+            to_date:
+              type: string
+              format: date
+        trigger_metrics:
+          type: array
+          items:
+            type: object
+            properties:
+              trigger_id:
+                type: string
+                format: uuid
+              trigger_name:
+                type: string
+              activation_count:
+                type: integer
+              success_rate:
+                type: number
+                format: float
+              effectiveness_score:
+                type: number
+                format: float
+              avg_feedback_quality:
+                type: number
+                format: float
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              details:
+                type: object
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Authentication required"
+
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Access denied"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Resource not found"
+
+tags:
+  - name: Question Combinations
+    description: Manage question combination rules and optimization
+  - name: Dynamic Triggers
+    description: Configure and manage dynamic question triggers
+  - name: Question Processing
+    description: Real-time question evaluation and selection
+  - name: Frequency Harmonization
+    description: Configure question frequency conflict resolution
+  - name: Admin Analytics
+    description: Administrative analytics and monitoring

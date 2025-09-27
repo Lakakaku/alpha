@@ -1,0 +1,272 @@
+{
+  "name": "Vocilia Customer - Belöningar för feedback",
+  "short_name": "Vocilia",
+  "description": "Få belöningar för att dela dina åsikter via AI-assisterade telefonsamtal på svenska butiker",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "sv-SE",
+  "dir": "ltr",
+  "categories": ["shopping", "lifestyle", "productivity"],
+  
+  "icons": [
+    {
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-72x72-any.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-96x96-any.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-128x128-any.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-144x144-any.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-152x152-any.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192x192-any.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-384x384-any.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512-any.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+
+  "screenshots": [
+    {
+      "src": "/screenshots/mobile-verification.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "Verifiering av transaktion på mobil"
+    },
+    {
+      "src": "/screenshots/call-status.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "Samtalsstatus och progress"
+    },
+    {
+      "src": "/screenshots/reward-timeline.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "Belöningstidslinje"
+    },
+    {
+      "src": "/screenshots/accessibility-settings.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "Tillgänglighetsinställningar"
+    },
+    {
+      "src": "/screenshots/desktop-overview.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Översikt på desktop"
+    }
+  ],
+
+  "shortcuts": [
+    {
+      "name": "Ny verifiering",
+      "short_name": "Verifiera",
+      "description": "Starta en ny transaktionsverifiering",
+      "url": "/verify",
+      "icons": [
+        {
+          "src": "/icons/shortcut-verify-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Samtalsstatus",
+      "short_name": "Status",
+      "description": "Kontrollera status för pågående samtal",
+      "url": "/call-status",
+      "icons": [
+        {
+          "src": "/icons/shortcut-status-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Inställningar",
+      "short_name": "Inställningar",
+      "description": "Hantera tillgänglighetsinställningar",
+      "url": "/settings",
+      "icons": [
+        {
+          "src": "/icons/shortcut-settings-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+
+  "related_applications": [],
+  "prefer_related_applications": false,
+
+  "protocol_handlers": [
+    {
+      "protocol": "web+vocilia",
+      "url": "/verify?session=%s"
+    }
+  ],
+
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "receipt",
+          "accept": ["image/*", ".pdf"]
+        }
+      ]
+    }
+  },
+
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+
+  "handle_links": "preferred",
+
+  "file_handlers": [
+    {
+      "action": "/upload-receipt",
+      "accept": {
+        "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp"],
+        "application/pdf": [".pdf"]
+      },
+      "icons": [
+        {
+          "src": "/icons/receipt-handler-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ],
+      "launch_type": "single-client"
+    }
+  ],
+
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui"
+  ],
+
+  "id": "vocilia-customer-app",
+  "iarc_rating_id": "",
+
+  "features": [
+    "camera",
+    "microphone",
+    "geolocation",
+    "notifications",
+    "background-sync",
+    "persistent-storage"
+  ],
+
+  "permissions": [
+    "notifications",
+    "background-sync",
+    "persistent-storage"
+  ]
+}

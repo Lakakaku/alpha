@@ -1,0 +1,841 @@
+openapi: 3.0.3
+info:
+  title: Test Management API
+  description: API for managing comprehensive testing infrastructure
+  version: 1.0.0
+  contact:
+    name: Vocilia Alpha Testing Team
+    url: https://github.com/vocilia/alpha
+
+servers:
+  - url: https://api.alpha.vocilia.com
+    description: Production API
+  - url: https://api-staging.alpha.vocilia.com
+    description: Staging API
+
+paths:
+  /api/test/suites:
+    get:
+      summary: List test suites
+      tags: [Test Suites]
+      parameters:
+        - name: component
+          in: query
+          schema:
+            type: string
+            enum: [customer-app, business-app, admin-app, backend-api, shared-packages]
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [unit, integration, e2e, performance]
+        - name: enabled
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of test suites
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TestSuite'
+
+    post:
+      summary: Create test suite
+      tags: [Test Suites]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTestSuiteRequest'
+      responses:
+        '201':
+          description: Test suite created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestSuite'
+        '400':
+          description: Invalid request
+        '409':
+          description: Test suite already exists
+
+  /api/test/suites/{suiteId}:
+    get:
+      summary: Get test suite details
+      tags: [Test Suites]
+      parameters:
+        - name: suiteId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Test suite details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestSuiteDetails'
+        '404':
+          description: Test suite not found
+
+    put:
+      summary: Update test suite
+      tags: [Test Suites]
+      parameters:
+        - name: suiteId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTestSuiteRequest'
+      responses:
+        '200':
+          description: Test suite updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestSuite'
+        '404':
+          description: Test suite not found
+
+  /api/test/runs:
+    get:
+      summary: List test runs
+      tags: [Test Runs]
+      parameters:
+        - name: branch
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, running, passed, failed, cancelled]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: List of test runs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TestRun'
+
+    post:
+      summary: Trigger test run
+      tags: [Test Runs]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TriggerTestRunRequest'
+      responses:
+        '201':
+          description: Test run started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestRun'
+        '400':
+          description: Invalid request
+
+  /api/test/runs/{runId}:
+    get:
+      summary: Get test run details
+      tags: [Test Runs]
+      parameters:
+        - name: runId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Test run details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestRunDetails'
+        '404':
+          description: Test run not found
+
+    delete:
+      summary: Cancel test run
+      tags: [Test Runs]
+      parameters:
+        - name: runId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Test run cancelled
+        '404':
+          description: Test run not found
+        '409':
+          description: Test run cannot be cancelled
+
+  /api/test/runs/{runId}/results:
+    get:
+      summary: Get test results for run
+      tags: [Test Results]
+      parameters:
+        - name: runId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [passed, failed, skipped, timeout, error]
+      responses:
+        '200':
+          description: Test results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TestResult'
+
+  /api/test/performance/benchmarks:
+    get:
+      summary: List performance benchmarks
+      tags: [Performance]
+      parameters:
+        - name: component
+          in: query
+          schema:
+            type: string
+        - name: metric
+          in: query
+          schema:
+            type: string
+            enum: [response-time, page-load, throughput, error-rate]
+      responses:
+        '200':
+          description: List of performance benchmarks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PerformanceBenchmark'
+
+    post:
+      summary: Create performance benchmark
+      tags: [Performance]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBenchmarkRequest'
+      responses:
+        '201':
+          description: Benchmark created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceBenchmark'
+
+  /api/test/performance/results:
+    get:
+      summary: Get performance results
+      tags: [Performance]
+      parameters:
+        - name: benchmarkId
+          in: query
+          schema:
+            type: string
+        - name: runId
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pass, warning, fail]
+      responses:
+        '200':
+          description: Performance results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PerformanceResult'
+
+  /api/test/data/datasets:
+    get:
+      summary: List test datasets
+      tags: [Test Data]
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [users, stores, transactions, feedback, admin]
+      responses:
+        '200':
+          description: List of test datasets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TestDataSet'
+
+    post:
+      summary: Create test dataset
+      tags: [Test Data]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDataSetRequest'
+      responses:
+        '201':
+          description: Dataset created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestDataSet'
+
+  /api/test/data/datasets/{datasetId}/generate:
+    post:
+      summary: Generate test data
+      tags: [Test Data]
+      parameters:
+        - name: datasetId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateDataRequest'
+      responses:
+        '200':
+          description: Test data generated
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TestDataRecord'
+
+  /api/test/reports/{runId}:
+    get:
+      summary: Get test report
+      tags: [Reports]
+      parameters:
+        - name: runId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [json, html, pdf]
+            default: json
+      responses:
+        '200':
+          description: Test report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestReport'
+            text/html:
+              schema:
+                type: string
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+
+components:
+  schemas:
+    TestSuite:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: [unit, integration, e2e, performance]
+        component:
+          type: string
+        priority:
+          type: string
+          enum: [critical, high, medium, low]
+        coverageTarget:
+          type: number
+          minimum: 0
+          maximum: 100
+        enabled:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    TestSuiteDetails:
+      allOf:
+        - $ref: '#/components/schemas/TestSuite'
+        - type: object
+          properties:
+            testCases:
+              type: array
+              items:
+                $ref: '#/components/schemas/TestCase'
+
+    TestCase:
+      type: object
+      properties:
+        id:
+          type: string
+        suiteId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [contract, unit, integration, e2e, performance]
+        filePath:
+          type: string
+        testFunction:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        timeout:
+          type: number
+        retries:
+          type: number
+        enabled:
+          type: boolean
+
+    TestRun:
+      type: object
+      properties:
+        id:
+          type: string
+        triggerType:
+          type: string
+          enum: [commit, pull-request, scheduled, manual]
+        triggerReference:
+          type: string
+        branch:
+          type: string
+        environmentId:
+          type: string
+        status:
+          type: string
+          enum: [pending, running, passed, failed, cancelled]
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        duration:
+          type: number
+        coverage:
+          $ref: '#/components/schemas/CoverageMetrics'
+        performanceMetrics:
+          $ref: '#/components/schemas/PerformanceMetrics'
+
+    TestRunDetails:
+      allOf:
+        - $ref: '#/components/schemas/TestRun'
+        - type: object
+          properties:
+            results:
+              type: array
+              items:
+                $ref: '#/components/schemas/TestResult'
+
+    TestResult:
+      type: object
+      properties:
+        id:
+          type: string
+        testRunId:
+          type: string
+        testCaseId:
+          type: string
+        status:
+          type: string
+          enum: [passed, failed, skipped, timeout, error]
+        duration:
+          type: number
+        errorMessage:
+          type: string
+        stackTrace:
+          type: string
+        screenshots:
+          type: array
+          items:
+            type: string
+        logs:
+          type: string
+        assertions:
+          $ref: '#/components/schemas/AssertionResults'
+        coverage:
+          $ref: '#/components/schemas/CoverageData'
+        retryAttempt:
+          type: number
+
+    PerformanceBenchmark:
+      type: object
+      properties:
+        id:
+          type: string
+        operation:
+          type: string
+        component:
+          type: string
+        metric:
+          type: string
+          enum: [response-time, page-load, throughput, error-rate]
+        target:
+          type: number
+        unit:
+          type: string
+        threshold:
+          $ref: '#/components/schemas/PerformanceThreshold'
+        environment:
+          type: string
+        enabled:
+          type: boolean
+
+    PerformanceResult:
+      type: object
+      properties:
+        id:
+          type: string
+        testRunId:
+          type: string
+        benchmarkId:
+          type: string
+        value:
+          type: number
+        status:
+          type: string
+          enum: [pass, warning, fail]
+        measurements:
+          $ref: '#/components/schemas/PerformanceMeasurements'
+        conditions:
+          $ref: '#/components/schemas/TestConditions'
+
+    TestDataSet:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+          enum: [users, stores, transactions, feedback, admin]
+        schema:
+          type: object
+        generatorConfig:
+          $ref: '#/components/schemas/GeneratorConfig'
+        sampleSize:
+          type: number
+        refreshStrategy:
+          type: string
+          enum: [static, per-run, per-test]
+        enabled:
+          type: boolean
+
+    TestDataRecord:
+      type: object
+      properties:
+        id:
+          type: string
+        dataSetId:
+          type: string
+        data:
+          type: object
+        checksum:
+          type: string
+        generatedAt:
+          type: string
+          format: date-time
+
+    TestReport:
+      type: object
+      properties:
+        id:
+          type: string
+        testRunId:
+          type: string
+        reportType:
+          type: string
+          enum: [summary, detailed, coverage, performance]
+        metrics:
+          $ref: '#/components/schemas/ReportMetrics'
+        trends:
+          type: object
+        recommendations:
+          type: array
+          items:
+            type: string
+        format:
+          type: string
+          enum: [json, html, pdf]
+        url:
+          type: string
+
+    # Supporting schemas
+    CoverageMetrics:
+      type: object
+      properties:
+        overall:
+          type: number
+        unit:
+          type: number
+        integration:
+          type: number
+
+    PerformanceMetrics:
+      type: object
+      properties:
+        apiResponseTime:
+          type: number
+        pageLoadTime:
+          type: number
+        errorRate:
+          type: number
+
+    AssertionResults:
+      type: object
+      properties:
+        total:
+          type: number
+        passed:
+          type: number
+        failed:
+          type: number
+
+    CoverageData:
+      type: object
+      properties:
+        statements:
+          type: number
+        branches:
+          type: number
+        functions:
+          type: number
+        lines:
+          type: number
+
+    PerformanceThreshold:
+      type: object
+      properties:
+        warning:
+          type: number
+        critical:
+          type: number
+
+    PerformanceMeasurements:
+      type: object
+      properties:
+        min:
+          type: number
+        max:
+          type: number
+        avg:
+          type: number
+        p95:
+          type: number
+        p99:
+          type: number
+
+    TestConditions:
+      type: object
+      properties:
+        concurrentUsers:
+          type: number
+        duration:
+          type: number
+        iterations:
+          type: number
+
+    GeneratorConfig:
+      type: object
+      properties:
+        locale:
+          type: string
+        seed:
+          type: number
+        rules:
+          type: object
+
+    ReportMetrics:
+      type: object
+      properties:
+        totalTests:
+          type: number
+        passRate:
+          type: number
+        coverage:
+          type: number
+        performance:
+          type: object
+
+    # Request schemas
+    CreateTestSuiteRequest:
+      type: object
+      required: [name, type, component]
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [unit, integration, e2e, performance]
+        component:
+          type: string
+        priority:
+          type: string
+          enum: [critical, high, medium, low]
+          default: medium
+        coverageTarget:
+          type: number
+          minimum: 0
+          maximum: 100
+          default: 80
+
+    UpdateTestSuiteRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        priority:
+          type: string
+          enum: [critical, high, medium, low]
+        coverageTarget:
+          type: number
+          minimum: 0
+          maximum: 100
+        enabled:
+          type: boolean
+
+    TriggerTestRunRequest:
+      type: object
+      required: [triggerType, branch]
+      properties:
+        triggerType:
+          type: string
+          enum: [commit, pull-request, scheduled, manual]
+        triggerReference:
+          type: string
+        branch:
+          type: string
+        environmentId:
+          type: string
+        suiteIds:
+          type: array
+          items:
+            type: string
+
+    CreateBenchmarkRequest:
+      type: object
+      required: [operation, component, metric, target, unit]
+      properties:
+        operation:
+          type: string
+        component:
+          type: string
+        metric:
+          type: string
+          enum: [response-time, page-load, throughput, error-rate]
+        target:
+          type: number
+        unit:
+          type: string
+        threshold:
+          $ref: '#/components/schemas/PerformanceThreshold'
+        environment:
+          type: string
+
+    CreateDataSetRequest:
+      type: object
+      required: [name, category, schema]
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+          enum: [users, stores, transactions, feedback, admin]
+        schema:
+          type: object
+        generatorConfig:
+          $ref: '#/components/schemas/GeneratorConfig'
+        sampleSize:
+          type: number
+          default: 100
+        refreshStrategy:
+          type: string
+          enum: [static, per-run, per-test]
+          default: per-run
+
+    GenerateDataRequest:
+      type: object
+      properties:
+        count:
+          type: number
+          minimum: 1
+          maximum: 10000
+          default: 100
+        seed:
+          type: number
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []

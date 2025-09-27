@@ -1,0 +1,345 @@
+openapi: 3.0.3
+info:
+  title: Fraud Detection API
+  description: Advanced fraud detection and scoring for customer feedback
+  version: 1.0.0
+  contact:
+    name: Vocilia Development Team
+
+servers:
+  - url: https://api.vocilia.com
+    description: Production API
+  - url: https://api-staging.vocilia.com
+    description: Staging API
+
+paths:
+  /api/fraud/analyze:
+    post:
+      summary: Analyze feedback for fraud indicators
+      description: Performs comprehensive fraud analysis on feedback submission
+      operationId: analyzeFeedbackFraud
+      tags:
+        - Fraud Detection
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - feedback_id
+                - feedback_content
+                - phone_number_hash
+                - store_id
+              properties:
+                feedback_id:
+                  type: string
+                  format: uuid
+                  description: Unique identifier for the feedback submission
+                feedback_content:
+                  type: string
+                  maxLength: 5000
+                  description: The actual feedback content to analyze
+                phone_number_hash:
+                  type: string
+                  description: Hashed phone number for behavioral analysis
+                store_id:
+                  type: string
+                  format: uuid
+                  description: Store where feedback was provided
+                transaction_context:
+                  type: object
+                  description: Optional transaction context for verification
+                  properties:
+                    transaction_time:
+                      type: string
+                      format: date-time
+                    purchase_amount:
+                      type: number
+                      format: decimal
+                    payment_method:
+                      type: string
+      responses:
+        '200':
+          description: Fraud analysis completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - fraud_score
+                  - is_fraudulent
+                  - reward_eligible
+                  - analysis_breakdown
+                properties:
+                  fraud_score:
+                    type: object
+                    required:
+                      - overall_score
+                      - context_score
+                      - keyword_score
+                      - behavioral_score
+                      - transaction_score
+                    properties:
+                      overall_score:
+                        type: integer
+                        minimum: 0
+                        maximum: 100
+                        description: Composite fraud score
+                      context_score:
+                        type: integer
+                        minimum: 0
+                        maximum: 100
+                        description: Context legitimacy score (40% weight)
+                      keyword_score:
+                        type: integer
+                        minimum: 0
+                        maximum: 100
+                        description: Keyword analysis score (20% weight)
+                      behavioral_score:
+                        type: integer
+                        minimum: 0
+                        maximum: 100
+                        description: Behavioral pattern score (30% weight)
+                      transaction_score:
+                        type: integer
+                        minimum: 0
+                        maximum: 100
+                        description: Transaction verification score (10% weight)
+                  is_fraudulent:
+                    type: boolean
+                    description: True if overall_score < 70
+                  reward_eligible:
+                    type: boolean
+                    description: True if feedback qualifies for reward
+                  analysis_breakdown:
+                    type: object
+                    properties:
+                      context_matches:
+                        type: array
+                        items:
+                          type: string
+                        description: Business context elements found in feedback
+                      red_flags:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            keyword:
+                              type: string
+                            category:
+                              type: string
+                              enum: [profanity, threats, nonsensical, impossible]
+                            severity:
+                              type: integer
+                              minimum: 1
+                              maximum: 10
+                      behavioral_warnings:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            pattern_type:
+                              type: string
+                              enum: [call_frequency, time_pattern, location_pattern, similarity_pattern]
+                            risk_level:
+                              type: string
+                              enum: [low, medium, high, critical]
+                  correlation_id:
+                    type: string
+                    format: uuid
+                    description: Correlation ID for audit tracking
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required
+        '403':
+          description: Insufficient permissions
+        '429':
+          description: Rate limit exceeded
+        '500':
+          description: Internal server error
+
+  /api/fraud/patterns/{phone_hash}:
+    get:
+      summary: Get behavioral patterns for phone number
+      description: Retrieves fraud-related behavioral patterns for a phone number
+      operationId: getBehavioralPatterns
+      tags:
+        - Fraud Detection
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: phone_hash
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Hashed phone number
+        - name: time_window
+          in: query
+          schema:
+            type: string
+            enum: [30m, 24h, 7d, 30d]
+            default: 24h
+          description: Time window for pattern analysis
+      responses:
+        '200':
+          description: Behavioral patterns retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  phone_hash:
+                    type: string
+                  patterns:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        pattern_type:
+                          type: string
+                          enum: [call_frequency, time_pattern, location_pattern, similarity_pattern]
+                        risk_score:
+                          type: integer
+                          minimum: 0
+                          maximum: 100
+                        violation_count:
+                          type: integer
+                        first_detected:
+                          type: string
+                          format: date-time
+                        last_updated:
+                          type: string
+                          format: date-time
+                  overall_risk_level:
+                    type: string
+                    enum: [low, medium, high, critical]
+        '404':
+          description: No patterns found for phone number
+        '403':
+          description: Admin access required
+
+  /api/fraud/keywords:
+    get:
+      summary: Get red flag keywords
+      description: Retrieves active red flag keywords for fraud detection
+      operationId: getRedFlagKeywords
+      tags:
+        - Fraud Detection
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [profanity, threats, nonsensical, impossible]
+          description: Filter by keyword category
+        - name: language
+          in: query
+          schema:
+            type: string
+            default: sv
+          description: Language code for keywords
+      responses:
+        '200':
+          description: Keywords retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  keywords:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        keyword:
+                          type: string
+                        category:
+                          type: string
+                          enum: [profanity, threats, nonsensical, impossible]
+                        severity_level:
+                          type: integer
+                          minimum: 1
+                          maximum: 10
+                        detection_pattern:
+                          type: string
+                          description: Regex pattern for detection
+    post:
+      summary: Add red flag keyword
+      description: Adds a new red flag keyword to the detection system
+      operationId: addRedFlagKeyword
+      tags:
+        - Fraud Detection
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - keyword
+                - category
+                - severity_level
+              properties:
+                keyword:
+                  type: string
+                  maxLength: 100
+                category:
+                  type: string
+                  enum: [profanity, threats, nonsensical, impossible]
+                severity_level:
+                  type: integer
+                  minimum: 1
+                  maximum: 10
+                language_code:
+                  type: string
+                  default: sv
+                detection_pattern:
+                  type: string
+                  description: Optional regex pattern
+      responses:
+        '201':
+          description: Keyword added successfully
+        '400':
+          description: Invalid keyword data
+        '403':
+          description: Admin access required
+        '409':
+          description: Keyword already exists
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Human-readable error message
+        correlation_id:
+          type: string
+          format: uuid
+          description: Correlation ID for debugging

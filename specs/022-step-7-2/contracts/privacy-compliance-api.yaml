@@ -1,0 +1,476 @@
+openapi: 3.0.3
+info:
+  title: Privacy & GDPR Compliance Testing API
+  description: API endpoints for privacy compliance and GDPR testing
+  version: 1.0.0
+
+servers:
+  - url: https://api.alpha.vocilia.com
+    description: Production API
+
+security:
+  - BearerAuth: []
+
+paths:
+  /api/privacy/assessments:
+    get:
+      summary: List privacy assessments
+      description: Retrieve privacy assessments for system components
+      tags: [Privacy Assessments]
+      parameters:
+        - name: component
+          in: query
+          schema:
+            type: string
+        - name: risk_level
+          in: query
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+      responses:
+        200:
+          description: List of privacy assessments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  assessments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PrivacyAssessment'
+
+    post:
+      summary: Create privacy assessment
+      description: Initiate a new privacy assessment for a system component
+      tags: [Privacy Assessments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                component_name:
+                  type: string
+                data_flow_path:
+                  type: array
+                  items:
+                    type: string
+                personal_data_types:
+                  type: array
+                  items:
+                    type: string
+                    enum: [phone_number, transaction_data, feedback_content, session_data]
+              required: [component_name, data_flow_path, personal_data_types]
+      responses:
+        201:
+          description: Privacy assessment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrivacyAssessment'
+
+  /api/privacy/assessments/{assessmentId}/anonymization:
+    post:
+      summary: Test data anonymization
+      description: Validate anonymization process for personal data
+      tags: [Privacy Assessments]
+      parameters:
+        - name: assessmentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                test_data:
+                  type: object
+                  description: Sample data to test anonymization
+                anonymization_method:
+                  type: string
+                verification_rules:
+                  type: array
+                  items:
+                    type: string
+              required: [test_data, anonymization_method]
+      responses:
+        200:
+          description: Anonymization test results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  anonymization_successful:
+                    type: boolean
+                  original_data_hash:
+                    type: string
+                  anonymized_data_hash:
+                    type: string
+                  compliance_score:
+                    type: number
+                    minimum: 0
+                    maximum: 100
+                  verification_details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        rule:
+                          type: string
+                        passed:
+                          type: boolean
+                        details:
+                          type: string
+
+  /api/gdpr/deletion-requests:
+    post:
+      summary: Test GDPR deletion request
+      description: Simulate customer data deletion request for testing
+      tags: [GDPR Compliance]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer_identifier:
+                  type: string
+                  description: Anonymized customer ID for testing
+                deletion_scope:
+                  type: array
+                  items:
+                    type: string
+                  description: Data types to delete
+                test_mode:
+                  type: boolean
+                  default: true
+                  description: Whether this is a test deletion
+              required: [customer_identifier, deletion_scope]
+      responses:
+        202:
+          description: Deletion request accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GDPRRequest'
+
+  /api/gdpr/deletion-requests/{requestId}:
+    get:
+      summary: Get deletion request status
+      description: Check status of GDPR deletion request
+      tags: [GDPR Compliance]
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Deletion request details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GDPRRequest'
+
+  /api/gdpr/deletion-requests/{requestId}/verify:
+    post:
+      summary: Verify deletion completion
+      description: Verify that all data was properly deleted
+      tags: [GDPR Compliance]
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Deletion verification results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  verification_complete:
+                    type: boolean
+                  deleted_records_count:
+                    type: integer
+                  remaining_data_found:
+                    type: boolean
+                  verification_details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        table_name:
+                          type: string
+                        records_before:
+                          type: integer
+                        records_after:
+                          type: integer
+                        deletion_confirmed:
+                          type: boolean
+
+  /api/gdpr/data-export:
+    post:
+      summary: Test customer data export
+      description: Simulate customer data export request for testing
+      tags: [GDPR Compliance]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer_identifier:
+                  type: string
+                export_format:
+                  type: string
+                  enum: [json, csv, xml]
+                  default: json
+                include_metadata:
+                  type: boolean
+                  default: true
+              required: [customer_identifier]
+      responses:
+        200:
+          description: Customer data export
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  export_id:
+                    type: string
+                    format: uuid
+                  customer_data:
+                    type: object
+                  metadata:
+                    type: object
+                    properties:
+                      export_timestamp:
+                        type: string
+                        format: date-time
+                      data_sources:
+                        type: array
+                        items:
+                          type: string
+                      retention_periods:
+                        type: object
+
+  /api/privacy/data-protection-audit:
+    post:
+      summary: Initiate data protection audit
+      description: Start comprehensive audit of data handling workflows
+      tags: [Data Protection]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                workflow_type:
+                  type: string
+                  enum: [qr_verification, feedback_collection, business_verification, payment_processing]
+                audit_scope:
+                  type: array
+                  items:
+                    type: string
+                include_access_logs:
+                  type: boolean
+                  default: true
+              required: [workflow_type]
+      responses:
+        202:
+          description: Audit initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  audit_id:
+                    type: string
+                    format: uuid
+                  estimated_completion:
+                    type: string
+                    format: date-time
+
+  /api/privacy/data-protection-audit/{auditId}:
+    get:
+      summary: Get audit results
+      description: Retrieve data protection audit results
+      tags: [Data Protection]
+      parameters:
+        - name: auditId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Audit results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataProtectionAudit'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    PrivacyAssessment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        component_name:
+          type: string
+        data_flow_path:
+          type: array
+          items:
+            type: string
+        personal_data_types:
+          type: array
+          items:
+            type: string
+        anonymization_status:
+          type: string
+          enum: [required, applied, verified, failed]
+        compliance_score:
+          type: number
+          minimum: 0
+          maximum: 100
+        risk_level:
+          type: string
+          enum: [low, medium, high, critical]
+        assessment_date:
+          type: string
+          format: date-time
+        next_review_date:
+          type: string
+          format: date-time
+
+    GDPRRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        request_type:
+          type: string
+          enum: [data_deletion, data_access, data_export, consent_withdrawal]
+        customer_identifier:
+          type: string
+        request_timestamp:
+          type: string
+          format: date-time
+        completion_timestamp:
+          type: string
+          format: date-time
+        response_time_hours:
+          type: number
+          maximum: 72
+          description: Must be ≤72 hours for deletion requests
+        compliance_status:
+          type: string
+          enum: [pending, in_progress, completed, failed, overdue]
+        deletion_scope:
+          type: array
+          items:
+            type: string
+        verification_method:
+          type: string
+        audit_trail:
+          type: array
+          items:
+            type: object
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+              action:
+                type: string
+              details:
+                type: string
+              performed_by:
+                type: string
+
+    DataProtectionAudit:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        workflow_type:
+          type: string
+          enum: [qr_verification, feedback_collection, business_verification, payment_processing]
+        customer_data_types:
+          type: array
+          items:
+            type: string
+        data_entry_point:
+          type: string
+        processing_steps:
+          type: array
+          items:
+            type: object
+            properties:
+              step_name:
+                type: string
+              timestamp:
+                type: string
+                format: date-time
+              data_accessed:
+                type: array
+                items:
+                  type: string
+        storage_locations:
+          type: array
+          items:
+            type: string
+        access_attempts:
+          type: array
+          items:
+            type: object
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+              user_role:
+                type: string
+              resource_accessed:
+                type: string
+              access_granted:
+                type: boolean
+        anonymization_applied:
+          type: boolean
+        retention_period:
+          type: integer
+          description: Days data is retained
+        compliance_violations:
+          type: array
+          items:
+            type: string
+        audit_timestamp:
+          type: string
+          format: date-time

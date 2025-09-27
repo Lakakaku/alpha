@@ -1,0 +1,476 @@
+openapi: 3.0.3
+info:
+  title: QR Code Verification API
+  description: Customer verification endpoints for QR code landing and transaction validation
+  version: 1.0.0
+  contact:
+    name: Vocilia Development Team
+    email: dev@vocilia.com
+
+servers:
+  - url: https://api.vocilia.com/v1
+    description: Production server
+  - url: https://api-staging.vocilia.com/v1  
+    description: Staging server
+
+paths:
+  /qr/verify/{storeId}:
+    post:
+      summary: Initialize QR verification session
+      description: Create verification session when customer scans QR code
+      operationId: initializeQRVerification
+      tags:
+        - QR Verification
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          description: Store UUID from QR code
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440000"
+        - name: v
+          in: query
+          required: true
+          description: QR code version
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 9999999
+            example: 12345
+        - name: t
+          in: query
+          required: true
+          description: QR generation timestamp
+          schema:
+            type: integer
+            example: 1703097600
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QRVerificationRequest'
+      responses:
+        '200':
+          description: Verification session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QRVerificationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/StoreNotFound'
+        '429':
+          $ref: '#/components/responses/RateLimit'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /verification/submit:
+    post:
+      summary: Submit customer verification form
+      description: Process customer transaction details and validate tolerances
+      operationId: submitCustomerVerification
+      tags:
+        - Customer Verification
+      security:
+        - SessionToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerVerificationRequest'
+      responses:
+        '200':
+          description: Verification submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerVerificationResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimit'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /verification/session/{sessionToken}:
+    get:
+      summary: Get verification session details
+      description: Retrieve current verification session state and store information
+      operationId: getVerificationSession
+      tags:
+        - Session Management
+      parameters:
+        - name: sessionToken
+          in: path
+          required: true
+          description: Verification session token
+          schema:
+            type: string
+            minLength: 32
+            maxLength: 64
+            example: "abc123def456ghi789jkl012mno345pqr678stu901vwx234yz"
+      responses:
+        '200':
+          description: Session details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionDetailsResponse'
+        '404':
+          $ref: '#/components/responses/SessionNotFound'
+        '410':
+          $ref: '#/components/responses/SessionExpired'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    SessionToken:
+      type: apiKey
+      in: header
+      name: X-Session-Token
+      description: Verification session token from QR scan
+
+  schemas:
+    QRVerificationRequest:
+      type: object
+      required:
+        - ip_address
+        - user_agent
+      properties:
+        ip_address:
+          type: string
+          format: ipv4
+          description: Client IP address for fraud detection
+          example: "192.168.1.100"
+        user_agent:
+          type: string
+          maxLength: 500
+          description: Browser user agent string
+          example: "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X)"
+
+    QRVerificationResponse:
+      type: object
+      required:
+        - success
+        - session_token
+        - store_info
+      properties:
+        success:
+          type: boolean
+          example: true
+        session_token:
+          type: string
+          description: Secure session token for form submission
+          example: "abc123def456ghi789jkl012mno345pqr678stu901vwx234yz"
+        store_info:
+          $ref: '#/components/schemas/StoreInfo'
+        fraud_warning:
+          type: boolean
+          description: Indicates if fraud detection flagged this request
+          example: false
+
+    CustomerVerificationRequest:
+      type: object
+      required:
+        - transaction_time
+        - transaction_amount
+        - phone_number
+      properties:
+        transaction_time:
+          type: string
+          format: time
+          pattern: '^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$'
+          description: Transaction time in HH:MM format (24-hour)
+          example: "14:32"
+        transaction_amount:
+          type: number
+          format: decimal
+          minimum: 0.01
+          maximum: 99999.99
+          multipleOf: 0.01
+          description: Transaction amount in SEK
+          example: 125.50
+        phone_number:
+          type: string
+          pattern: '^(\+46|0046|0)[\s-]?7[\s-]?[02369][\s-]?\d{3}[\s-]?\d{2}[\s-]?\d{2}$'
+          description: Swedish mobile phone number (various formats accepted)
+          example: "070-123 45 67"
+
+    CustomerVerificationResponse:
+      type: object
+      required:
+        - success
+        - verification_id
+        - validation_results
+      properties:
+        success:
+          type: boolean
+          example: true
+        verification_id:
+          type: string
+          format: uuid
+          description: Unique verification record ID
+          example: "110e8400-e29b-41d4-a716-446655440000"
+        validation_results:
+          $ref: '#/components/schemas/ValidationResults'
+        next_steps:
+          type: string
+          description: Information about what happens next
+          example: "Your verification is complete. You'll receive a feedback call within 24 hours."
+
+    SessionDetailsResponse:
+      type: object
+      required:
+        - session_id
+        - store_info
+        - status
+        - created_at
+      properties:
+        session_id:
+          type: string
+          format: uuid
+          example: "220e8400-e29b-41d4-a716-446655440000"
+        store_info:
+          $ref: '#/components/schemas/StoreInfo'
+        status:
+          type: string
+          enum: [pending, completed, expired, failed]
+          example: "pending"
+        qr_version:
+          type: integer
+          example: 12345
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-09-22T14:30:00Z"
+        expires_at:
+          type: string
+          format: date-time
+          example: "2025-09-22T15:00:00Z"
+
+    StoreInfo:
+      type: object
+      required:
+        - store_id
+        - store_name
+        - business_name
+      properties:
+        store_id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        store_name:
+          type: string
+          maxLength: 100
+          description: Display name of the store location
+          example: "ICA Supermarket Vasastan"
+        business_name:
+          type: string
+          maxLength: 100
+          description: Parent business/company name
+          example: "ICA Sverige AB"
+        logo_url:
+          type: string
+          format: uri
+          description: Store or business logo for display
+          example: "https://cdn.vocilia.com/logos/ica-vasastan.png"
+
+    ValidationResults:
+      type: object
+      required:
+        - time_validation
+        - amount_validation
+        - phone_validation
+        - overall_valid
+      properties:
+        time_validation:
+          $ref: '#/components/schemas/TimeValidation'
+        amount_validation:
+          $ref: '#/components/schemas/AmountValidation'
+        phone_validation:
+          $ref: '#/components/schemas/PhoneValidation'
+        overall_valid:
+          type: boolean
+          description: True if all validations pass
+          example: true
+
+    TimeValidation:
+      type: object
+      required:
+        - status
+        - difference_minutes
+      properties:
+        status:
+          type: string
+          enum: [valid, out_of_tolerance, invalid]
+          example: "valid"
+        difference_minutes:
+          type: integer
+          description: Absolute difference from current time in minutes
+          example: 1
+        tolerance_range:
+          type: string
+          description: Human-readable tolerance range
+          example: "14:30 - 14:34"
+
+    AmountValidation:
+      type: object
+      required:
+        - status
+        - difference_sek
+      properties:
+        status:
+          type: string
+          enum: [valid, out_of_tolerance, invalid]
+          example: "valid"
+        difference_sek:
+          type: number
+          format: decimal
+          description: Absolute difference from expected amount in SEK
+          example: 1.50
+        tolerance_range:
+          type: string
+          description: Human-readable tolerance range
+          example: "123.50 - 127.50 SEK"
+
+    PhoneValidation:
+      type: object
+      required:
+        - status
+        - e164_format
+      properties:
+        status:
+          type: string
+          enum: [valid, invalid_format, not_swedish]
+          example: "valid"
+        e164_format:
+          type: string
+          description: Phone number in E.164 format (if valid)
+          example: "+46701234567"
+        national_format:
+          type: string
+          description: Phone number in Swedish national format (if valid)
+          example: "070-123 45 67"
+
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+        - message
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Error code for programmatic handling
+          example: "VALIDATION_FAILED"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Transaction time must be within 2 minutes of current time"
+        details:
+          type: object
+          description: Additional error context
+          additionalProperties: true
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: "INVALID_PARAMETERS"
+            message: "QR version must be between 1 and 9999999"
+
+    ValidationError:
+      description: Form validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: "VALIDATION_FAILED"
+            message: "Transaction time is outside tolerance range"
+            details:
+              field: "transaction_time"
+              tolerance_range: "14:30 - 14:34"
+
+    StoreNotFound:
+      description: Store ID not found or inactive
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: "STORE_NOT_FOUND"
+            message: "Store is no longer available for feedback"
+
+    SessionNotFound:
+      description: Verification session not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: "SESSION_NOT_FOUND"
+            message: "Verification session does not exist"
+
+    SessionExpired:
+      description: Verification session has expired
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: "SESSION_EXPIRED"
+            message: "Verification session has expired. Please scan the QR code again"
+
+    Unauthorized:
+      description: Invalid or missing session token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: "UNAUTHORIZED"
+            message: "Invalid session token"
+
+    RateLimit:
+      description: Too many requests from this IP
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: "RATE_LIMIT_EXCEEDED"
+            message: "Too many verification attempts. Please try again later"
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: "INTERNAL_ERROR"
+            message: "An unexpected error occurred. Please try again"

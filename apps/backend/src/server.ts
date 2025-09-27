@@ -3,6 +3,9 @@ import app from './app';
 import { config } from './config';
 import { logger } from './middleware/logging';
 import { closeDatabase, testDatabaseConnection } from './config/database';
+import { alertProcessor, dataAggregator } from './services/monitoring';
+import { startWeeklyPaymentBatchJob } from './jobs/weekly-payment-batch';
+import { startMaterializedViewRefreshJob } from './jobs/refresh-materialized-views';
 
 const server = http.createServer(app);
 
@@ -47,6 +50,13 @@ async function gracefulShutdown(signal: string): Promise<void> {
   }, config.server.shutdownTimeout || 30000); // 30 seconds default
 
   try {
+    // Stop background monitoring services
+    logger.info('Stopping background monitoring services...');
+    await Promise.all([
+      alertProcessor.stop().catch(err => logger.error('Error stopping alert processor:', err)),
+      dataAggregator.stop().catch(err => logger.error('Error stopping data aggregator:', err))
+    ]);
+
     // Close all active connections
     logger.info(`Closing ${connections.size} active connections...`);
     for (const connection of connections) {
@@ -83,11 +93,11 @@ async function startServer(): Promise<void> {
     }
 
     // Start listening
-    server.listen(config.server.port, () => {
+    server.listen(config.server.port, async () => {
       logger.info(`Server running on port ${config.server.port} in ${config.server.env} mode`);
       logger.info(`API Base URL: ${config.server.baseUrl}`);
       logger.info(`Process ID: ${process.pid}`);
-      
+
       // Log configuration summary
       logger.info('Configuration summary:', {
         port: config.server.port,
@@ -101,6 +111,35 @@ async function startServer(): Promise<void> {
           supabaseUrl: config.supabase.url ? 'configured' : 'missing'
         }
       });
+
+      // Start background monitoring services
+      logger.info('Starting background monitoring services...');
+      try {
+        await Promise.all([
+          alertProcessor.start().catch(err => {
+            logger.error('Failed to start alert processor:', err);
+            return Promise.resolve();
+          }),
+          dataAggregator.start().catch(err => {
+            logger.error('Failed to start data aggregator:', err);
+            return Promise.resolve();
+          })
+        ]);
+        logger.info('Background monitoring services started successfully');
+        
+        // Start weekly payment batch cron job
+        logger.info('Starting weekly payment batch cron job...');
+        startWeeklyPaymentBatchJob();
+        logger.info('Weekly payment batch cron job started successfully');
+        
+        // Start materialized view refresh cron job
+        logger.info('Starting materialized view refresh cron job...');
+        startMaterializedViewRefreshJob();
+        logger.info('Materialized view refresh cron job started successfully');
+      } catch (error) {
+        logger.error('Error starting background monitoring services:', error);
+        // Don't exit - continue without background services
+      }
     });
 
     // Handle server errors
@@ -151,6 +190,24 @@ async function startServer(): Promise<void> {
       const isHealthy = await performHealthCheck();
       if (!isHealthy) {
         logger.warn('Periodic health check failed');
+      }
+
+      // Check background service health
+      try {
+        const [alertProcessorHealth, dataAggregatorHealth] = await Promise.all([
+          alertProcessor.healthCheck().catch(() => ({ healthy: false, issues: ['Service unavailable'] })),
+          dataAggregator.healthCheck().catch(() => ({ healthy: false, issues: ['Service unavailable'] }))
+        ]);
+
+        if (!alertProcessorHealth.healthy) {
+          logger.warn('Alert processor health check failed:', alertProcessorHealth.issues);
+        }
+
+        if (!dataAggregatorHealth.healthy) {
+          logger.warn('Data aggregator health check failed:', dataAggregatorHealth.issues);
+        }
+      } catch (error) {
+        logger.error('Error checking background service health:', error);
       }
     }, 5 * 60 * 1000);
 

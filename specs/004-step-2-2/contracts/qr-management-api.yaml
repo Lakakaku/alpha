@@ -1,0 +1,702 @@
+openapi: 3.0.3
+info:
+  title: QR Code Management API
+  description: API for managing QR codes, analytics, and print templates for Vocilia Alpha stores
+  version: 1.0.0
+  contact:
+    name: Vocilia Alpha API
+    url: https://api.vocilia.se
+
+servers:
+  - url: https://api.vocilia.se/v1
+    description: Production API
+  - url: http://localhost:3001/v1
+    description: Development API
+
+security:
+  - supabaseAuth: []
+
+paths:
+  /qr/stores/{storeId}:
+    get:
+      summary: Get QR code information for a store
+      description: Retrieves current QR code data, status, and metadata for a specific store
+      operationId: getStoreQRCode
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Store identifier
+      responses:
+        '200':
+          description: QR code information retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QRCodeInfo'
+        '404':
+          description: Store not found or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /qr/stores/{storeId}/regenerate:
+    post:
+      summary: Regenerate QR code for a store
+      description: Creates a new QR code version with 24-hour transition period
+      operationId: regenerateStoreQRCode
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  description: Reason for regeneration
+                  example: "QR code compromised"
+                transitionHours:
+                  type: integer
+                  default: 24
+                  minimum: 1
+                  maximum: 168
+                  description: Hours to maintain old QR functionality
+      responses:
+        '200':
+          description: QR code regenerated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QRCodeInfo'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permissions (requires manage_qr)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /qr/stores/{storeId}/download:
+    get:
+      summary: Download printable QR code PDF
+      description: Generates and downloads customized PDF with QR code for printing
+      operationId: downloadQRCodePDF
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: templateId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Custom template ID (uses default if not specified)
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [A4, letter, business_card, label_sheet]
+            default: A4
+      responses:
+        '200':
+          description: PDF generated successfully
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+                example: 'attachment; filename="store-qr-code.pdf"'
+        '404':
+          description: Store or template not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /qr/analytics/{storeId}:
+    get:
+      summary: Get QR code scan analytics for a store
+      description: Retrieves aggregated scan analytics with time-based filtering
+      operationId: getQRAnalytics
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [hour, day, week, month]
+            default: day
+          description: Time period for analytics aggregation
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Start time for analytics (ISO 8601)
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: End time for analytics (ISO 8601)
+      responses:
+        '200':
+          description: Analytics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QRAnalytics'
+        '400':
+          description: Invalid time range or parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permissions (requires view_analytics)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /qr/bulk/regenerate:
+    post:
+      summary: Bulk regenerate QR codes for multiple stores
+      description: Regenerates QR codes for multiple stores in a single operation
+      operationId: bulkRegenerateQRCodes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - storeIds
+                - operation
+              properties:
+                storeIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  maxItems: 100
+                  description: List of store IDs to process
+                operation:
+                  type: string
+                  enum: [regenerate, activate, deactivate]
+                  description: Operation to perform on all stores
+                reason:
+                  type: string
+                  description: Reason for bulk operation
+                  example: "Security update"
+                transitionHours:
+                  type: integer
+                  default: 24
+                  minimum: 1
+                  maximum: 168
+      responses:
+        '200':
+          description: Bulk operation completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkOperationResult'
+        '400':
+          description: Invalid request or too many stores
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permissions for one or more stores
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /qr/scan:
+    post:
+      summary: Track QR code scan event
+      description: Records a QR code scan for analytics (called by customer frontend)
+      operationId: trackQRScan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - storeId
+              properties:
+                storeId:
+                  type: string
+                  format: uuid
+                  description: Store whose QR was scanned
+                qrVersion:
+                  type: integer
+                  description: Version of QR code scanned
+                userAgent:
+                  type: string
+                  description: Browser user agent string
+                referrer:
+                  type: string
+                  description: Page that referred to QR scan
+                sessionId:
+                  type: string
+                  format: uuid
+                  description: Customer session identifier
+      responses:
+        '201':
+          description: Scan event recorded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  scanId:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
+        '400':
+          description: Invalid scan data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Store not found or QR version invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /qr/templates:
+    get:
+      summary: List print templates for authenticated business
+      description: Retrieves all custom print templates for the current business
+      operationId: listPrintTemplates
+      responses:
+        '200':
+          description: Templates retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PrintTemplate'
+
+    post:
+      summary: Create custom print template
+      description: Creates a new customizable print template for QR codes
+      operationId: createPrintTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePrintTemplate'
+      responses:
+        '201':
+          description: Template created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrintTemplate'
+        '400':
+          description: Invalid template configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /qr/templates/{templateId}:
+    put:
+      summary: Update print template
+      description: Updates an existing print template configuration
+      operationId: updatePrintTemplate
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePrintTemplate'
+      responses:
+        '200':
+          description: Template updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrintTemplate'
+        '404':
+          description: Template not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Delete print template
+      description: Deletes a custom print template (cannot delete default)
+      operationId: deletePrintTemplate
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Template deleted successfully
+        '400':
+          description: Cannot delete default template
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Template not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    supabaseAuth:
+      type: http
+      scheme: bearer
+      description: Supabase JWT token with business permissions
+
+  schemas:
+    QRCodeInfo:
+      type: object
+      required:
+        - id
+        - storeId
+        - qrData
+        - status
+        - version
+        - generatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: QR code unique identifier
+        storeId:
+          type: string
+          format: uuid
+          description: Associated store ID
+        qrData:
+          type: string
+          description: QR code URL/data
+        status:
+          type: string
+          enum: [active, inactive, pending_regeneration]
+          description: Current QR code status
+        version:
+          type: integer
+          description: QR code version number
+        generatedAt:
+          type: string
+          format: date-time
+          description: When current QR was generated
+        transitionUntil:
+          type: string
+          format: date-time
+          nullable: true
+          description: When old QR expires (during transitions)
+        scanCount:
+          type: integer
+          description: Total scans for this QR version
+        lastScannedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Most recent scan timestamp
+
+    QRAnalytics:
+      type: object
+      required:
+        - storeId
+        - period
+        - totalScans
+        - data
+      properties:
+        storeId:
+          type: string
+          format: uuid
+        period:
+          type: string
+          enum: [hour, day, week, month]
+        totalScans:
+          type: integer
+          description: Total scans in requested period
+        uniqueSessions:
+          type: integer
+          description: Unique customer sessions
+        peakTime:
+          type: string
+          format: date-time
+          description: Time with highest scan activity
+        averageScansPerHour:
+          type: number
+          description: Average hourly scan rate
+        data:
+          type: array
+          items:
+            type: object
+            required:
+              - timestamp
+              - scans
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+              scans:
+                type: integer
+              uniqueSessions:
+                type: integer
+
+    BulkOperationResult:
+      type: object
+      required:
+        - batchId
+        - operation
+        - totalStores
+        - successCount
+        - results
+      properties:
+        batchId:
+          type: string
+          format: uuid
+          description: Unique batch operation identifier
+        operation:
+          type: string
+          enum: [regenerate, activate, deactivate]
+        totalStores:
+          type: integer
+          description: Number of stores processed
+        successCount:
+          type: integer
+          description: Number of successful operations
+        results:
+          type: array
+          items:
+            type: object
+            required:
+              - storeId
+              - success
+            properties:
+              storeId:
+                type: string
+                format: uuid
+              success:
+                type: boolean
+              error:
+                type: string
+                nullable: true
+                description: Error message if operation failed
+              qrCodeInfo:
+                $ref: '#/components/schemas/QRCodeInfo'
+                nullable: true
+
+    PrintTemplate:
+      type: object
+      required:
+        - id
+        - businessId
+        - templateName
+        - pageSize
+        - qrSize
+        - isDefault
+      properties:
+        id:
+          type: string
+          format: uuid
+        businessId:
+          type: string
+          format: uuid
+        templateName:
+          type: string
+          maxLength: 100
+        pageSize:
+          type: string
+          enum: [A4, letter, business_card, label_sheet]
+        qrSize:
+          type: integer
+          minimum: 64
+          maximum: 512
+          description: QR code size in pixels
+        includeLogo:
+          type: boolean
+          default: false
+        logoUrl:
+          type: string
+          nullable: true
+          description: URL to business logo image
+        customText:
+          type: string
+          maxLength: 200
+          default: "Scan for feedback"
+        textColor:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+          default: "#000000"
+        backgroundColor:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+          default: "#FFFFFF"
+        borderStyle:
+          type: string
+          enum: [none, thin, thick, dashed]
+          default: "thin"
+        isDefault:
+          type: boolean
+          description: Whether this is the default template for the business
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreatePrintTemplate:
+      type: object
+      required:
+        - templateName
+        - pageSize
+      properties:
+        templateName:
+          type: string
+          maxLength: 100
+        pageSize:
+          type: string
+          enum: [A4, letter, business_card, label_sheet]
+        qrSize:
+          type: integer
+          minimum: 64
+          maximum: 512
+          default: 256
+        includeLogo:
+          type: boolean
+          default: false
+        logoUrl:
+          type: string
+          nullable: true
+        customText:
+          type: string
+          maxLength: 200
+          default: "Scan for feedback"
+        textColor:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+          default: "#000000"
+        backgroundColor:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+          default: "#FFFFFF"
+        borderStyle:
+          type: string
+          enum: [none, thin, thick, dashed]
+          default: "thin"
+        setAsDefault:
+          type: boolean
+          default: false
+
+    UpdatePrintTemplate:
+      type: object
+      properties:
+        templateName:
+          type: string
+          maxLength: 100
+        pageSize:
+          type: string
+          enum: [A4, letter, business_card, label_sheet]
+        qrSize:
+          type: integer
+          minimum: 64
+          maximum: 512
+        includeLogo:
+          type: boolean
+        logoUrl:
+          type: string
+          nullable: true
+        customText:
+          type: string
+          maxLength: 200
+        textColor:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+        backgroundColor:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+        borderStyle:
+          type: string
+          enum: [none, thin, thick, dashed]
+        setAsDefault:
+          type: boolean
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          nullable: true
+          description: Additional error context
+        timestamp:
+          type: string
+          format: date-time

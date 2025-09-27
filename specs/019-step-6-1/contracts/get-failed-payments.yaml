@@ -1,0 +1,189 @@
+openapi: 3.0.0
+info:
+  title: Get Failed Payments API
+  version: 1.0.0
+  description: List failed payments requiring manual intervention
+
+paths:
+  /api/admin/payments/failed:
+    get:
+      summary: List failed payments
+      description: |
+        Retrieves all payment failures that require manual intervention, including
+        payments that have exceeded automatic retry limits or have unresolvable errors.
+      operationId: getFailedPayments
+      tags:
+        - Payments
+      security:
+        - AdminAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [pending, manual_review, resolved, cancelled]
+          description: Filter by resolution status
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+          description: Number of results to return
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Pagination offset
+      responses:
+        '200':
+          description: Failed payments retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - failures
+                  - total
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  failures:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - id
+                        - paymentTransactionId
+                        - customerPhone
+                        - amountSek
+                        - attemptNumber
+                        - failureReason
+                        - resolutionStatus
+                        - createdAt
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          example: "b8c9d0e1-f2a3-4567-b123-456789012345"
+                        paymentTransactionId:
+                          type: string
+                          format: uuid
+                          example: "c9d0e1f2-a3b4-5678-c123-456789012345"
+                        customerPhone:
+                          type: string
+                          pattern: '^467\d{8}$'
+                          example: "467012345678"
+                        amountSek:
+                          type: number
+                          format: decimal
+                          example: 44.00
+                        attemptNumber:
+                          type: integer
+                          minimum: 1
+                          maximum: 4
+                          example: 4
+                        failureReason:
+                          type: string
+                          example: "Invalid phone number"
+                        swishErrorCode:
+                          type: string
+                          nullable: true
+                          example: "INVALID_PHONE_NUMBER"
+                        swishErrorMessage:
+                          type: string
+                          nullable: true
+                          example: "The provided phone number is not registered with Swish"
+                        retryScheduledAt:
+                          type: string
+                          format: date-time
+                          nullable: true
+                          example: null
+                        resolutionStatus:
+                          type: string
+                          enum: [pending, retrying, manual_review, resolved, cancelled]
+                          example: "manual_review"
+                        adminNotes:
+                          type: string
+                          nullable: true
+                          example: "Customer contacted, phone number updated"
+                        resolvedBy:
+                          type: string
+                          format: uuid
+                          nullable: true
+                          example: null
+                        resolvedAt:
+                          type: string
+                          format: date-time
+                          nullable: true
+                          example: null
+                        createdAt:
+                          type: string
+                          format: date-time
+                          example: "2025-09-25T00:05:00Z"
+                        batchWeek:
+                          type: string
+                          example: "2025-W09"
+                        storeNames:
+                          type: array
+                          items:
+                            type: string
+                          example: ["Store A", "Store B", "Store C"]
+                  total:
+                    type: integer
+                    description: Total count of failed payments matching filter
+                    example: 3
+                  limit:
+                    type: integer
+                    example: 50
+                  offset:
+                    type: integer
+                    example: 0
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Admin authentication required"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Failed to retrieve failed payments"
+
+components:
+  securitySchemes:
+    AdminAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Admin session token from /api/admin/auth/login

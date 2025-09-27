@@ -1,0 +1,477 @@
+openapi: 3.0.3
+info:
+  title: Audit & Monitoring API
+  description: Admin endpoints for audit logs and system monitoring
+  version: 1.0.0
+
+servers:
+  - url: https://alpha-backend.railway.app/api
+    description: Production backend
+  - url: http://localhost:3001/api
+    description: Development backend
+
+paths:
+  /admin/audit:
+    get:
+      summary: Get audit logs
+      description: Retrieve paginated audit logs with filtering options
+      operationId: getAuditLogs
+      tags:
+        - Audit & Monitoring
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number (1-based)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of logs per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: action_type
+          in: query
+          description: Filter by action type
+          schema:
+            type: string
+            enum: [login, logout, create, update, delete, upload, view]
+        - name: resource_type
+          in: query
+          description: Filter by resource type
+          schema:
+            type: string
+            enum: [store, admin, session, upload, system]
+        - name: admin_id
+          in: query
+          description: Filter by admin ID
+          schema:
+            type: string
+            format: uuid
+        - name: from_date
+          in: query
+          description: Filter from date (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: to_date
+          in: query
+          description: Filter to date (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: success_only
+          in: query
+          description: Show only successful actions
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Audit logs retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      logs:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AuditLog'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+                      summary:
+                        $ref: '#/components/schemas/AuditSummary'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/monitoring/dashboard:
+    get:
+      summary: Get monitoring dashboard
+      description: Retrieve comprehensive system monitoring data
+      operationId: getMonitoringDashboard
+      tags:
+        - Audit & Monitoring
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Monitoring data retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      system_health:
+                        $ref: '#/components/schemas/SystemHealth'
+                      store_metrics:
+                        $ref: '#/components/schemas/StoreMetrics'
+                      recent_activity:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/RecentActivity'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/monitoring/stores/{storeId}/metrics:
+    get:
+      summary: Get store metrics history
+      description: Retrieve historical metrics for a specific store
+      operationId: getStoreMetricsHistory
+      tags:
+        - Audit & Monitoring
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          description: Store UUID
+          schema:
+            type: string
+            format: uuid
+        - name: metric_type
+          in: query
+          description: Filter by metric type
+          schema:
+            type: string
+            enum: [sync, error, performance, availability]
+        - name: hours
+          in: query
+          description: Number of hours of history to retrieve
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 168
+            default: 24
+        - name: granularity
+          in: query
+          description: Data point granularity
+          schema:
+            type: string
+            enum: [minute, hour, day]
+            default: hour
+      responses:
+        '200':
+          description: Store metrics retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      store_id:
+                        type: string
+                        format: uuid
+                      metrics:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/MetricDataPoint'
+                      summary:
+                        $ref: '#/components/schemas/MetricsSummary'
+        '404':
+          description: Store not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 770e8400-e29b-41d4-a716-446655440002
+        admin_id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        admin_username:
+          type: string
+          example: admin_user
+        action_type:
+          type: string
+          enum: [login, logout, create, update, delete, upload, view]
+          example: create
+        resource_type:
+          type: string
+          enum: [store, admin, session, upload, system]
+          example: store
+        resource_id:
+          type: string
+          format: uuid
+          nullable: true
+          example: 660e8400-e29b-41d4-a716-446655440003
+        action_details:
+          type: object
+          example:
+            description: Created new store
+            store_name: Café Stockholm Central
+            business_email: info@cafestockholm.se
+        ip_address:
+          type: string
+          example: 192.168.1.100
+        user_agent:
+          type: string
+          example: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)
+        performed_at:
+          type: string
+          format: date-time
+          example: 2025-09-23T14:30:00Z
+        success:
+          type: boolean
+          example: true
+        error_message:
+          type: string
+          nullable: true
+          example: null
+
+    SystemHealth:
+      type: object
+      properties:
+        overall_status:
+          type: string
+          enum: [healthy, warning, critical]
+          example: healthy
+        uptime_percentage:
+          type: number
+          format: float
+          example: 99.8
+        total_stores:
+          type: integer
+          example: 87
+        online_stores:
+          type: integer
+          example: 82
+        offline_stores:
+          type: integer
+          example: 5
+        stores_with_errors:
+          type: integer
+          example: 3
+        avg_performance_score:
+          type: number
+          format: float
+          example: 8.2
+        last_updated:
+          type: string
+          format: date-time
+          example: 2025-09-23T16:30:00Z
+
+    StoreMetrics:
+      type: object
+      properties:
+        sync_success_rate:
+          type: number
+          format: float
+          example: 0.96
+        avg_sync_time_minutes:
+          type: number
+          format: float
+          example: 3.2
+        total_errors_24h:
+          type: integer
+          example: 12
+        performance_distribution:
+          type: object
+          properties:
+            excellent:
+              type: integer
+              description: Stores with score 9-10
+              example: 25
+            good:
+              type: integer
+              description: Stores with score 7-8.9
+              example: 45
+            fair:
+              type: integer
+              description: Stores with score 5-6.9
+              example: 15
+            poor:
+              type: integer
+              description: Stores with score 0-4.9
+              example: 2
+
+    RecentActivity:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        activity_type:
+          type: string
+          enum: [store_created, store_updated, upload_completed, error_resolved, admin_login]
+          example: store_created
+        description:
+          type: string
+          example: New store 'Café Stockholm Central' created
+        admin_username:
+          type: string
+          example: admin_user
+        timestamp:
+          type: string
+          format: date-time
+          example: 2025-09-23T15:45:00Z
+        metadata:
+          type: object
+          nullable: true
+          example:
+            store_id: 660e8400-e29b-41d4-a716-446655440003
+            store_name: Café Stockholm Central
+
+    MetricDataPoint:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: 2025-09-23T15:00:00Z
+        metric_type:
+          type: string
+          enum: [sync, error, performance, availability]
+          example: performance
+        value:
+          type: number
+          example: 8.5
+        unit:
+          type: string
+          example: score
+        metadata:
+          type: object
+          nullable: true
+          example:
+            response_time_ms: 120
+
+    MetricsSummary:
+      type: object
+      properties:
+        metric_type:
+          type: string
+          example: performance
+        period_hours:
+          type: integer
+          example: 24
+        min_value:
+          type: number
+          example: 7.2
+        max_value:
+          type: number
+          example: 9.1
+        avg_value:
+          type: number
+          example: 8.5
+        data_points:
+          type: integer
+          example: 24
+        trend:
+          type: string
+          enum: [improving, stable, declining]
+          example: stable
+
+    AuditSummary:
+      type: object
+      properties:
+        total_actions:
+          type: integer
+          example: 1247
+        successful_actions:
+          type: integer
+          example: 1198
+        failed_actions:
+          type: integer
+          example: 49
+        unique_admins:
+          type: integer
+          example: 3
+        most_common_action:
+          type: string
+          example: view
+        period_start:
+          type: string
+          format: date-time
+          example: 2025-09-22T00:00:00Z
+        period_end:
+          type: string
+          format: date-time
+          example: 2025-09-23T16:30:00Z
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 50
+        total_pages:
+          type: integer
+          example: 12
+        total_items:
+          type: integer
+          example: 587
+        has_next:
+          type: boolean
+          example: true
+        has_prev:
+          type: boolean
+          example: false
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: UNAUTHORIZED
+            message:
+              type: string
+              example: Access denied
+            details:
+              type: object
+              nullable: true
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

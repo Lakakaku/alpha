@@ -1,0 +1,154 @@
+openapi: 3.0.0
+info:
+  title: Process Payment Batch API
+  version: 1.0.0
+  description: Trigger weekly payment batch processing
+
+paths:
+  /api/admin/payments/process-batch:
+    post:
+      summary: Trigger weekly payment batch
+      description: |
+        Initiates payment batch processing for all pending rewards from the specified week.
+        Aggregates rewards per customer, sends Swish payments, tracks failures, and generates
+        reconciliation reports. Normally triggered by cron job on Sunday 00:00.
+      operationId: processBatch
+      tags:
+        - Payments
+      security:
+        - AdminAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                batchWeek:
+                  type: string
+                  pattern: '^\d{4}-W\d{2}$'
+                  description: ISO week format (defaults to previous week if not provided)
+                  example: "2025-W09"
+                forceReprocess:
+                  type: boolean
+                  description: Force reprocessing of already completed batch
+                  default: false
+      responses:
+        '202':
+          description: Batch processing initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - batchId
+                  - batchWeek
+                  - status
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  batchId:
+                    type: string
+                    format: uuid
+                    example: "f6a7b8c9-d0e1-2345-f123-456789012345"
+                  batchWeek:
+                    type: string
+                    example: "2025-W09"
+                  status:
+                    type: string
+                    enum: [processing]
+                    example: "processing"
+                  estimatedCustomers:
+                    type: integer
+                    description: Estimated number of customers to be paid
+                    example: 127
+                  estimatedAmountSek:
+                    type: number
+                    format: decimal
+                    description: Estimated total payout in SEK
+                    example: 5420.50
+                  startedAt:
+                    type: string
+                    format: date-time
+                    example: "2025-09-25T12:00:00Z"
+                  message:
+                    type: string
+                    example: "Batch processing started. Use GET /api/admin/payments/batch/{batchId} to monitor progress."
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Invalid batch week format"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Admin authentication required"
+        '409':
+          description: Batch already processing
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Batch for week 2025-W09 is already processing"
+                  batchId:
+                    type: string
+                    format: uuid
+                    example: "f6a7b8c9-d0e1-2345-f123-456789012345"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Failed to initiate batch processing"
+
+components:
+  securitySchemes:
+    AdminAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Admin session token from /api/admin/auth/login
