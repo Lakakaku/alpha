@@ -8,17 +8,20 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "test": "jest",
-    "test:ci": "jest --ci --coverage",
+    "test:ci": "jest --ci --coverage --passWithNoTests",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
   },
   "devDependencies": {
-    "typescript": "^5.3.3",
-    "tsup": "^8.0.1",
-    "jest": "^29.7.0",
     "@types/jest": "^29.5.8",
-    "eslint": "^8.56.0"
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "libphonenumber-js": "^1.12.18"
   }
 }
