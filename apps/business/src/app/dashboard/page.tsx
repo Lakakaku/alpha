@@ -13,7 +13,7 @@ export default function DashboardPage() {
     status: 'active'
   });
 
-  const recentQuestions = questions || [];
+  const recentQuestions = Array.isArray(questions) ? questions : [];
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-8">
