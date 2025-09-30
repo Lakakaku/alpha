@@ -1,6 +1,7 @@
 {
-  "buildCommand": "pnpm build",
-  "installCommand": "cd ../.. && pnpm install",
+  "buildCommand": "cd ../.. && pnpm install --frozen-lockfile && pnpm build --filter @vocilia/types --filter @vocilia/database --filter @vocilia/ui --filter @vocilia/customer",
+  "installCommand": "npm install -g pnpm@10.17.1",
+  "outputDirectory": ".next",
   "framework": "nextjs",
-  "outputDirectory": ".next"
+  "devCommand": "cd ../.. && pnpm --filter @vocilia/customer dev"
 }
