@@ -1,9 +1,6 @@
 /** @type {import('eslint').Linter.Config} */
 module.exports = {
-  extends: [
-    '../../.eslintrc.js',
-    'next/core-web-vitals',
-  ],
+  extends: ['next/core-web-vitals'],
   parserOptions: {
     project: './tsconfig.json',
     tsconfigRootDir: __dirname,
@@ -16,6 +13,13 @@ module.exports = {
     'react/no-unescaped-entities': 'off',
     'react/display-name': 'off',
     'react-hooks/exhaustive-deps': 'warn',
+
+    // TypeScript rules from root config
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+    ],
+    '@typescript-eslint/no-explicit-any': 'warn',
   },
   settings: {
     'import/resolver': {
