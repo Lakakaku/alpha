@@ -1,7 +1,4 @@
-import { CallSession } from '../../models/CallSession';
-import { CallEvent } from '../../models/CallEvent';
-import { CallResponse } from '../../models/CallResponse';
-import { QuestionConfiguration } from '../../models/QuestionConfiguration';
+import { CallSession, CallEvent, CallResponse, QuestionConfiguration } from '@vocilia/types';
 import { CallOrchestrator } from '../../services/calls/CallOrchestrator';
 import { OpenAIVoiceService } from '../../services/ai/OpenAIVoiceService';
 import { FortyElksService } from '../../services/telephony/FortyElksService';

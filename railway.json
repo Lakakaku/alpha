@@ -2,11 +2,11 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "echo 'Using simple server - TypeScript build disabled temporarily'",
-    "watchPatterns": ["**"]
+    "buildCommand": "pnpm install --frozen-lockfile",
+    "watchPatterns": ["apps/backend/src/**/*.ts", "apps/backend/package.json", "packages/**/*.ts"]
   },
   "deploy": {
-    "startCommand": "node apps/backend/server-simple.js",
+    "startCommand": "pnpm --filter=@vocilia/backend run dev",
     "numReplicas": 1,
     "sleepApplication": false,
     "restartPolicyType": "ON_FAILURE",

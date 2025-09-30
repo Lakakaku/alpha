@@ -206,23 +206,23 @@ export async function checkExternalServices(): Promise<HealthCheckResult> {
   const start = Date.now();
   
   try {
-    // Check SMTP service if configured
-    if (config.email?.smtp?.host) {
+    // Check email service if configured
+    if (config.services.emailService) {
       // Basic connectivity check (no actual email sending)
-      // In a real implementation, you might want to test SMTP connectivity
+      // In a real implementation, you might want to test email service connectivity
     }
-    
+
     // Check any other external APIs or services
     // For now, just return healthy since we don't have external dependencies
-    
+
     const duration = Date.now() - start;
-    
+
     return {
       status: 'healthy',
       timestamp: new Date().toISOString(),
       duration,
       details: {
-        smtp: config.email?.smtp?.host ? 'configured' : 'not_configured',
+        emailService: config.services.emailService ? 'configured' : 'not_configured',
         externalApis: 'none_configured'
       }
     };
@@ -268,7 +268,7 @@ export async function performHealthCheck(): Promise<SystemHealthStatus> {
       status: overallStatus,
       timestamp: new Date().toISOString(),
       version: process.env.npm_package_version || '1.0.0',
-      environment: config.server.env,
+      environment: config.env,
       uptime: Math.floor(process.uptime()),
       checks
     };
@@ -293,7 +293,7 @@ export async function performHealthCheck(): Promise<SystemHealthStatus> {
       status: 'unhealthy',
       timestamp: new Date().toISOString(),
       version: process.env.npm_package_version || '1.0.0',
-      environment: config.server.env,
+      environment: config.env,
       uptime: Math.floor(process.uptime()),
       checks: {
         database: { status: 'unhealthy', timestamp: new Date().toISOString(), duration: 0, error: 'Health check system error' },
