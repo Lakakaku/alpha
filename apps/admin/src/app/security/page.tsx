@@ -9,13 +9,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { SecurityTestResults } from '@/components/security/SecurityTestResults';
-import { VulnerabilityManager } from '@/components/security/VulnerabilityManager';
+import { Card, CardContent, CardHeader, CardTitle } from '@vocilia/ui';
+import { Button } from '@vocilia/ui';
+import { Badge } from '@vocilia/ui';
+import { Alert, AlertDescription } from '@vocilia/ui';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@vocilia/ui';
+// import { SecurityTestResults } from '@/components/security/SecurityTestResults';
+// import { VulnerabilityManager } from '@/components/security/VulnerabilityManager';
 import {
   Shield,
   AlertTriangle,
@@ -396,12 +396,12 @@ export default function SecurityDashboard() {
 
         {/* Test Results Tab */}
         <TabsContent value="results">
-          <SecurityTestResults />
+          <div className="p-6 text-center text-muted-foreground">Security Test Results component not yet implemented</div>
         </TabsContent>
 
         {/* Vulnerabilities Tab */}
         <TabsContent value="vulnerabilities">
-          <VulnerabilityManager />
+          <div className="p-6 text-center text-muted-foreground">Vulnerability Manager component not yet implemented</div>
         </TabsContent>
       </Tabs>
     </div>

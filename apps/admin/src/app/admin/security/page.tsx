@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@vocilia/ui';
+import { Badge } from '@vocilia/ui';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@vocilia/ui';
 import { Shield, AlertTriangle, Eye, Clock, Users, Database } from 'lucide-react';
 import AuditLogViewer from '@/components/security/AuditLogViewer';
 import IntrusionEventDashboard from '@/components/security/IntrusionEventDashboard';

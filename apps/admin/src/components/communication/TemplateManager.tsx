@@ -1,16 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@vocilia/ui';
+import { Badge } from '@vocilia/ui';
+import { Button } from '@vocilia/ui';
+import { Input } from '@vocilia/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@vocilia/ui';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@vocilia/ui';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@vocilia/ui';
+import { Textarea } from '@vocilia/ui';
+import { Label } from '@vocilia/ui';
+import { Switch } from '@vocilia/ui';
 import { AlertCircle, Plus, Edit, Trash2, Copy, Eye, FileText, Globe, Calendar, CheckCircle, XCircle, MessageSquare, Code, Save, RotateCcw } from 'lucide-react';
 import { format } from 'date-fns';
 import { sv } from 'date-fns/locale';

@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@vocilia/ui';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@vocilia/ui';
 import VerificationCyclesList from '@/components/verification/VerificationCyclesList';
 import VerificationDatabasesTable from '@/components/verification/VerificationDatabasesTable';
 import PaymentInvoicesManager from '@/components/verification/PaymentInvoicesManager';

@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@vocilia/ui';
+import { Badge } from '@vocilia/ui';
+import { Button } from '@vocilia/ui';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@vocilia/ui';
+import { Alert, AlertDescription } from '@vocilia/ui';
 import { 
   MessageSquare, 
   Mail, 

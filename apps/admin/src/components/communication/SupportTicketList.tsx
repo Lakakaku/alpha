@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@vocilia/ui';
+import { Badge } from '@vocilia/ui';
+import { Button } from '@vocilia/ui';
+import { Input } from '@vocilia/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@vocilia/ui';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@vocilia/ui';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@vocilia/ui';
+import { Textarea } from '@vocilia/ui';
+import { Label } from '@vocilia/ui';
 import { AlertCircle, Clock, CheckCircle, XCircle, Phone, Mail, MessageSquare, User, Building, Calendar, ArrowUpDown, Filter, MessageCircle, Eye, Edit, Archive } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { sv } from 'date-fns/locale';
