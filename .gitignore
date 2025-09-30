@@ -52,7 +52,7 @@ pnpm-debug.log*
 .yarnrc.yml
 yarn.lock
 package-lock.json
-pnpm-lock.yaml
+# pnpm-lock.yaml should be committed for consistent dependencies
 
 # Runtime data
 pids
