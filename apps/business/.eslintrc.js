@@ -27,8 +27,10 @@ module.exports = {
     '@typescript-eslint/no-floating-promises': 'warn',
     '@typescript-eslint/prefer-nullish-coalescing': 'warn',
     '@typescript-eslint/require-await': 'warn',
+    '@typescript-eslint/no-misused-promises': 'warn',
     'import/order': 'warn',
     'no-console': 'warn',
+    'no-case-declarations': 'warn',
   },
   settings: {
     'import/resolver': {
