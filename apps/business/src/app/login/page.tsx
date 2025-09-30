@@ -29,7 +29,7 @@ function LoginPageContent() {
   // Redirect if already authenticated and approved
   useEffect(() => {
     if (user && (businessAccount as any)?.verification_status === 'approved') {
-      const redirectTo = searchParams.get('redirect') || '/dashboard';
+      const redirectTo = searchParams?.get('redirect') || '/dashboard';
       router.push(redirectTo);
     } else if (user && (businessAccount as any)?.verification_status === 'pending') {
       router.push('/pending-approval');
@@ -37,8 +37,8 @@ function LoginPageContent() {
   }, [user, businessAccount, router, searchParams]);
 
   // Get any status messages from URL params
-  const statusMessage = searchParams.get('message');
-  const statusType = searchParams.get('type');
+  const statusMessage = searchParams?.get('message');
+  const statusType = searchParams?.get('type');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -89,7 +89,7 @@ function LoginPageContent() {
         if ((businessAccount as any)?.verification_status === 'pending') {
           router.push('/pending-approval');
         } else if ((businessAccount as any)?.verification_status === 'approved') {
-          const redirectTo = searchParams.get('redirect') || '/dashboard';
+          const redirectTo = searchParams?.get('redirect') || '/dashboard';
           router.push(redirectTo);
         } else {
           router.push('/pending-approval');
