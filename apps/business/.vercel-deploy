@@ -1,0 +1,11 @@
+# Vercel Deployment Trigger
+# This file triggers deployment with the updated build configuration
+# Updated: 2025-09-30
+
+Build configuration has been updated to use:
+- pnpm install --frozen-lockfile
+- pnpm build with proper dependency filters
+- Dependencies built in correct order: types, database, ui, business
+
+Previous deployments failed due to incorrect sequential build commands.
+New configuration matches the working customer app setup.

@@ -1,0 +1,11 @@
+# Vercel Deployment Trigger
+# This file triggers the first deployment for the admin app
+# Updated: 2025-09-30
+
+Initial deployment configuration:
+- pnpm install --frozen-lockfile
+- pnpm build with proper dependency filters
+- Dependencies built in correct order: types, database, ui, admin
+- Matches working customer app configuration
+
+This is the first deployment for the admin dashboard.
