@@ -3,7 +3,7 @@
   "build": {
     "builder": "NIXPACKS",
     "buildCommand": "echo 'Using simple server - TypeScript build disabled temporarily'",
-    "watchPatterns": ["apps/backend/server-simple.js", "apps/backend/package.json"]
+    "watchPatterns": ["**"]
   },
   "deploy": {
     "startCommand": "node apps/backend/server-simple.js",
