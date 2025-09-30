@@ -9,3 +9,4 @@ Build configuration has been updated to use:
 
 Previous deployments failed due to incorrect sequential build commands.
 New configuration matches the working customer app setup.
+trigger-1759266475
