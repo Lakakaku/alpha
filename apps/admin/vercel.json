@@ -1,7 +1,7 @@
 {
-  "buildCommand": "pnpm run build",
-  "installCommand": "pnpm install",
-  "framework": "nextjs",
+  "buildCommand": "cd ../.. && pnpm install --frozen-lockfile && pnpm build --filter @vocilia/types --filter @vocilia/database --filter @vocilia/ui --filter @vocilia/admin",
+  "installCommand": "npm install -g pnpm@10.17.1",
   "outputDirectory": ".next",
-  "ignoreCommand": "./scripts/check-tests.sh"
+  "framework": "nextjs",
+  "devCommand": "cd ../.. && pnpm --filter @vocilia/admin dev"
 }
