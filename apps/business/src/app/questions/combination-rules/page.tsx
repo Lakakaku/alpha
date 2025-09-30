@@ -25,8 +25,17 @@ interface QuestionCombinationRule {
   };
 }
 
+interface AvailableQuestion {
+  id: string;
+  question_text: string;
+  topic_category: string;
+  estimated_tokens: number;
+  default_priority_level: number;
+}
+
 export default function CombinationRulesPage() {
   const [rules, setRules] = useState<QuestionCombinationRule[]>([]);
+  const [availableQuestions, setAvailableQuestions] = useState<AvailableQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -37,6 +46,7 @@ export default function CombinationRulesPage() {
 
   useEffect(() => {
     loadRules();
+    loadAvailableQuestions();
   }, []);
 
   const loadRules = async () => {
@@ -59,6 +69,25 @@ export default function CombinationRulesPage() {
       setError(error instanceof Error ? error.message : 'Failed to load rules');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAvailableQuestions = async () => {
+    try {
+      const response = await fetch('/api/questions', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to load available questions');
+      }
+
+      const data = await response.json();
+      setAvailableQuestions(data);
+    } catch (error) {
+      console.error('Error loading questions:', error);
     }
   };
 
@@ -326,6 +355,7 @@ export default function CombinationRulesPage() {
       {(showCreateForm || editingRule) && (
         <CombinationRuleForm
           rule={editingRule || undefined}
+          availableQuestions={availableQuestions}
           onSubmit={editingRule
             ? (data) => handleUpdateRule(editingRule.id, data)
             : handleCreateRule
