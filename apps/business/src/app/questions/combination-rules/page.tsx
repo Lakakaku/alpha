@@ -2,14 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Input, Label, Switch, Badge, Alert, AlertDescription } from '@vocilia/ui';
 import { AlertCircle, Plus, Settings, Trash2, Edit } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CombinationRuleForm } from '@/components/questions/CombinationRuleForm';
 import { useToast } from '@/hooks/use-toast';
 
@@ -331,8 +325,8 @@ export default function CombinationRulesPage() {
 
       {(showCreateForm || editingRule) && (
         <CombinationRuleForm
-          rule={editingRule}
-          onSubmit={editingRule 
+          rule={editingRule || undefined}
+          onSubmit={editingRule
             ? (data) => handleUpdateRule(editingRule.id, data)
             : handleCreateRule
           }
