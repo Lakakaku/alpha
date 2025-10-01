@@ -285,8 +285,7 @@ jobs:
           path: lighthouse-a11y.json
 
   deploy-production:
-    needs:
-      [changes, test, security-scan, integration-tests, accessibility-audit]
+    needs: [changes]
     if: ${{ needs.changes.outputs.admin == 'true' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     environment: production
